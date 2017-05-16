@@ -1,0 +1,74 @@
+{
+  "name": "bt-cyclejs",
+  "version": "0.0.0",
+  "description": "BrainTrainer",
+  "main": "index.js",
+  "bin":{
+    "bt-cyclejs": "bin/build.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "gulp": "gulp",
+    "browserify": "browserify",
+    "clean": "shx rm -Rf public/",
+    "mkdirp": "mkdirp",
+    "build": "gulp build",
+    "lite": "lite-server",
+    "npm-run-all": "npm-run-all",
+    "web": "npm-run-all build lite",
+    "watch": "gulp watch",
+    "mkdir:public": "node scripts/create_folders.js",
+    "move:templates": "node scripts/move_templates.js",
+    "bundle": "gulp bundle",
+    "bundle-node": "npm run mkdir:public && npm run move:templates && browserify ./lib/main.js --outfile=./public/src/js/bundle.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndrejSperling/BrainTrainer.git"
+  },
+  "keywords": [
+    "braintrainer",
+    "cyclejs"
+  ],
+  "author": "BrainTrainer",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AndrejSperling/BrainTrainer/issues"
+  },
+  "homepage": "https://github.com/AndrejSperling/BrainTrainer#readme",
+  "dependencies": {
+    "@cycle/dom": "^17.1.0",
+    "@cycle/run": "^3.1.0",
+    "xstream": "^10.7.0",
+    "shelljs": "^0.4.0",
+    "yargs": "^3.9.0"
+  },
+  "devDependencies": {
+    "@cycle/isolate": "^2.1.0",
+    "browserify": "^14.3.0",
+    "browsify": "0.0.4",
+    "css-loader": "^0.28.1",
+    "fs": "0.0.1-security",
+    "fs-extra": "^3.0.1",
+    "graceful-fs": "^4.1.11",
+    "gulp": "^3.9.1",
+    "gulp-folders": "^1.1.0",
+    "gulp-if": "^2.0.2",
+    "gulp-shell": "^0.6.3",
+    "gulp-stylus": "^2.6.0",
+    "gulp-uglify": "^2.1.2",
+    "gulp-util": "^3.0.8",
+    "lite-server": "^2.3.0",
+    "npm-run-all": "^4.0.2",
+    "shx": "^0.2.2",
+    "style-loader": "^0.17.0",
+    "stylus": "^0.54.5",
+    "stylus-loader": "^3.0.1",
+    "typescript": "^2.3.2",
+    "typings": "^2.1.1",
+    "underscore": "^1.8.3",
+    "webpack": "^2.5.1",
+    "yargs": "^8.0.1",
+    "bt-cyclejs": "git+https://github.com/AndrejSperling/npm-command-test.git"
+  }
+}
