@@ -1,32 +1,15 @@
-const mkdirp = require('mkdirp');
-const path = require('path');
-const shell = require('shelljs');
-const mv = require('mv');
-const gulp = require('gulp');
+const buildExt = require('./tasks/build-extern');
 
-function buildWebApp(mPath) {
+function buildWebApp(path) {
 
-    console.log("Try to create folder: " + mPath);
+    console.log("Try to create folder: " + path);
 
-    if (mPath === undefined) {
-        console.error("Kein Pfad angegeben!")
+    if (path === undefined) {
+        console.error("No path was submitted")
     } else {
-        runBuildPublicFolder()
-        moveFilesToExternFolder(mPath)
+        buildExt.build(path);
     }
 
-}
-
-function runBuildPublicFolder() {
-    console.log("Run Build Public Folder");
-    if (shell.exec('npm run gulp build-extern').code !== 0) {
-        shell.echo('Error: Couldn\'t build public folder');
-        shell.exit(1);
-    }
-}
-
-function moveFilesToExternFolder(destFolder) {
-    gulp.src('./public/**/*').pipe(gulp.dest(destFolder))
 }
 
 module.exports = {

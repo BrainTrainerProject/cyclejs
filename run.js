@@ -1,4 +1,4 @@
 const i     = require("./index.js");
 const path  = require("path");
 
-i.buildWebApp(path.resolve(process.cwd(), "./public222"));
+i.buildWebApp(path.resolve(process.cwd(), "./pdublic222"));
