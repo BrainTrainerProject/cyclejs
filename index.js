@@ -1,7 +1,7 @@
 const mkdirp 	= require('mkdirp');
 const path 		= require('path');
 
-module.exports = function buildWebApp(mPath) {
+function buildWebApp(mPath) {
 	
 	console.log("Try to create folder: " + mPath);
 	
@@ -15,3 +15,7 @@ module.exports = function buildWebApp(mPath) {
 	}
 	
 }
+
+module.exports = {
+    buildWebApp: buildWebApp
+};
