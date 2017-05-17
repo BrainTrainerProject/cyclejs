@@ -1,8 +1,9 @@
-var gulp = require('gulp');
-var util = require('gulp-util');
+const gulp = require('gulp');
+const util = require('gulp-util');
 const shell = require('gulp-shell');
 const _ = require('underscore');
 const mkdirp = require('mkdirp');
+const runSequence = require('run-sequence');
 
 var dependencies = [
     // Example: '@angular/**/*.js',
@@ -60,8 +61,20 @@ gulp.task("templates", function () {
         .pipe(gulp.dest('./public/'));
 });
 
+gulp.task("ts", function () {
+    var ts = require('gulp-typescript');
+    var project = ts.createProject('tsconfig.json');
+    return gulp.src("./src/**/*.ts")
+        .pipe(project())
+        .pipe(gulp.dest('./lib'));
+});
+
 gulp.task("views", ["styles", "templates", "images"]);
 gulp.task("build", ["views", "bundle"]);
+
+gulp.task("build-extern", function(callback) {
+    runSequence('ts', ['build'], callback);
+});
 
 gulp.task("watch", ["views"], function () {
     gulp.watch("./lib/**/*", ["bundle"]);
@@ -69,7 +82,6 @@ gulp.task("watch", ["views"], function () {
     gulp.watch("./sources/css/*.styl", ["views"])
     gulp.watch("./sources/templates/*.html", ["views"])
 });
-
 
 
 gulp.task("buildtest", function () {

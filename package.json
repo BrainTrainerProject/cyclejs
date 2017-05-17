@@ -36,7 +36,9 @@
   "dependencies": {
     "@cycle/dom": "^17.1.0",
     "@cycle/run": "^3.1.0",
+    "gulp-typescript": "^3.1.6",
     "mkdirp": "^0.5.1",
+    "mv": "^2.1.1",
     "path": "^0.12.7",
     "shelljs": "^0.4.0",
     "xstream": "^10.7.0",
@@ -59,6 +61,7 @@
     "gulp-util": "^3.0.8",
     "lite-server": "^2.3.0",
     "npm-run-all": "^4.0.2",
+    "run-sequence": "^1.2.2",
     "shx": "^0.2.2",
     "style-loader": "^0.17.0",
     "stylus": "^0.54.5",
@@ -67,7 +70,6 @@
     "typings": "^2.1.1",
     "underscore": "^1.8.3",
     "webpack": "^2.5.1",
-    "yargs": "^8.0.1",
-    "bt-cyclejs": "git+https://github.com/AndrejSperling/npm-command-test.git"
+    "yargs": "^8.0.1"
   }
 }
