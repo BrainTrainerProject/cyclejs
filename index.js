@@ -3,6 +3,7 @@ const path = require('path');
 
 
 function makeConsoleLog(mPath) {
+	console.log("P: " + mPath);
 	const path = mPath | process.cwd();
     console.log("Hey!!!")
     console.log("Du befindest dich gerade hier: " + path)
