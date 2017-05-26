@@ -73,6 +73,8 @@
     "require-dir": "^0.3.1"
   },
   "devDependencies": {
-
+    "@cycle/collection": "^0.6.0",
+    "@cycle/http": "^13.3.0",
+    "@types/jquery": "^2.0.45"
   }
 }

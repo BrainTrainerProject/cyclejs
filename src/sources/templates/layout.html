@@ -125,7 +125,7 @@ width: 100%;-->
                         </div>
 
                         <!-- Right Content -->
-                        <div  class="col-right ui dividing right rail">
+                        <div class="col-right ui dividing right rail">
 
                             <div class="ui secondary menu">
 
@@ -161,14 +161,61 @@ width: 100%;-->
                         </div>
 
                     </div>
-<!-- Filter -->
-                    <div class="ui container content-row" >
+                    <!-- Filter -->
+                    <div class="ui container content-row">
 
-                            <!-- Filter -->
-                            <div class="ui secondary  menu">
+                        <!-- Filter -->
+                        <div class="ui secondary  menu">
 
-                                <div class="ui item">
-                                    <div class="ui dropdown simple">
+                            <div class="ui item">
+                                <div class="ui dropdown simple">
+                                    <div class="text">File</div>
+                                    <i class="dropdown icon"></i>
+                                    <div class="menu">
+                                        <div class="item">New</div>
+                                        <div class="item">
+                                            <span class="description">ctrl + o</span>
+                                            Open...
+                                        </div>
+                                        <div class="item">
+                                            <span class="description">ctrl + s</span>
+                                            Save as...
+                                        </div>
+                                        <div class="item">
+                                            <span class="description">ctrl + r</span>
+                                            Rename
+                                        </div>
+                                        <div class="item">Make a copy</div>
+                                        <div class="item">
+                                            <i class="folder icon"></i>
+                                            Move to folder
+                                        </div>
+                                        <div class="item">
+                                            <i class="trash icon"></i>
+                                            Move to trash
+                                        </div>
+                                        <div class="divider"></div>
+                                        <div class="item">Download As...</div>
+                                        <div class="item">
+                                            <i class="dropdown icon"></i>
+                                            Publish To Web
+                                            <div class="menu">
+                                                <div class="item">Google Docs</div>
+                                                <div class="item">Google Drive</div>
+                                                <div class="item">Dropbox</div>
+                                                <div class="item">Adobe Creative Cloud</div>
+                                                <div class="item">Private FTP</div>
+                                                <div class="item">Another Service...</div>
+                                            </div>
+                                        </div>
+                                        <div class="item">E-mail Collaborators</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="right menu">
+                                <div class="item">
+                                    <div class="ui dropdown">
                                         <div class="text">File</div>
                                         <i class="dropdown icon"></i>
                                         <div class="menu">
@@ -212,58 +259,11 @@ width: 100%;-->
                                         </div>
                                     </div>
                                 </div>
-
-                                <div class="right menu">
-                                    <div class="item">
-                                        <div class="ui dropdown">
-                                            <div class="text">File</div>
-                                            <i class="dropdown icon"></i>
-                                            <div class="menu">
-                                                <div class="item">New</div>
-                                                <div class="item">
-                                                    <span class="description">ctrl + o</span>
-                                                    Open...
-                                                </div>
-                                                <div class="item">
-                                                    <span class="description">ctrl + s</span>
-                                                    Save as...
-                                                </div>
-                                                <div class="item">
-                                                    <span class="description">ctrl + r</span>
-                                                    Rename
-                                                </div>
-                                                <div class="item">Make a copy</div>
-                                                <div class="item">
-                                                    <i class="folder icon"></i>
-                                                    Move to folder
-                                                </div>
-                                                <div class="item">
-                                                    <i class="trash icon"></i>
-                                                    Move to trash
-                                                </div>
-                                                <div class="divider"></div>
-                                                <div class="item">Download As...</div>
-                                                <div class="item">
-                                                    <i class="dropdown icon"></i>
-                                                    Publish To Web
-                                                    <div class="menu">
-                                                        <div class="item">Google Docs</div>
-                                                        <div class="item">Google Drive</div>
-                                                        <div class="item">Dropbox</div>
-                                                        <div class="item">Adobe Creative Cloud</div>
-                                                        <div class="item">Private FTP</div>
-                                                        <div class="item">Another Service...</div>
-                                                    </div>
-                                                </div>
-                                                <div class="item">E-mail Collaborators</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                             </div>
 
-                            <div class="ui divider"></div>
+                        </div>
+
+                        <div class="ui divider"></div>
 
                     </div>
                 </div>
@@ -287,6 +287,62 @@ width: 100%;-->
 
                     <!-- Left Main -->
                     <div id="content-left" class="left-main">
+
+
+                        <div class="ui grid">
+                            <div class="four wide column">
+
+                                <img class="ui medium image"
+                                     src="http://i3.kym-cdn.com/photos/images/newsfeed/001/217/729/f9a.jpg">
+
+                            </div>
+                            <div class="twelve wide column">
+
+                                <form class="ui form">
+
+                                    <div class="field">
+                                        <label>Titel</label>
+                                        <div class="field">
+                                            <input type="text" placeholder="Titel">
+                                        </div>
+                                    </div>
+
+                                    <div class="field">
+                                        <label>Beschreibung</label>
+                                        <div class="field">
+                                            <textarea placeholder="Beschreibung"></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div class="field">
+                                        <label>Tags</label>
+                                        <div class="field">
+                                            <input type="text" placeholder="Tags">
+                                        </div>
+                                    </div>
+
+                                    <div class="fields">
+
+                                        <div class="eight wide field"></div>
+                                        <div class="four wide field right floated">
+
+                                            <select class="ui right floated dropdown">
+                                                <option value="private">Privat</option>
+                                                <option value="public">Öffentlich</option>
+                                            </select>
+
+                                        </div>
+                                        <div class="four wide field ">
+                                            <button class="ui button right fluid floated " type="submit">Submit</button>
+                                        </div>
+                                    </div>
+
+                                </form>
+
+                            </div>
+
+                        </div>
+
 
                         <div class="ui three column doubling stackable masonry grid">
 

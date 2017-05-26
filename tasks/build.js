@@ -70,7 +70,9 @@ gulp.task("ts", function () {
 });
 
 gulp.task("views", ["styles", "templates", "images"]);
-gulp.task("build", ["views", "bundle"]);
+gulp.task("build",
+    runSequence("ts", ["bundle", "styles", "templates", "images"])
+);
 
 gulp.task("ts", function () {
     var ts = require('gulp-typescript');

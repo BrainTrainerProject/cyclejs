@@ -1,35 +1,37 @@
 import {div, DOMSource, makeDOMDriver} from "@cycle/dom";
+import {makeHTTPDriver} from "@cycle/http";
 import xs, {Stream} from "xstream";
 import {VNode} from "snabbdom/vnode";
 import {run} from "@cycle/run";
-import SidebarLeft from "./compontent/SidebarLeft/index";
-import SidebarRight from "./compontent/SidebarRight/index";
-import CenterContent from "./compontent/ContentCenter/index";
+import Karteikarte from "./compontent/form/Karteikarte";
+import NotecardList from "./compontent/NotecardList";
 
 export type Sources = {
     DOM: DOMSource,
+    HTTP: any
 };
 
 export type Sinks = {
-    DOM: Stream<VNode>,
+    DOM: Stream<VNode>
 };
 
 function Main(sources: Sources): Sinks {
 
-    const sidebarLeft$ = SidebarLeft(sources);
-    const centerContent$ = CenterContent(sources);
-    const sidebarRight$ = SidebarRight(sources);
+    const kateikarten$ = Karteikarte(sources);
+    const nodecardList$ = NotecardList(sources);
 
-    const combineViews$ = xs.combine(sidebarLeft$.DOM, centerContent$.DOM, sidebarRight$.DOM)
-        .map(([sidebarLeft, center, sidebarRight]) => div('.main', [
-            div('.left', {style: {color: ''}}, [sidebarLeft]),
-            div('.center', [center]),
-            div('.right', [sidebarRight])
-        ]));
+    const layout$ = xs
+        .combine(kateikarten$.DOM, nodecardList$.DOM)
+        .map(([kartenkarten, nodecardlist]) => {
+            return div([nodecardlist, kartenkarten])
+        });
 
-    return {DOM: combineViews$}
+    return {
+        DOM: layout$
+    };
 }
 
 run(Main, {
-    DOM: makeDOMDriver("#app")
+    DOM: makeDOMDriver("#app"),
+    HTTP: makeHTTPDriver()
 });
