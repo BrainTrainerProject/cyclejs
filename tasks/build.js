@@ -83,8 +83,9 @@ gulp.task("ts", function () {
 });
 
 gulp.task("watch", ["views"], function () {
+    gulp.watch("./src/**/*.ts", ["ts"]);
     gulp.watch("./lib/**/*", ["bundle"]);
-    gulp.watch("./sources/**/*", ["views"])
-    gulp.watch("./sources/css/*.styl", ["views"])
-    gulp.watch("./sources/templates/*.html", ["views"])
+    gulp.watch("./sources/**/*", ["views"]);
+    gulp.watch("./sources/css/*.styl", ["views"]);
+    gulp.watch("./sources/templates/*.html", ["views"]);
 });
