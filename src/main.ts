@@ -1,12 +1,12 @@
-import { button, div, DOMSource, h1, makeDOMDriver, span } from "@cycle/dom";
-import { makeHTTPDriver } from "@cycle/http";
-import xs, { Stream } from "xstream";
-import { run } from "@cycle/run";
-import onionify, { StateSource } from "cycle-onionify";
-import { Reducer, Sinks, Sources, State } from "./interfaces";
-import { VNode } from "snabbdom/vnode";
-import NotecardForm, { NotecardFormSinks } from "./compontent/form/NotecardForm/index";
-import isolate from "@cycle/isolate";
+import {button, div, DOMSource, h1, makeDOMDriver, span} from '@cycle/dom';
+import {makeHTTPDriver} from '@cycle/http';
+import xs, {Stream} from 'xstream';
+import {run} from '@cycle/run';
+import onionify, {Lens, StateSource} from 'cycle-onionify';
+import {Reducer, Sinks, Sources, State} from './interfaces';
+import {VNode} from 'snabbdom/vnode';
+import NotecardForm, {NotecardFormSinks} from './compontent/form/NotecardForm/index';
+import isolate from '@cycle/isolate';
 
 export type MainSources = Sources & { onion: StateSource<MainState> };
 export type MainSinks = Sinks & { onion: Stream<Reducer> };
@@ -15,7 +15,7 @@ export interface MainState extends State {
 }
 
 run(onionify(Main), {
-    DOM: makeDOMDriver("#app"),
+    DOM: makeDOMDriver('#app'),
     HTTP: makeHTTPDriver()
 });
 
@@ -31,20 +31,40 @@ function Main(sources: MainSources): MainSinks {
      return div([nodecardlist, kartenkarten])
      });*/
 
-    const notecardFormSinks: NotecardFormSinks = isolate(NotecardForm, 'child')(sources);
+    const identityLens: Lens<State, State> = {
+        get: state => state,
+        set: (state, childState) => childState
+    };
+
+    const notecardFormSinks: NotecardFormSinks = isolate(NotecardForm, {onion: 'counter'})(sources);
     const notecardVDom$: Stream<VNode> = notecardFormSinks.DOM;
-    const notecardReducer$ = notecardFormSinks.onion.map(s => {
+    const notecardReducer$ = notecardFormSinks.onion;
+    const notecardHTTP$ = notecardFormSinks.HTTP;
 
-        console.log("State");
-        console.log(state$);
-        state$.map(state => {
-            console.log("ss");
-            console.log(state);
-            return state;
-        });
+    /*const submitForm$ = state$
+     .map(state => state.counter)
+     .filter(s => {
+     if (s.submit === true) {
+     s.submit = false;
+     return true;
+     }
+     return false;
+     })
+     .map(s => ({
+     url: 'http://localhost:8080/api/notecard',
+     method: 'POST',
+     category: 'post-notecard',
+     send: {
+     "title": s.title,
+     "task": s.description,
+     "answer": s.tags,
+     }
+     }));*/
 
-        return s;
-    })
+    //const request$ = submitForm$;
+    /*const response$ = sources.HTTP
+        .select('post-notecard')
+        .flatten().debug();*/
 
     const parentReducer$ = intent(sources.DOM) as Stream<Reducer>;
     const reducer$ = xs.merge(parentReducer$, notecardReducer$);
@@ -54,7 +74,8 @@ function Main(sources: MainSources): MainSinks {
 
     return {
         DOM: vdom$,
-        onion: reducer$,
+        HTTP: notecardHTTP$,
+        onion: reducer$
     };
 }
 
