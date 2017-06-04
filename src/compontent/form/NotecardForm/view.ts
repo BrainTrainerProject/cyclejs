@@ -1,15 +1,18 @@
 import { Stream } from "xstream";
-import {
-    BTN_SUBMIT,
-    INP_DESC,
-    INP_TAGS,
-    INP_TITLE,
-    INP_VISBILITY,
-    NotecardFormState,
-    NotecardVisibiblityType
-} from "./index";
-import { button, div, form, img, input, label, option, select, textarea } from "@cycle/dom";
+import { button, div, form, img, input, label, li, option, select, textarea, ul } from "@cycle/dom";
 import { VNode } from "snabbdom/vnode";
+import { NotecardFormState } from "./index";
+import { Visibility } from "../../common/Visibility";
+import { isNullOrUndefined } from "util";
+import { _ } from "underscore";
+
+export const BTN_SUBMIT = '.btn_submit';
+export const INP_TITLE = '.inp_title';
+export const INP_DESC = '.inp_desc';
+export const INP_TAGS = '.inp_tags';
+export const INP_VISBILITY = '.inp_visibility';
+
+export const ERR_TITLE = 'err_title';
 
 export function view(state$: Stream<NotecardFormState>): Stream<VNode> {
     return state$
@@ -18,7 +21,33 @@ export function view(state$: Stream<NotecardFormState>): Stream<VNode> {
         });
 }
 
+function errorMessage(state) {
+    console.log(state);
+    if (!isNullOrUndefined(state.errors)) {
+        return div(".ui.error.message", [
+            ul(".list", _.map(state.errors, function (error) {
+                return li([error.msg])
+            }))
+        ])
+    } else {
+        return '';
+    }
+}
+
+function preventFocusChange(vnode) {
+    vnode.elm.focus();
+    let val = vnode.elm.value;
+    vnode.elm.value = '';
+    vnode.elm.value = val;
+}
+
 function getCreateForm(state: NotecardFormState): VNode {
+
+    const errJson = (!isNullOrUndefined(state.errors)) ? state.errors : null;
+    const hasError = errJson != null;
+    const hasTitleError: boolean = (errJson != null && errJson.hasOwnProperty(INP_TITLE));
+    const hasDescError: boolean = (errJson != null && errJson.hasOwnProperty(INP_DESC));
+    const hasTagsError: boolean = (errJson != null && errJson.hasOwnProperty(INP_TAGS));
 
     return div(".ui.grid", [
         div(".four.wide.column", [
@@ -31,7 +60,7 @@ function getCreateForm(state: NotecardFormState): VNode {
         ]),
         div(".twelve.wide.column", [
             form(".ui.form", [
-                div(".field", [
+                div(".field".concat((hasTitleError) ? ".error" : ""), [
                     label([`Titel`]),
                     div(INP_TITLE + ".field", [
                         input({
@@ -39,22 +68,28 @@ function getCreateForm(state: NotecardFormState): VNode {
                                 "type": "text",
                                 "placeholder": "Titel",
                                 "value": state.title
+                            },
+                            hook: {
+                                insert: (vnode) => preventFocusChange(vnode),
                             }
                         })
                     ])
                 ]),
-                div(".field", [
+                div(".field".concat((hasDescError) ? ".error" : ""), [
                     label([`Beschreibung`]),
                     div(INP_DESC + ".field", [
                         textarea({
                             "attrs": {
                                 "placeholder": "Beschreibung",
                                 "value": state.description
+                            },
+                            hook: {
+                                insert: (vnode) => preventFocusChange(vnode),
                             }
                         })
                     ])
                 ]),
-                div(".field", [
+                div(".field".concat((hasTagsError) ? ".error" : ""), [
                     label([`Tags`]),
                     div(INP_TAGS + ".field", [
                         input({
@@ -62,6 +97,9 @@ function getCreateForm(state: NotecardFormState): VNode {
                                 "type": "text",
                                 "placeholder": "Tags",
                                 "value": state.tags
+                            },
+                            hook: {
+                                insert: (vnode) => preventFocusChange(vnode),
                             }
                         })
                     ])
@@ -73,7 +111,7 @@ function getCreateForm(state: NotecardFormState): VNode {
                             option({
                                     "attrs": {
                                         "value": "private",
-                                        "selected": (state.visbility === NotecardVisibiblityType.PRIVATE) ? "selected" : ""
+                                        "selected": (state.visibility === Visibility.PRIVATE) ? "selected" : ""
                                     }
                                 },
                                 [`Privat`]
@@ -81,7 +119,7 @@ function getCreateForm(state: NotecardFormState): VNode {
                             option({
                                 "attrs": {
                                     "value": "public",
-                                    "selected": (state.visbility === NotecardVisibiblityType.PUBLIC) ? "selected" : ""
+                                    "selected": (state.visibility === Visibility.PUBLIC) ? "selected" : ""
                                 }
                             }, [`Öffentlich`])
                         ])
@@ -95,7 +133,8 @@ function getCreateForm(state: NotecardFormState): VNode {
                         }, [`Submit`])
                     ])
                 ])
-            ])
+            ]),
+            (errJson != null) ? errorMessage(state) : ""
         ])
     ])
 }
