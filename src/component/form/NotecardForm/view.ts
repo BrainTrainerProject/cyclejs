@@ -5,6 +5,7 @@ import { NotecardFormState } from "./index";
 import { Visibility } from "../../common/Visibility";
 import { isNullOrUndefined } from "util";
 import { _ } from "underscore";
+import { jsonHasChilds } from "../../common/Utils";
 
 export const BTN_SUBMIT = '.btn_submit';
 export const INP_TITLE = '.inp_title';
@@ -22,29 +23,20 @@ export function view(state$: Stream<NotecardFormState>): Stream<VNode> {
 }
 
 function errorMessage(state) {
-    console.log(state);
-    if (!isNullOrUndefined(state.errors)) {
+    if (!isNullOrUndefined(state.errors) && jsonHasChilds(state.errors)) {
         return div(".ui.error.message", [
             ul(".list", _.map(state.errors, function (error) {
                 return li([error.msg])
             }))
         ])
     } else {
-        return '';
+        return null;
     }
-}
-
-function preventFocusChange(vnode) {
-    vnode.elm.focus();
-    let val = vnode.elm.value;
-    vnode.elm.value = '';
-    vnode.elm.value = val;
 }
 
 function getCreateForm(state: NotecardFormState): VNode {
 
     const errJson = (!isNullOrUndefined(state.errors)) ? state.errors : null;
-    const hasError = errJson != null;
     const hasTitleError: boolean = (errJson != null && errJson.hasOwnProperty(INP_TITLE));
     const hasDescError: boolean = (errJson != null && errJson.hasOwnProperty(INP_DESC));
     const hasTagsError: boolean = (errJson != null && errJson.hasOwnProperty(INP_TAGS));
@@ -60,7 +52,7 @@ function getCreateForm(state: NotecardFormState): VNode {
         ]),
         div(".twelve.wide.column", [
             form(".ui.form", [
-                div(".field".concat((hasTitleError) ? ".error" : ""), [
+                div(".field", {class: {error: hasTitleError}}, [
                     label([`Titel`]),
                     div(INP_TITLE + ".field", [
                         input({
@@ -68,28 +60,22 @@ function getCreateForm(state: NotecardFormState): VNode {
                                 "type": "text",
                                 "placeholder": "Titel",
                                 "value": state.title
-                            },
-                            hook: {
-                                insert: (vnode) => preventFocusChange(vnode),
                             }
                         })
                     ])
                 ]),
-                div(".field".concat((hasDescError) ? ".error" : ""), [
+                div(".field", {class: {error: hasDescError}}, [
                     label([`Beschreibung`]),
                     div(INP_DESC + ".field", [
                         textarea({
                             "attrs": {
                                 "placeholder": "Beschreibung",
                                 "value": state.description
-                            },
-                            hook: {
-                                insert: (vnode) => preventFocusChange(vnode),
                             }
                         })
                     ])
                 ]),
-                div(".field".concat((hasTagsError) ? ".error" : ""), [
+                div(".field", {class: {error: hasTagsError}}, [
                     label([`Tags`]),
                     div(INP_TAGS + ".field", [
                         input({
@@ -97,9 +83,6 @@ function getCreateForm(state: NotecardFormState): VNode {
                                 "type": "text",
                                 "placeholder": "Tags",
                                 "value": state.tags
-                            },
-                            hook: {
-                                insert: (vnode) => preventFocusChange(vnode),
                             }
                         })
                     ])
@@ -134,7 +117,7 @@ function getCreateForm(state: NotecardFormState): VNode {
                     ])
                 ])
             ]),
-            (errJson != null) ? errorMessage(state) : ""
+            errorMessage(state)
         ])
     ])
 }
