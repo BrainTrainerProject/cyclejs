@@ -15,7 +15,8 @@ export interface NotecardFormState extends State {
     title: String,
     description: String,
     tags: String,
-    visibility: Visibility
+    visibility: Visibility,
+    errors: {}
 }
 
 function NotecardForm(sources: NotecardFormSources): NotecardFormSinks {
