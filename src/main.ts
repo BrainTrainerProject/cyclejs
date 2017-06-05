@@ -5,9 +5,12 @@ import { run } from "@cycle/run";
 import onionify, { StateSource } from "cycle-onionify";
 import { Reducer, Sinks, Sources, State } from "./interfaces";
 import { VNode } from "snabbdom/vnode";
-import NotecardForm, { NotecardFormSinks } from "./compontent/form/NotecardForm/index";
+import NotecardForm, { NotecardFormSinks } from "./component/form/NotecardForm/index";
 import isolate from "@cycle/isolate";
-import { PostNotecardApi } from "./compontent/common/ApiRequests";
+import { PostNotecardApi } from "./component/common/ApiRequests";
+import { Sidebar } from "./component/layout/Sidebar";
+import { Content } from "./component/layout/Content";
+import { Modal } from "./component/layout/Modal";
 
 export type MainSources = Sources & { onion: StateSource<MainState> };
 export type MainSinks = Sinks & { onion: Stream<Reducer> };
@@ -24,25 +27,24 @@ function Main(sources: MainSources): MainSinks {
 
     const state$ = sources.onion.state$;
 
-    const notecardFormSinks: NotecardFormSinks = isolate(NotecardForm, {onion: 'counter'})(sources);
-    const notecardVDom$: Stream<VNode> = notecardFormSinks.DOM;
-    const notecardReducer$ = notecardFormSinks.onion;
-    const notecardHTTP$ = notecardFormSinks.HTTP;
+    const sidebarSinks  = Sidebar(sources);
+    const contentSinks  = Content(sources);
+    const modalSinks    = Modal(sources);
 
     const parentReducer$ = intent(sources.DOM) as Stream<Reducer>;
-    const reducer$ = xs.merge(parentReducer$, notecardReducer$);
+    const reducer$ = xs.merge(parentReducer$, contentSinks.onion);
 
-    const vdom$ = xs.combine(notecardVDom$ as Stream<VNode>, view(state$) as Stream<VNode>)
-        .map(([sidebar, counter]) => div([sidebar, counter]));
+    const vdom$ = xs.combine(
+        sidebarSinks.DOM as Stream<VNode>,
+        contentSinks.DOM as Stream<VNode>,
+        modalSinks.DOM as Stream<VNode>,
+        view(state$) as Stream<VNode>);
 
-    const response$ = sources.HTTP
-        .select(PostNotecardApi.ID)
-        .flatten()
-        .debug('response inside main');
+    const http$ = contentSinks.HTTP;
 
     return {
-        DOM: vdom$,
-        HTTP: xs.merge(notecardHTTP$, response$),
+        DOM: htmlWrapper(vdom$),
+        HTTP: http$,
         onion: reducer$
     };
 }
@@ -72,4 +74,15 @@ function view(state$: Stream<MainState>): Stream<VNode> {
                 button('.subtract', ['dec'])
             ])
         );
+}
+
+function htmlWrapper(vdom$: Stream<[VNode]>): Stream<VNode> {
+    return vdom$.map(([sidebar, content, modal, counter]) =>
+        div('#app', [
+            div('.pusher', [
+                div('.full.height', [sidebar, content])
+            ]),
+            div('.other', [modal, counter])
+        ])
+    )
 }
