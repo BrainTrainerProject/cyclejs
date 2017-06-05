@@ -46,6 +46,7 @@
     "browsify": "0.0.4",
     "css-loader": "^0.28.1",
     "cycle-onionify": "^3.3.0",
+    "cyclejs-modal": "^2.0.3",
     "fs": "0.0.1-security",
     "fs-extra": "^3.0.1",
     "graceful-fs": "^4.1.11",

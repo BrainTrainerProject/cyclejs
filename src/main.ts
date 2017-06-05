@@ -5,14 +5,14 @@ import { run } from "@cycle/run";
 import onionify, { StateSource } from "cycle-onionify";
 import { Reducer, Sinks, Sources, State } from "./interfaces";
 import { VNode } from "snabbdom/vnode";
-import NotecardForm, { NotecardFormSinks } from "./component/form/NotecardForm/index";
-import isolate from "@cycle/isolate";
-import { PostNotecardApi } from "./component/common/ApiRequests";
 import { Sidebar } from "./component/layout/Sidebar";
 import { Content } from "./component/layout/Content";
-import { Modal } from "./component/layout/Modal";
+import { ModalAction } from "cyclejs-modal";
+import NotecardForm, { NotecardFormSinks } from "./component/form/NotecardForm/index";
+import { ModalComponent } from "./component/layout/ModalComponent";
+import { makeModalDriver } from "./driver/ModalDriver/index";
 
-export type MainSources = Sources & { onion: StateSource<MainState> };
+export type MainSources = Sources & { onion: StateSource<MainState>, modal: Stream<any> };
 export type MainSinks = Sinks & { onion: Stream<Reducer> };
 export interface MainState extends State {
     count: number;
@@ -20,19 +20,20 @@ export interface MainState extends State {
 
 run(onionify(Main), {
     DOM: makeDOMDriver('#app'),
-    HTTP: makeHTTPDriver()
+    HTTP: makeHTTPDriver(),
+    MODAL: makeModalDriver()
 });
 
 function Main(sources: MainSources): MainSinks {
 
     const state$ = sources.onion.state$;
 
-    const sidebarSinks  = Sidebar(sources);
-    const contentSinks  = Content(sources);
-    const modalSinks    = Modal(sources);
+    const sidebarSinks = Sidebar(sources);
+    const contentSinks = Content(sources);
+    const modalSinks = ModalComponent(sources);
 
     const parentReducer$ = intent(sources.DOM) as Stream<Reducer>;
-    const reducer$ = xs.merge(parentReducer$, contentSinks.onion);
+    const reducer$ = xs.merge(parentReducer$, contentSinks.onion, modalSinks.onion);
 
     const vdom$ = xs.combine(
         sidebarSinks.DOM as Stream<VNode>,
@@ -40,13 +41,40 @@ function Main(sources: MainSources): MainSinks {
         modalSinks.DOM as Stream<VNode>,
         view(state$) as Stream<VNode>);
 
-    const http$ = contentSinks.HTTP;
+    const http$ = xs.merge(contentSinks.HTTP, modalSinks.HTTP);
 
     return {
         DOM: htmlWrapper(vdom$),
         HTTP: http$,
-        onion: reducer$
+        onion: reducer$,
+        MODAL: xs.merge(xs.of({type: 'open', component: NotecardForm}), modalSinks.MODAL)
     };
+}
+
+function modal(sources): Sinks {
+
+    const notecardFormSinks: NotecardFormSinks = NotecardForm(sources);
+    const notecardVDom$: Stream<VNode> = notecardFormSinks.DOM;
+    const notecardReducer$ = notecardFormSinks.onion;
+    const notecardHTTP$ = notecardFormSinks.HTTP;
+
+    const vdom$ = viewz(notecardVDom$)
+    const reducer$ = notecardReducer$
+    const http$ = notecardHTTP$
+
+    return {
+        DOM: vdom$,
+        HTTP: http$,
+        onion: reducer$,
+        modal: sources.DOM.select('.button').events('click')
+            .mapTo({type: 'close'} as ModalAction)
+    };
+}
+
+function viewz(vdom$: Stream<VNode>) {
+    return vdom$.map(notecard => div("#mainz-container", [
+        div("#content-left.left-main", [notecard])
+    ]))
 }
 
 function intent(DOM: DOMSource): Stream<Reducer> {

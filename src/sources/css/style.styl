@@ -376,3 +376,29 @@ remify(value) { /* separate mixin, so it can be used elsewhere */
     column-count: 5;
   }
 }
+
+.modal.standard{
+  padding 25px
+}
+
+.ui.modal.scrolling {
+  position: fixed;
+  top: 1em;
+  bottom: 1em;
+
+  .content {
+    position: absolute;
+    display: block;
+    overflow: auto;
+    top: 5em;
+    bottom: 5em;
+    width: 100%;
+  }
+
+  .actions {
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
