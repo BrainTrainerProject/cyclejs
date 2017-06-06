@@ -3,10 +3,16 @@ import { a, button, div, i, img, input, span } from "@cycle/dom";
 import NotecardForm, { NotecardFormSinks } from "../form/NotecardForm/index";
 import isolate from "@cycle/isolate";
 import { VNode } from "snabbdom/vnode";
+import { ModalAction } from "cyclejs-modal";
+import { MainSources } from "../../main";
 
-export function MainCompone(sources) {
+export function MainComponent(sources: MainSources) {
 
     const state$ = sources.onion.state$;
+    const dom = sources.DOM;
+
+    const actions = intent(sources);
+    const reducer = model(sources, actions);
 
     const notecardFormSinks: NotecardFormSinks = isolate(NotecardForm, {onion: 'counter'})(sources);
     const notecardVDom$: Stream<VNode> = notecardFormSinks.DOM;
@@ -17,12 +23,39 @@ export function MainCompone(sources) {
     const reducer$ = notecardReducer$
     const http$ = notecardHTTP$
 
+    const modal$ = reducer.MODAL;
+
     const sinks = {
         DOM: vdom$,
         HTTP: http$,
-        onion: reducer$
+        onion: reducer$,
+        MODAL: modal$
     };
 
+    return sinks;
+}
+
+function intent(sources: MainSources) {
+
+    const dom = sources.DOM;
+
+    return {
+        newSetClick$: sources.DOM.select(".new-set-btn").events('click').debug()
+    }
+}
+
+function model(sources, actions) {
+
+    const openNotecardModal$ = actions.newSetClick$.mapTo({
+        type: 'open',
+        component: NotecardForm
+    } as ModalAction);
+
+    const $modal = openNotecardModal$;
+
+    const sinks = {
+        MODAL: $modal
+    };
     return sinks;
 }
 
@@ -50,7 +83,7 @@ function view(vdom$: Stream<VNode>) {
                                                 "placeholder": "Search...",
                                                 "className": "prompt"
                                             }
-                                        })
+                                        }),
                                         i(".search.link.icon", {
                                             "attributes": {
                                                 "data-content": "Search UI",

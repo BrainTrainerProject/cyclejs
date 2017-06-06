@@ -8,15 +8,9 @@ export function ModalComponent(sources) {
 
     const state$ = sources.onion.state$;
 
-    const modal$ = sources.MODAL.map(request => {
-        console.log("ModelComponent");
-        console.log(request);
-    }).mapTo({
-        type: "ModalComponent",
-        it: "wicked"
-    });
+    const modal$ = sources.MODAL.get().map
 
-    const notecardFormSinks: NotecardFormSinks = isolate(NotecardForm, {onion: 'counter'})(sources);
+    const notecardFormSinks: NotecardFormSinks = isolate(NotecardForm, {onion: 'modal'})(sources);
     const notecardVDom$: Stream<VNode> = notecardFormSinks.DOM;
     const notecardReducer$ = notecardFormSinks.onion;
     const notecardHTTP$ = notecardFormSinks.HTTP;
@@ -24,9 +18,11 @@ export function ModalComponent(sources) {
     //const vdom$ = view(notecardVDom$)
     const reducer$ = notecardReducer$
     const http$ = notecardHTTP$
+    const vdom$ = xs.of(null);
+    //const vdom$ = notecardVDom$.map(content => div("#main-modal.ui.standard.modal.transition.visible.scrolling", [content]));
 
     const sinks = {
-        DOM: notecardVDom$.map(content => div(".ui.standard.modal.transition.visible.scrolling", [content])),
+        DOM: vdom$,
         HTTP: http$,
         onion: reducer$,
         MODAL: modal$
