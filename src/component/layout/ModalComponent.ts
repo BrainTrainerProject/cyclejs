@@ -8,7 +8,7 @@ export function ModalComponent(sources) {
 
     const state$ = sources.onion.state$;
 
-    const modal$ = sources.MODAL.get().map
+    const modal$ = sources.MODAL.request().map(m => console.log(m))
 
     const notecardFormSinks: NotecardFormSinks = isolate(NotecardForm, {onion: 'modal'})(sources);
     const notecardVDom$: Stream<VNode> = notecardFormSinks.DOM;
