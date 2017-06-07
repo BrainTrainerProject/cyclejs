@@ -4,7 +4,7 @@ import { DevToolEnabledSource } from "@cycle/run";
 import { isNullOrUndefined } from "util";
 import { Component } from "../../interfaces";
 
-export class ModalSource {
+/*export class ModalSource {
 
     constructor(private _res$$) {
     }
@@ -75,4 +75,4 @@ function isValidRequest(request: any): boolean {
         }
     }
     return false;
-}
+}*/

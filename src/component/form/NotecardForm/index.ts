@@ -1,4 +1,4 @@
-import { Stream } from "xstream";
+import xs, { Stream } from "xstream";
 import { StateSource } from "cycle-onionify";
 import { Reducer, Sinks, Sources, State } from "../../../interfaces";
 import { intent } from "./intent";

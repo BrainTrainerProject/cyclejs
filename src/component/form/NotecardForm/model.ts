@@ -73,10 +73,6 @@ export function model(sources: any, state$: any, intent: any, prevState?: Noteca
         .map(state => generateRequest(state));
 
     const request$ = submitRequest$;
-    const response$ = sources.HTTP
-        .select(PostNotecardApi.ID)
-        .flatten()
-        .debug('response inside notecard form');
 
     const reducer$ = xs.merge(
         default$,
@@ -88,7 +84,7 @@ export function model(sources: any, state$: any, intent: any, prevState?: Noteca
     );
 
     const sinks = {
-        HTTP: xs.merge(request$, response$),
+        HTTP: request$,
         onion: reducer$
     };
 

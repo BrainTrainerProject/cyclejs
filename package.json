@@ -17,7 +17,7 @@
     "mkdir:public": "node scripts/create_folders.js",
     "move:templates": "node scripts/move_templates.js",
     "bundle": "gulp bundle",
-    "bundle-node": "npm run mkdir:public && npm run move:templates && browserify ./lib/main.js --outfile=./public/src/js/bundle.js"
+    "bundle-node": "npm run mkdir:public && npm run move:templates && browserify ./lib/app.js --outfile=./public/src/js/bundle.js"
   },
   "repository": {
     "type": "git",
@@ -46,7 +46,7 @@
     "browsify": "0.0.4",
     "css-loader": "^0.28.1",
     "cycle-onionify": "^3.3.0",
-    "cyclejs-modal": "^2.0.3",
+    "cyclejs-modal": "git+https://github.com/AndrejSperling/cyclejs-modal.git",
     "cyclejs-utils": "^1.0.4",
     "fs": "0.0.1-security",
     "fs-extra": "^3.0.1",
@@ -75,7 +75,6 @@
     "stylus": "^0.54.5",
     "stylus-loader": "^3.0.1",
     "typescript": "^2.3.2",
-    "typings": "^2.1.1",
     "underscore": "^1.8.3",
     "webpack": "^2.5.1",
     "xstream": "^10.7.0",

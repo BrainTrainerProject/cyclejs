@@ -39,9 +39,9 @@ gulp.task("make-folders", function () {
 });
 
 gulp.task("bundle", ["make-folders"], function () {
-    return gulp.src('./lib/main.js', {read: false})
+    return gulp.src('./lib/app.js', {read: false})
         .pipe(shell(['mkdirp ./public/src/js/']))
-        .pipe(shell(['browserify ./lib/main.js --outfile=./public/src/js/bundle.js']))
+        .pipe(shell(['browserify ./lib/app.js --outfile=./public/src/js/bundle.js']))
 });
 
 gulp.task("images", function () {

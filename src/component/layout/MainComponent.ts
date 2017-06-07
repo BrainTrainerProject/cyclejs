@@ -1,12 +1,11 @@
 import xs, { Stream } from "xstream";
 import { a, button, div, i, img, input, span } from "@cycle/dom";
-import NotecardForm, { NotecardFormSinks } from "../form/NotecardForm/index";
-import isolate from "@cycle/isolate";
+import NotecardForm from "../form/NotecardForm/index";
 import { VNode } from "snabbdom/vnode";
 import { ModalAction } from "cyclejs-modal";
-import { MainSources } from "../../main";
+import { AppSources } from "../../app";
 
-export function MainComponent(sources: MainSources) {
+export function MainComponent(sources: AppSources) {
 
     const state$ = sources.onion.state$;
     const dom = sources.DOM;
@@ -14,33 +13,26 @@ export function MainComponent(sources: MainSources) {
     const actions = intent(sources);
     const reducer = model(sources, actions);
 
-    const notecardFormSinks: NotecardFormSinks = isolate(NotecardForm, {onion: 'counter'})(sources);
-    const notecardVDom$: Stream<VNode> = notecardFormSinks.DOM;
-    const notecardReducer$ = notecardFormSinks.onion;
-    const notecardHTTP$ = notecardFormSinks.HTTP;
+    const vdom$ = view(xs.of(div(['CONTENT'])));
 
-    const vdom$ = view(notecardVDom$)
-    const reducer$ = notecardReducer$
-    const http$ = notecardHTTP$
-
-    const modal$ = reducer.MODAL;
+    const modal$ = reducer.modal;
 
     const sinks = {
         DOM: vdom$,
-        HTTP: http$,
-        onion: reducer$,
-        MODAL: modal$
+        HTTP: xs.never(),
+        onion: xs.never(),
+        modal: modal$
     };
 
     return sinks;
 }
 
-function intent(sources: MainSources) {
+function intent(sources: AppSources) {
 
-    const dom = sources.DOM;
+    const {DOM} = sources;
 
     return {
-        newSetClick$: sources.DOM.select(".new-set-btn").events('click').debug()
+        newSetClick$: DOM.select(".new-set-btn").events('click')
     }
 }
 
@@ -48,13 +40,17 @@ function model(sources, actions) {
 
     const openNotecardModal$ = actions.newSetClick$.mapTo({
         type: 'open',
+        props: {
+            title: "Neues Set erstellen"
+        },
         component: NotecardForm
-    } as ModalAction);
+    } as ModalAction)
+
 
     const $modal = openNotecardModal$;
 
     const sinks = {
-        MODAL: $modal
+        modal: $modal
     };
     return sinks;
 }
