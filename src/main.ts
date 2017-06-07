@@ -23,7 +23,7 @@ run(onionify(Main), {
 function Main(sources: MainSources): MainSinks {
 
     const mainSinks = MainComponent(sources);
-    const modalSinks = ModalComponent(sources);
+    const modalSinks = ModalComponent(sources, mainSinks);
 
     const reducer$ = xs.merge(mainSinks.onion, modalSinks.onion);
     const vdom$ = view(xs.combine(mainSinks.DOM, modalSinks.DOM));
