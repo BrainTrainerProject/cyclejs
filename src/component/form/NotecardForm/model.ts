@@ -1,14 +1,14 @@
-import xs, { Stream } from "xstream";
-import sampleCombine from "xstream/extra/sampleCombine";
-import { NotecardFormState } from "./index";
-import { Reducer } from "../../../interfaces";
-import { assoc, assocPath, dissocPath } from "ramda";
-import { title } from "@cycle/dom";
-import { CRUDType } from "../../common/CrudType";
-import { Visibility } from "../../common/Visibility";
-import { INP_DESC, INP_TAGS, INP_TITLE } from "./view";
-import { jsonHasChilds } from "../../common/Utils";
-import { HttpRequest, PostNotecardApi } from "../../common/ApiRequests";
+import xs, {Stream} from 'xstream';
+import sampleCombine from 'xstream/extra/sampleCombine';
+import {NotecardFormState} from './index';
+import {Reducer} from '../../../interfaces';
+import {assoc, assocPath, dissocPath} from 'ramda';
+import {title} from '@cycle/dom';
+import {CRUDType} from '../../common/CRUDType';
+import {Visibility} from '../../common/Visibility';
+import {INP_DESC, INP_TAGS, INP_TITLE} from './view';
+import {jsonHasChilds} from '../../common/Utils';
+import {HttpRequest, PostNotecardApi} from '../../common/ApiRequests';
 
 export function model(sources: any, state$: any, intent: any, prevState?: NotecardFormState) {
 
@@ -18,13 +18,13 @@ export function model(sources: any, state$: any, intent: any, prevState?: Noteca
         if (typeof prevState === 'undefined') {
             return {
                 type: CRUDType.ADD,
-                title: "",
-                description: "",
-                tags: "",
+                title: '',
+                description: '',
+                tags: '',
                 visibility: Visibility.PRIVATE
-            }
+            };
         }
-        return prevState
+        return prevState;
     });
 
     const titleChange$: Stream<Reducer> = dynamicInputStream(intent.inputTitle$, 'title', INP_TITLE);
@@ -33,7 +33,7 @@ export function model(sources: any, state$: any, intent: any, prevState?: Noteca
 
     const visibilityChange$: Stream<Reducer> = intent.selectVisibility$
         .map(ev => {
-            for (let child of ev.target.children) {
+            for (const child of ev.target.children) {
                 if (child.selected) {
                     switch (child.value) {
                         case 'private' :
@@ -46,21 +46,20 @@ export function model(sources: any, state$: any, intent: any, prevState?: Noteca
             return Visibility.PRIVATE;
         })
         .map(visibility => function visibilityReducer(prevState) {
-            return assoc('visibility', visibility, prevState)
+            return assoc('visibility', visibility, prevState);
         });
-
 
     const submitValid$: Stream<Reducer> = intent.submit$
         .map(submit => function submitReducer(state) {
-            if (state.title == "") {
+            if (state.title == '') {
                 state = errorMsg(INP_TITLE, 'Titel eingeben!', state);
             }
 
-            if (state.description == "") {
+            if (state.description == '') {
                 state = errorMsg(INP_DESC, 'Beschreibung eingeben!', state);
             }
 
-            if (state.tags == "") {
+            if (state.tags == '') {
                 state = errorMsg(INP_TAGS, 'Tags eingeben!', state);
             }
             return state;
@@ -92,7 +91,7 @@ export function model(sources: any, state$: any, intent: any, prevState?: Noteca
 }
 
 function isFormValid(state) {
-    return jsonHasChilds(state.errors)
+    return jsonHasChilds(state.errors);
 }
 
 function generateRequest(state): HttpRequest {
@@ -125,7 +124,7 @@ function generateRequest(state): HttpRequest {
 }
 
 function errorMsg(selectorKey, msg, prevState) {
-    return assocPath(['errors', selectorKey, 'msg'], msg, prevState)
+    return assocPath(['errors', selectorKey, 'msg'], msg, prevState);
 }
 
 function dynamicInputStream(start$, valueKey, selectorKey): Stream<Reducer> {
@@ -133,5 +132,5 @@ function dynamicInputStream(start$, valueKey, selectorKey): Stream<Reducer> {
         state = dissocPath(['errors', selectorKey], state);
         state = assoc(valueKey, value, state);
         return state;
-    })
+    });
 }

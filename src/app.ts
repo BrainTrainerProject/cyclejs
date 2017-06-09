@@ -5,7 +5,7 @@ import { run } from "@cycle/run";
 import onionify, { StateSource } from "cycle-onionify";
 import { Reducer, Sinks, Sources, State } from "./interfaces";
 import { VNode } from "snabbdom/vnode";
-import { MainComponent } from "./component/layout/MainComponent";
+import { MainComponent } from "./component/MainComponent";
 import { wrappedModalify, modalify } from "cyclejs-modal";
 import { ModalWrapper } from "./component/layout/ModalWrapper";
 

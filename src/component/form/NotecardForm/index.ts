@@ -1,25 +1,25 @@
-import xs, { Stream } from "xstream";
-import { StateSource } from "cycle-onionify";
-import { Reducer, Sinks, Sources, State } from "../../../interfaces";
-import { intent } from "./intent";
-import { model } from "./model";
-import { view } from "./view";
-import { Visibility } from "../../common/visibility";
-import { CRUDType } from "../../common/CrudType";
+import {Stream} from 'xstream';
+import {StateSource} from 'cycle-onionify';
+import {Reducer, Sinks, Sources, State} from '../../../interfaces';
+import {intent} from './intent';
+import {model} from './model';
+import {view} from './view';
+import {Visibility} from '../../common/Visibility';
+import {CRUDType} from '../../common/CRUDType';
 
-export type NotecardFormSources = Sources & { onion: StateSource<NotecardFormState> };
-export type NotecardFormSinks = Sinks & { onion: Stream<Reducer> };
+export type NotecardFormSources = Sources & { onion : StateSource<NotecardFormState> };
+export type NotecardFormSinks = Sinks & { onion : Stream<Reducer> };
 export interface NotecardFormState extends State {
-    isLoading: false,
-    type: CRUDType,
-    title: String,
-    description: String,
-    tags: String,
-    visibility: Visibility,
-    errors: {}
+    isLoading : false;
+    type : CRUDType;
+    title : String;
+    description : String;
+    tags : String;
+    visibility : Visibility;
+    errors : {};
 }
 
-function NotecardForm(sources: NotecardFormSources): NotecardFormSinks {
+function NotecardForm(sources : NotecardFormSources) : NotecardFormSinks {
 
     const state$ = sources.onion.state$;
     const action$ = intent(sources);
