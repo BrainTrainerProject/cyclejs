@@ -1,10 +1,11 @@
-import {Reducer, Sinks, Sources, State} from '../../interfaces';
-import {StateSource} from 'cycle-onionify';
-import xs, {Stream} from 'xstream';
-import Collection from '@cycle/collection';
-import {button, div} from '@cycle/dom';
-import {defaultView, DefaultViewProps} from './defaultView';
-import {GetNotecardsApi} from '../common/ApiRequests';
+import { Reducer, Sinks, Sources, State } from "../../interfaces";
+import { StateSource } from "cycle-onionify";
+import xs, { Stream } from "xstream";
+import Collection from "@cycle/collection";
+import { button, div } from "@cycle/dom";
+import { defaultView, DefaultViewProps } from "./defaultView";
+import { GetNotecardsApi } from "../../common/api/GetNotecards";
+import { Util } from "../../common/Util";
 const R = require('ramda');
 
 export type CardViewSources = Sources & { onion: StateSource<CardViewState> };
@@ -19,7 +20,11 @@ function CardItem(sources) {
 
     return {
         DOM: props$.map(i => defaultView({
-            title: i.title
+            title: i.title,
+            imageUrl: Util.imageUrl('/card-placeholder.png'),
+            url: "#",
+            rating: 3,
+            ratingCount: 42
         } as DefaultViewProps))
     };
 

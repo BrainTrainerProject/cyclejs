@@ -377,7 +377,7 @@ remify(value) { /* separate mixin, so it can be used elsewhere */
   }
 }
 
-.modal.standard{
+.modal.standard {
   padding 25px
 }
 
@@ -403,8 +403,8 @@ remify(value) { /* separate mixin, so it can be used elsewhere */
   }
 }
 
-div.cyclejs-modal-dimmer{
-  background: rgba(0,0,0,0.8) !important;
+div.cyclejs-modal-dimmer {
+  background: rgba(0, 0, 0, 0.8) !important;
 }
 
 div.cyclejs-modal-container {
@@ -421,16 +421,31 @@ div.cyclejs-modal-container {
 
 }
 
-
-.simple.ui.message{
+.simple.ui.message {
 
   padding-top 0
   padding-bottom 0
 
   @media only screen and (min-width: $tabletBreakpoint) {
-    .header{
+    .header {
       padding-top 0.5em !important
     }
+  }
+
+}
+
+.card-cover {
+
+  background #ccc !important;
+
+}
+
+.card-title {
+
+  .header {
+    overflow hidden !important
+    font-size: 1.0em !important
+    height: 1.2em !important
   }
 
 }

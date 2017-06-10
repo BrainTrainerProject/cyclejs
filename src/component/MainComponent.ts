@@ -1,10 +1,11 @@
 import xs, {Stream} from 'xstream';
-import {a, button, div, i, img, input, span} from '@cycle/dom';
+import { a, button, div, i, img, input, map, span } from '@cycle/dom';
 import NotecardForm from './form/NotecardForm/index';
 import {VNode} from 'snabbdom/vnode';
 import {ModalAction} from 'cyclejs-modal';
 import {AppSinks, AppSources} from '../app';
 import HomePage from './page/HomePage';
+import { Sidebar } from "./layout/Sidebar";
 
 export function MainComponent(sources: AppSources): AppSinks {
 
@@ -14,10 +15,13 @@ export function MainComponent(sources: AppSources): AppSinks {
     const actions = intent(sources);
     const reducer = model(sources, actions);
 
+    // Sidebar
+    const sidebarSinks = Sidebar(sources);
+
     // Homepage
     const homepageSinks = HomePage(sources);
 
-    const vdom$ = view(homepageSinks.DOM);
+    const vdom$ = xs.combine(sidebarSinks.DOM, homepageSinks.DOM).map(view);
 
     const modal$ = reducer.modal;
 
@@ -58,8 +62,8 @@ function model(sources, actions) {
     return sinks;
 }
 
-function view(vdom$: Stream<VNode>) {
-    return vdom$.map(notecard => div('#main-container', [
+function view([sidebar, content]): VNode[] {
+    return [sidebar,  div('#main-container', [
         div('#masthead.ui.container', [
             div('.ui.container.content-row-flexible', [
                 div('.col-left', [
@@ -240,7 +244,7 @@ function view(vdom$: Stream<VNode>) {
                     button('.new-set-btn.ui.primary.button', [`Neues Set erstellen`])
                 ])
             ]),
-            div('#content-left.left-main', [notecard])
+            div('#content-left.left-main', [content])
         ])
-    ]));
+    ])]
 }

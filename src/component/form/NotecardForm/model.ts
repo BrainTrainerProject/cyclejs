@@ -1,14 +1,15 @@
-import xs, {Stream} from 'xstream';
-import sampleCombine from 'xstream/extra/sampleCombine';
-import {NotecardFormState} from './index';
-import {Reducer} from '../../../interfaces';
-import {assoc, assocPath, dissocPath} from 'ramda';
-import {title} from '@cycle/dom';
-import {CRUDType} from '../../common/CRUDType';
-import {Visibility} from '../../common/Visibility';
-import {INP_DESC, INP_TAGS, INP_TITLE} from './view';
-import {jsonHasChilds} from '../../common/Utils';
-import {HttpRequest, PostNotecardApi} from '../../common/ApiRequests';
+import xs, { Stream } from "xstream";
+import sampleCombine from "xstream/extra/sampleCombine";
+import { NotecardFormState } from "./index";
+import { Reducer } from "../../../interfaces";
+import { assoc, assocPath, dissocPath } from "ramda";
+import { title } from "@cycle/dom";
+import { CRUDType } from "../../../common/CRUDType";
+import { Visibility } from "../../../common/Visibility";
+import { INP_DESC, INP_TAGS, INP_TITLE } from "./view";
+import { jsonHasChilds } from "../../../common/Utils";
+import { PostNotecardApi } from "../../../common/api/PostNotecard";
+import { HttpRequest } from "../../../common/api/HttpRequest";
 
 export function model(sources: any, state$: any, intent: any, prevState?: NotecardFormState) {
 

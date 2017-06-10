@@ -39,7 +39,7 @@ function view(vdom$: Stream<VNode>): Stream<VNode> {
     return vdom$.map(content =>
         div('#app', [
             div('.pusher', [
-                div('.full.height', [content])
+                div('.full.height', content)
             ])
         ])
     )

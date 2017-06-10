@@ -4,17 +4,18 @@ import {Reducer, Sinks, Sources, State} from '../../../interfaces';
 import {intent} from './intent';
 import {model} from './model';
 import {view} from './view';
-import {Visibility} from '../../common/Visibility';
-import {CRUDType} from '../../common/CRUDType';
+import {Visibility} from '../../../common/Visibility';
+import {CRUDType} from '../../../common/CRUDType';
 
 export type NotecardFormSources = Sources & { onion : StateSource<NotecardFormState> };
 export type NotecardFormSinks = Sinks & { onion : Stream<Reducer> };
 export interface NotecardFormState extends State {
     isLoading : false;
     type : CRUDType;
-    title : String;
-    description : String;
-    tags : String;
+    imageUrl: string;
+    title : string;
+    description : string;
+    tags : string;
     visibility : Visibility;
     errors : {};
 }
