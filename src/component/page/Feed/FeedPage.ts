@@ -19,12 +19,12 @@ export default function FeedPage(sources: AppSources): AppSinks {
     const leftView$ = lessonsSinks.DOM;
     const rightView$ = xs.of(contentRight());
 
-    const mainLayoutSinks = MainLayout(sources)(leftView$, rightView$);
+    //const mainLayoutSinks = MainLayout(sources)(leftView$, rightView$);
 
     const sinks = {
-        DOM: mainLayoutSinks.DOM,
+        DOM_LEFT: leftView$,
+        DOM_RIGHT: rightView$,
         HTTP: lessonsSinks.HTTP,
-        router: mainLayoutSinks.router,
         modal: reducer.modal,
         onion: lessonsSinks.onion
     };

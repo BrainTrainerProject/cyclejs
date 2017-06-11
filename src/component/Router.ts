@@ -12,6 +12,8 @@ import StorePage from "./page/Store/StorePage";
 import SettingPage from "./page/Setting/SettingPage";
 import FeedPage from "./page/Feed/FeedPage";
 import { ProtectedPage } from "./page/ProtectedPage";
+import { MainLayoutWrapper } from "./layout/MainLayoutWrapper";
+import UnderConstructionPage from "./page/UnderConstruction/UnderConstructionPage";
 
 function routedComponent(sources) {
     return ({path, value}) =>  value({...sources, router: sources.router.path(path)})
@@ -19,12 +21,12 @@ function routedComponent(sources) {
 
 const routes = {
     '/start':   protect(StartPage),
-    '/feed':    ProtectedPage(FeedPage),
-    '/store':   protect(StartPage),
-    '/profil':  ProtectedPage(ProfilPage),
-    '/set':     ProtectedPage(SetPage),
-    '/setting': ProtectedPage(SettingPage),
-    '/login':   ProtectedPage(LoginPage),
+    '/feed':    ProtectedPage(MainLayoutWrapper(UnderConstructionPage)),
+    '/store':   ProtectedPage(MainLayoutWrapper(UnderConstructionPage)),
+    '/profil':  ProtectedPage(MainLayoutWrapper(UnderConstructionPage)),
+    '/set':     ProtectedPage(MainLayoutWrapper(UnderConstructionPage)),
+    '/setting': ProtectedPage(MainLayoutWrapper(UnderConstructionPage)),
+    '/login':   ProtectedPage(MainLayoutWrapper(UnderConstructionPage)),
     '*': NotFoundPage,
 };
 
