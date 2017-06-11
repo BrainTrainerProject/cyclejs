@@ -1,3 +1,7 @@
 {
-  "apiUrl": "http://192.168.2.108:8080/api"
+  "apiUrl": "http://192.168.2.108:8080/api/",
+  "auth0":{
+    "domain" : "braintrainer.eu.auth0.com",
+    "clientId" : "eq9LvFuMek0D4bScIsObJJ1b61BuKIB3"
+  }
 }

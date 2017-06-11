@@ -5,7 +5,7 @@ import Collection from "@cycle/collection";
 import { button, div } from "@cycle/dom";
 import { defaultView, DefaultViewProps } from "./defaultView";
 import { GetNotecardsApi } from "../../common/api/GetNotecards";
-import { Util } from "../../common/Util";
+import { Utils } from "../../common/Utils";
 const R = require('ramda');
 
 export type CardViewSources = Sources & { onion: StateSource<CardViewState> };
@@ -21,7 +21,7 @@ function CardItem(sources) {
     return {
         DOM: props$.map(i => defaultView({
             title: i.title,
-            imageUrl: Util.imageUrl('/card-placeholder.png'),
+            imageUrl: Utils.imageUrl('/card-placeholder.png'),
             url: "#",
             rating: 3,
             ratingCount: 42

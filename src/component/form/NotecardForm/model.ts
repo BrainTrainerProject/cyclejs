@@ -7,7 +7,7 @@ import { title } from "@cycle/dom";
 import { CRUDType } from "../../../common/CRUDType";
 import { Visibility } from "../../../common/Visibility";
 import { INP_DESC, INP_TAGS, INP_TITLE } from "./view";
-import { jsonHasChilds } from "../../../common/Utils";
+import { Utils } from "../../../common/Utils";
 import { PostNotecardApi } from "../../../common/api/PostNotecard";
 import { HttpRequest } from "../../../common/api/HttpRequest";
 
@@ -92,7 +92,7 @@ export function model(sources: any, state$: any, intent: any, prevState?: Noteca
 }
 
 function isFormValid(state) {
-    return jsonHasChilds(state.errors);
+    return Utils.jsonHasChilds(state.errors);
 }
 
 function generateRequest(state): HttpRequest {

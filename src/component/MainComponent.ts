@@ -1,16 +1,19 @@
 import xs, {Stream} from 'xstream';
-import { a, button, div, i, img, input, map, span } from '@cycle/dom';
+import { a, button, div, i, img, input, map, pre, span } from '@cycle/dom';
 import NotecardForm from './form/NotecardForm/index';
 import {VNode} from 'snabbdom/vnode';
 import {ModalAction} from 'cyclejs-modal';
 import {AppSinks, AppSources} from '../app';
 import HomePage from './page/HomePage';
 import { Sidebar } from "./layout/Sidebar";
+const jwt = require("jwt-decode");
 
 export function MainComponent(sources: AppSources): AppSinks {
 
     const state$ = sources.onion.state$;
     const dom = sources.DOM;
+    const auth0 = sources.auth0;
+    const props = sources.props;
 
     const actions = intent(sources);
     const reducer = model(sources, actions);
@@ -25,11 +28,49 @@ export function MainComponent(sources: AppSources): AppSinks {
 
     const modal$ = reducer.modal;
 
+    const showProfile$ = auth0
+        .tokens$
+        .map(tokens => sources.DOM
+            .select(".show-profile")
+            .events("click")
+            .mapTo({ action: "getUserInfo", params: tokens.accessToken })
+        )
+        .flatten();
+
+    const profile$ = auth0
+        .select("getUserInfo")
+        .map(({ response }) => response);
+
+    const loginState$ = xs
+        .combine(props.tokens$, profile$.startWith(null))
+        .map(([ tokens, profile ]) => ({
+            user: tokens.idToken ? jwt(tokens.idToken): null,
+            profile: profile
+        }));
+
+    const profileVDom$ = loginState$.map(({ user, profile }) => {
+
+        const profileNode = profile ?
+            pre(JSON.stringify(profile, null, 2)) :
+            null;
+
+        return user ?
+            div([
+                div("hello " + user.nickname),
+                button(".logout", "logout"),
+                button(".show-profile", "Show profile"),
+                profileNode
+            ]) :
+            div("please log in")
+    });
+
     const sinks = {
         DOM: vdom$,
         HTTP: homepageSinks.HTTP,
         onion: xs.never(),
-        modal: modal$
+        modal: modal$,
+        router: xs.never(),
+        auth0: showProfile$
     };
 
     return sinks;

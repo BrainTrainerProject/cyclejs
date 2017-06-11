@@ -1,4 +1,4 @@
-import { Util } from "../Util";
+import { Utils } from "../Utils";
 
 interface GetNotecardsProps {
 }
@@ -9,7 +9,7 @@ export class GetNotecardsApi {
 
     static buildRequest() {
         return {
-            url: Util.apiUrl('/notecard'),
+            url: Utils.apiUrl('/notecard'),
             method: 'GET',
             category: GetNotecardsApi.ID,
             type: 'application/json'

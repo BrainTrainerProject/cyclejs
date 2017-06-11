@@ -5,13 +5,17 @@ import { HTTPSource, RequestOptions } from "@cycle/http";
 export type Sources = {
     DOM: DOMSource;
     HTTP: HTTPSource;
-    modal: any
+    modal: any,
+    router: any,
+    auth0: any
 };
 
 export type RootSinks = {
     DOM: Stream<VNode>;
     HTTP: Stream<RequestOptions>;
     modal: Stream<any>;
+    router: Stream<any>;
+    auth0: Stream<any>
 };
 
 export interface State {

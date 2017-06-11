@@ -66,6 +66,11 @@ gulp.task("templates", function () {
         .pipe(gulp.dest('./public/'));
 });
 
+gulp.task("config", function () {
+    return gulp.src('./src/*.json')
+        .pipe(gulp.dest('./lib/'));
+});
+
 gulp.task("ts", function () {
     var ts = require('gulp-typescript');
     var project = ts.createProject('tsconfig.json');
@@ -76,7 +81,7 @@ gulp.task("ts", function () {
 
 gulp.task("views", ["styles", "templates", "images", "js"]);
 gulp.task("build",
-    runSequence("ts", ["bundle", "styles", "templates", "images", "js"])
+    runSequence("ts", "config", ["bundle", "styles", "templates", "images", "js"])
 );
 
 gulp.task("ts", function () {

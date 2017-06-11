@@ -4,9 +4,8 @@ import { VNode } from "snabbdom/vnode";
 import { NotecardFormState } from "./index";
 import { Visibility } from "../../../common/Visibility";
 import { isNullOrUndefined, isUndefined } from "util";
-import { _ } from "underscore";
-import { jsonHasChilds } from "../../../common/Utils";
-import { Util } from "../../../common/Util";
+import { Utils } from "../../../common/Utils";
+const R = require('ramda');
 
 export const BTN_SUBMIT = '.btn_submit';
 export const INP_TITLE = '.inp_title';
@@ -24,11 +23,10 @@ export function view(state$: Stream<NotecardFormState>): Stream<VNode> {
 }
 
 function errorMessage(state) {
-    if (!isNullOrUndefined(state.errors) && jsonHasChilds(state.errors)) {
+    if (!isNullOrUndefined(state.errors) && Utils.jsonHasChilds(state.errors)) {
         return div('.ui.error.message', [
-            ul('.list', _.map(state.errors, function (error) {
-                return li([error.msg]);
-            }))
+            ul('.list', R.values(R.map(error => li([error.msg]), state.errors))
+            )
         ]);
     } else {
         return null;
@@ -90,7 +88,7 @@ function getCreateForm(state: NotecardFormState): VNode {
 
                 img('#set-image.ui.medium.image', {
                     attrs: {
-                        'src': Util.imageUrl('/card-placeholder.png'),
+                        'src': Utils.imageUrl('/card-placeholder.png'),
                         'className': 'ui medium image'
                     },
                     hook: {
