@@ -2,7 +2,7 @@ import xs from "xstream";
 import { adapt } from "@cycle/run/lib/adapt";
 import { DevToolEnabledSource } from "@cycle/run";
 import { isNullOrUndefined } from "util";
-import { Component } from "../../interfaces";
+import { Component } from "../../common/interfaces";
 
 /*export class ModalSource {
 

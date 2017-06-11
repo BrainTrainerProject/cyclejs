@@ -1,4 +1,4 @@
-import { Component, Sinks, Sources } from "../../interfaces";
+import { Component, Sinks, Sources } from "../../common/interfaces";
 import { isNullOrUndefined } from "util";
 import { extractSinks, mergeSinks } from "cyclejs-utils";
 import xs, { Stream } from "xstream";

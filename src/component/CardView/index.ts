@@ -1,4 +1,4 @@
-import { Reducer, Sinks, Sources, State } from "../../interfaces";
+import { Reducer, Sinks, Sources, State } from "../../common/interfaces";
 import { StateSource } from "cycle-onionify";
 import xs, { Stream } from "xstream";
 import Collection from "@cycle/collection";

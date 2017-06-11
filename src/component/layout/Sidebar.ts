@@ -1,6 +1,14 @@
 import xs from "xstream";
 import { a, div, img } from "@cycle/dom";
+
 export function Sidebar(sources) {
+
+    // intent & model
+    const startClick$   = sources.DOM.select('.nav-start').events('click').mapTo('/start');
+    const feedClick$    = sources.DOM.select('.nav-feed').events('click').mapTo('/feed');
+    const storeClick$   = sources.DOM.select('.nav-store').events('click').mapTo('/store');
+
+    const route$ = xs.merge(startClick$, feedClick$, storeClick$);
 
     const sinks = {
         DOM: xs.of(
@@ -20,16 +28,14 @@ export function Sidebar(sources) {
                         ])
                     ]),
                     div(".ui.secondary.vertical.menu", [
-                        a(".active.item", [`Start`]),
-                        a(".item", [
-                            `Feed`,
-                            div(".ui.label", [`1`])
-                        ]),
-                        a(".item", [`Store`])
+                        a(".nav-start.active.item", ['Start']),
+                        a(".nav-feed.item", ['Feed', div(".ui.label", [`1`])]),
+                        a(".nav-store.item", ['Store'])
                     ])
                 ])
             ])
-        )
+        ),
+        router: route$
     };
 
     return sinks;

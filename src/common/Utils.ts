@@ -11,7 +11,6 @@ export class Utils {
     };
 
     static imageUrl(url) {
-        console.log(url);
         return '/src/img/' + Utils.slashCheck(url)
     };
 

@@ -1,7 +1,7 @@
 import xs, { Stream } from "xstream";
 import sampleCombine from "xstream/extra/sampleCombine";
 import { NotecardFormState } from "./index";
-import { Reducer } from "../../../interfaces";
+import { Reducer } from "../../../common/interfaces";
 import { assoc, assocPath, dissocPath } from "ramda";
 import { title } from "@cycle/dom";
 import { CRUDType } from "../../../common/CRUDType";

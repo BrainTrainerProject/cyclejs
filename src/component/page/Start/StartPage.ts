@@ -1,14 +1,14 @@
-import xs, {Stream} from 'xstream';
-import { a, button, div, i, img, input, map, pre, span } from '@cycle/dom';
-import NotecardForm from './form/NotecardForm/index';
-import {VNode} from 'snabbdom/vnode';
-import {ModalAction} from 'cyclejs-modal';
-import {AppSinks, AppSources} from '../app';
-import HomePage from './page/HomePage';
-import { Sidebar } from "./layout/Sidebar";
+import xs from "xstream";
+import { a, button, div, i, img, input, pre, span } from "@cycle/dom";
+import NotecardForm from "../../form/NotecardForm/index";
+import { VNode } from "snabbdom/vnode";
+import { ModalAction } from "cyclejs-modal";
+import { AppSinks, AppSources } from "../../../app";
+import { Sidebar } from "../../layout/Sidebar";
+import CardView from "../../CardView/index";
 const jwt = require("jwt-decode");
 
-export function MainComponent(sources: AppSources): AppSinks {
+export default function StartPage(sources: AppSources): AppSinks {
 
     const state$ = sources.onion.state$;
     const dom = sources.DOM;
@@ -21,10 +21,10 @@ export function MainComponent(sources: AppSources): AppSinks {
     // Sidebar
     const sidebarSinks = Sidebar(sources);
 
-    // Homepage
-    const homepageSinks = HomePage(sources);
+    // Cards
+    const lessonsSinks = CardView(sources);
 
-    const vdom$ = xs.combine(sidebarSinks.DOM, homepageSinks.DOM).map(view);
+    const vdom$ = xs.combine(sidebarSinks.DOM, lessonsSinks.DOM).map(view);
 
     const modal$ = reducer.modal;
 
@@ -33,22 +33,22 @@ export function MainComponent(sources: AppSources): AppSinks {
         .map(tokens => sources.DOM
             .select(".show-profile")
             .events("click")
-            .mapTo({ action: "getUserInfo", params: tokens.accessToken })
+            .mapTo({action: "getUserInfo", params: tokens.accessToken})
         )
         .flatten();
 
     const profile$ = auth0
         .select("getUserInfo")
-        .map(({ response }) => response);
+        .map(({response}) => response);
 
     const loginState$ = xs
         .combine(props.tokens$, profile$.startWith(null))
-        .map(([ tokens, profile ]) => ({
-            user: tokens.idToken ? jwt(tokens.idToken): null,
+        .map(([tokens, profile]) => ({
+            user: tokens.idToken ? jwt(tokens.idToken) : null,
             profile: profile
         }));
 
-    const profileVDom$ = loginState$.map(({ user, profile }) => {
+    const profileVDom$ = loginState$.map(({user, profile}) => {
 
         const profileNode = profile ?
             pre(JSON.stringify(profile, null, 2)) :
@@ -66,10 +66,10 @@ export function MainComponent(sources: AppSources): AppSinks {
 
     const sinks = {
         DOM: vdom$,
-        HTTP: homepageSinks.HTTP,
+        HTTP: lessonsSinks.HTTP,
         onion: xs.never(),
         modal: modal$,
-        router: xs.never(),
+        router: sidebarSinks.router,
         auth0: showProfile$
     };
 
@@ -104,7 +104,7 @@ function model(sources, actions) {
 }
 
 function view([sidebar, content]): VNode[] {
-    return [sidebar,  div('#main-container', [
+    return [sidebar, div('#main-container', [
         div('#masthead.ui.container', [
             div('.ui.container.content-row-flexible', [
                 div('.col-left', [

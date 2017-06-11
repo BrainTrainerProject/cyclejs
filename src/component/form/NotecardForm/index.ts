@@ -1,6 +1,6 @@
 import {Stream} from 'xstream';
 import {StateSource} from 'cycle-onionify';
-import {Reducer, Sinks, Sources, State} from '../../../interfaces';
+import {Reducer, Sinks, Sources, State} from '../../../common/interfaces';
 import {intent} from './intent';
 import {model} from './model';
 import {view} from './view';
