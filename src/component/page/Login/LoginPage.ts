@@ -53,10 +53,12 @@ export default function LoginPage(sources) {
                 div("please log in")
         })
 
+
+
     const sinks = {
         DOM: xs.of(view(vdom$)),
         onion: xs.never(),
-        auth0: showLoginForm$,
+        auth0: xs.merge(showLoginForm$)
     };
 
     return sinks;

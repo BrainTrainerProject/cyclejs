@@ -6,19 +6,22 @@ import LoginPage from "./Login/LoginPage";
 export function ProtectedPage(component: Component) {
     return function (sources) {
 
-console.log(sources);
-        const tokens$ = sources.auth0.tokens$;
-        const route$ = sources.router.history$.map(s => {
-            console.log(s);
-            return s;
-        });
+        const prevUrl$ = xs.of(null).debug('prevUrl');
 
-        const loggedOut$ = tokens$
+        const {auth0} = sources;
+
+        const tokens$ = sources.auth0.tokens$;
+        const route$ = sources.router.history$.map(s => {return s;});
+
+        const isNotLoggedIn$ = tokens$
             .filter(token => !token);
 
-        const loginPage$ = loggedOut$
-            .mapTo('/login?prev=' + window.location.pathname)
-            .debug('Loing Redicre');
+        const loginPage$ = isNotLoggedIn$
+            .map(s => '/login');
+
+        const loggedIn$ = auth0.select('authenticated')
+
+        const redirectLogin$ = loggedIn$.mapTo('/start')
 
         const componentSinks = protect(component, {
             decorators: {
@@ -34,21 +37,12 @@ console.log(sources);
             }
         })(sources);
 
-        //const loginSinks = ProtectedPage(LoginPage)(sources);
 
-        /*return{
-            DOM: loginSinks.DOM || xs.never(),
-            HTTP: loginSinks.HTTP || xs.never(),
-            router: loginSinks.router || xs.never(),
-            onion: loginSinks.onion || xs.never(),
-            modal: loginSinks.modal || xs.never(),
-            auth0: loginSinks.auth0 || xs.never()
-        }*/
-
-        return {
+        let sinks = {
             ...componentSinks,
-            //auth0: xs.never(),
-            //router: xs.merge(loginPage$, componentSinks.router || xs.never(), route$)
-        }
+            router: xs.merge(componentSinks.router || xs.empty(), loginPage$, loggedIn$.mapTo('/start'), route$, redirectLogin$)
+        };
+
+        return sinks;
     }
 }

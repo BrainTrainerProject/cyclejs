@@ -28,7 +28,9 @@ run(onionify(wrappedModalify(App, ModalWrapper)), {
     auth0: makeAuth0Driver(config.auth0.clientId, config.auth0.domain, {
         auth: {
             params: {scope: "openid nickname"},
-            responseType: "token"
+            responseType: "token",
+            redirect: true,
+            redirectUrl: config.auth0.callbackUrl,
         }
     })
 });
