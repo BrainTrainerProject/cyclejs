@@ -10,20 +10,21 @@ import { MainLayoutWrapper } from "./layout/MainLayoutWrapper";
 import UnderConstructionPage from "./page/UnderConstruction/UnderConstructionPage";
 import dropRepeats from "xstream/extra/dropRepeats";
 
-function routedComponent(sources) {
-    return ({path, value}) => value({...sources, router: sources.router.path(path)})
-}
+const routedComponent       = (sources) => ({path, value}) => value({...sources, router: sources.router.path(path)});
+const protectedPage         = (page) => ProtectedPage(page);
+const mainLayout            = (component) => MainLayoutWrapper(component);
+const protectedMainLayout   = (Component) => protectedPage(mainLayout(Component));
 
 const routes = {
-    '/start': protect(StartPage),
-    '/feed': ProtectedPage(MainLayoutWrapper(UnderConstructionPage)),
-    '/store': ProtectedPage(MainLayoutWrapper(UnderConstructionPage)),
-    '/profile': ProtectedPage(MainLayoutWrapper(UnderConstructionPage)),
-    '/sets': ProtectedPage(MainLayoutWrapper(UnderConstructionPage)),
-    '/settings': ProtectedPage(MainLayoutWrapper(UnderConstructionPage)),
-    '/login': ProtectedPage(LoginPage),
-    '/logout': ProtectedPage(MainLayoutWrapper(UnderConstructionPage)),
-    '*': NotFoundPage,
+    '/start':       protectedMainLayout(StartPage),
+    '/feed':        protectedMainLayout(UnderConstructionPage),
+    '/store':       protectedMainLayout(UnderConstructionPage),
+    '/profile':     protectedMainLayout(UnderConstructionPage),
+    '/sets':        protectedMainLayout(UnderConstructionPage),
+    '/settings':    protectedMainLayout(UnderConstructionPage),
+    '/login':       protectedPage(LoginPage),
+    '/logout':      protectedPage(LoginPage),
+    '*':            NotFoundPage,
 };
 
 export function Router(sources: AppSources): AppSinks {
@@ -31,17 +32,21 @@ export function Router(sources: AppSources): AppSinks {
     const routes$: Stream<SwitchPathReturn> = sources.router.define(routes).compose(dropRepeats((a, b) => a.path == b.path));
     const page$ = routes$.map(routedComponent(sources)).remember();
 
-    const redirectHomepage$ = sources.router.history$
+    const redirectStartpage$ = sources.router.history$
         .filter(loc => loc.pathname === '/')
         .mapTo('/start');
 
     return {
         DOM: page$.map(c => c.DOM || xs.never()).flatten(),
         HTTP: page$.map(c => c.HTTP || xs.never()).flatten(),
-        router: xs.merge(page$.map(c => c.router || xs.never()).flatten(), redirectHomepage$),
+        router: xs.merge(page$.map(c => c.router || xs.never()).flatten(), redirectStartpage$),
         onion: page$.map(c => c.onion || xs.never()).flatten(),
         modal: page$.map(c => c.modal || xs.never()).flatten(),
-        auth0: page$.map(c => c.auth0 || xs.never()).flatten()
+        auth0: page$.map(c => {
+
+            console.log(c);
+            return  c.auth0.debug('AUTH0') || xs.never()
+        }).flatten().debug('AUTHO MANI SINK')
     };
 
 }

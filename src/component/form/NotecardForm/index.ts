@@ -1,4 +1,4 @@
-import {Stream} from 'xstream';
+import xs,{Stream} from 'xstream';
 import {StateSource} from 'cycle-onionify';
 import {Reducer, Sinks, Sources, State} from '../../../common/interfaces';
 import {intent} from './intent';
@@ -6,6 +6,7 @@ import {model} from './model';
 import {view} from './view';
 import {Visibility} from '../../../common/Visibility';
 import {CRUDType} from '../../../common/CRUDType';
+import { GetNotecardsApi } from "../../../common/api/GetNotecards";
 
 export type NotecardFormSources = Sources & { onion : StateSource<NotecardFormState> };
 export type NotecardFormSinks = Sinks & { onion : Stream<Reducer> };

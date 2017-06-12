@@ -12,10 +12,8 @@ export default function Masthead(sources) {
     const profileSinks = MastheadProfil(sources);
 
     const routeChange$ = sources.router.history$.map(s => {
-        console.log(s);
         return s;
     });
-
 
     return {
         DOM: xs.combine(searchSinks.DOM, profileSinks.DOM, filterSinks.DOM).map(view),

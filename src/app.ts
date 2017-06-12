@@ -37,9 +37,12 @@ run(onionify(wrappedModalify(App, ModalWrapper)), {
 
 function App(sources: AppSources): AppSinks {
     const routerSinks = Router(sources);
+    console.log(routerSinks);
     return {
         ...routerSinks,
-        DOM: view(routerSinks.DOM)
+        HTTP: routerSinks.HTTP.debug("HTTP REQUEST"),
+        DOM: view(routerSinks.DOM),
+        auth0: routerSinks.auth0.debug('AUTH APP')
     };
 }
 

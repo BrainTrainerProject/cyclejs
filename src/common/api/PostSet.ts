@@ -2,7 +2,7 @@ import { CRUDType } from "../CRUDType";
 import { Visibility } from "../Visibility";
 import { Utils } from "../Utils";
 
-export interface PostNotecardProps {
+export interface PostSetProps {
     type: CRUDType.ADD;
     title: string;
     description: string;
@@ -11,15 +11,15 @@ export interface PostNotecardProps {
 }
 
 
-export class PostNotecardApi {
+export class PostSetApi {
 
     public static readonly ID: string = 'post-notecard';
 
-    public static buildRequest(props: PostNotecardProps) {
+    public static buildRequest(props: PostSetProps) {
         return {
             url: Utils.apiUrl('/echo'),
             method: 'POST',
-            category: PostNotecardApi.ID,
+            category: PostSetApi.ID,
             send: props
         };
     }

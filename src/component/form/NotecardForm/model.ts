@@ -8,12 +8,13 @@ import { CRUDType } from "../../../common/CRUDType";
 import { Visibility } from "../../../common/Visibility";
 import { INP_DESC, INP_TAGS, INP_TITLE } from "./view";
 import { Utils } from "../../../common/Utils";
-import { PostNotecardApi } from "../../../common/api/PostNotecard";
 import { HttpRequest } from "../../../common/api/HttpRequest";
+import { PostSetApi } from "../../../common/api/PostSet";
+import { GetNotecardsApi } from "../../../common/api/GetNotecards";
 
 export function model(sources: any, state$: any, intent: any, prevState?: NotecardFormState) {
 
-    const HTTP = sources.HTTP;
+    const {HTTP} = sources;
 
     const default$: Stream<Reducer> = xs.of(function defaultReducer(): any {
         if (typeof prevState === 'undefined') {
@@ -22,7 +23,8 @@ export function model(sources: any, state$: any, intent: any, prevState?: Noteca
                 title: '',
                 description: '',
                 tags: '',
-                visibility: Visibility.PRIVATE
+                visibility: Visibility.PRIVATE,
+                errors: {}
             };
         }
         return prevState;
@@ -64,13 +66,13 @@ export function model(sources: any, state$: any, intent: any, prevState?: Noteca
                 state = errorMsg(INP_TAGS, 'Tags eingeben!', state);
             }
             return state;
-        });
+        })
 
-    const submitRequest$ = intent.submit$
+    const submitRequest$ = submitValid$
         .compose(sampleCombine(state$))
         .map(([submitEvent, state]) => state)
         .filter(state => isFormValid(state))
-        .map(state => generateRequest(state));
+        .map(state => generateRequest(state))
 
     const request$ = submitRequest$;
 
@@ -92,13 +94,20 @@ export function model(sources: any, state$: any, intent: any, prevState?: Noteca
 }
 
 function isFormValid(state) {
-    return Utils.jsonHasChilds(state.errors);
+
+    let err = 0;
+    if (state.title === '') err++;
+    if (state.description === '') err++;
+    if (state.tags === '') err++;
+    if (Utils.jsonHasChilds(state.errors)) err++
+    return err === 0
+
 }
 
 function generateRequest(state): HttpRequest {
     switch (state.type) {
         case CRUDType.ADD:
-            return PostNotecardApi.buildRequest({
+            return PostSetApi.buildRequest({
                 'type': state.type,
                 'title': state.title,
                 'description': state.description,
@@ -106,7 +115,7 @@ function generateRequest(state): HttpRequest {
                 'visibility': state.visibility
             });
         case CRUDType.DELETE:
-            return PostNotecardApi.buildRequest({
+            return PostSetApi.buildRequest({
                 'type': state.type,
                 'title': state.title,
                 'description': state.description,
@@ -114,7 +123,7 @@ function generateRequest(state): HttpRequest {
                 'visibility': state.visibility
             });
         case CRUDType.UPDATE:
-            return PostNotecardApi.buildRequest({
+            return PostSetApi.buildRequest({
                 'type': state.type,
                 'title': state.title,
                 'description': state.description,

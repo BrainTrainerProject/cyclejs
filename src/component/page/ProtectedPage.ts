@@ -19,6 +19,15 @@ export function ProtectedPage(component: Component) {
         const loginPage$ = isNotLoggedIn$
             .map(s => '/login');
 
+        const logoutRequest$ = route$
+            .map(path => path.pathname)
+            .filter(path => path === '/logout')
+            .mapTo({action: "logout"})
+            .remember();
+
+        const redirictLogoutPage$ = logoutRequest$
+            .mapTo('/login');
+
         const loggedIn$ = auth0.select('authenticated')
 
         const redirectLogin$ = loggedIn$.mapTo('/start')
@@ -40,7 +49,8 @@ export function ProtectedPage(component: Component) {
 
         let sinks = {
             ...componentSinks,
-            router: xs.merge(componentSinks.router || xs.empty(), loginPage$, loggedIn$.mapTo('/start'), route$, redirectLogin$)
+            router: xs.merge(componentSinks.router || xs.empty(), loginPage$, loggedIn$.mapTo('/start'), route$, redirectLogin$,redirictLogoutPage$),
+            auth0: xs.merge(logoutRequest$, componentSinks.auth0 || xs.empty())
         };
 
         return sinks;

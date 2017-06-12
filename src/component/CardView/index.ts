@@ -19,8 +19,8 @@ function CardItem(sources) {
     const props$ = sources.props$;
 
     return {
-        DOM: props$.map(i => defaultView({
-            title: i.title,
+        DOM: props$.map(set => defaultView({
+            title: set.title,
             imageUrl: Utils.imageUrl('/card-placeholder.png'),
             url: "#",
             rating: 3,
@@ -32,8 +32,7 @@ function CardItem(sources) {
 
 export default function CardView(sources: CardViewSources): CardViewSinks {
 
-    const HTTP = sources.HTTP;
-    const DOM = sources.DOM;
+    const {DOM, HTTP} = sources;
 
     const tasksState$ = HTTP.select(GetNotecardsApi.ID)
         .flatten()
@@ -48,9 +47,10 @@ export default function CardView(sources: CardViewSources): CardViewSinks {
 
     const lessonSets$ = Collection.gather(CardItem, sources, tasksState$, 'id', key => `${key}$`);
 
-    const refreshList$ = xs.periodic(1000)
+    const refreshList$ = xs.of(GetNotecardsApi.buildRequest());
+    /*const refreshList$ = xs.periodic(1000)
         .startWith(0)
-        .mapTo(GetNotecardsApi.buildRequest());
+        .mapTo(GetNotecardsApi.buildRequest());*/
 
     const lessonsListView$ = Collection.pluck(lessonSets$, item => item.DOM);
 
