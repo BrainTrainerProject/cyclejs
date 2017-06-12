@@ -4,11 +4,12 @@ import { a, div, img } from "@cycle/dom";
 export function Sidebar(sources) {
 
     // intent & model
-    const startClick$   = sources.DOM.select('.nav-start').events('click').mapTo('/start');
-    const feedClick$    = sources.DOM.select('.nav-feed').events('click').mapTo('/feed');
-    const storeClick$   = sources.DOM.select('.nav-store').events('click').mapTo('/store');
+    const headerClick$ = sources.DOM.select('.logo a').events('click').map(e => e.preventDefault()).mapTo('/start');
+    const startClick$ = sources.DOM.select('.nav-start').events('click').mapTo('/start');
+    const feedClick$ = sources.DOM.select('.nav-feed').events('click').mapTo('/feed');
+    const storeClick$ = sources.DOM.select('.nav-store').events('click').mapTo('/store');
 
-    const route$ = xs.merge(startClick$, feedClick$, storeClick$);
+    const route$ = xs.merge(headerClick$, startClick$, feedClick$, storeClick$);
 
     const sinks = {
         DOM: xs.of(
@@ -17,7 +18,7 @@ export function Sidebar(sources) {
                     div(".logo", [
                         a({
                             "attrs": {
-                                "href": "/"
+                                "href": "/start"
                             }
                         }, [
                             img({

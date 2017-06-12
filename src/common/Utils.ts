@@ -1,3 +1,6 @@
+import { Sinks } from "./interfaces";
+import { extractSinks, filterProp } from "cyclejs-utils";
+import xs from "xstream";
 const config = require('../config.json');
 
 export class Utils {
@@ -18,6 +21,15 @@ export class Utils {
         for (let itm in json)
             return true;
         return false;
+    }
+
+    static filterPropsByArray(sinks: any, props: string[]) {
+        let currSinks: Sinks = sinks;
+        for (let prop of props) {
+            currSinks = filterProp(extractSinks(xs.of(currSinks), Object.keys(currSinks)), prop)
+        }
+        return currSinks;
+
     }
 
 }
