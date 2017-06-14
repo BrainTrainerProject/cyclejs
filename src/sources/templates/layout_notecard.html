@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.10/semantic.min.css"/>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.10/semantic.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="https://semantic-ui.com/stylesheets/docs.css">
+    <link rel="stylesheet" type="text/css" href="/src/css/style.css">
+
+</head>
+
+<body>
+
+<div id="app">
+
+    <div class="pusher">
+
+        <div class="full height">
+
+            <!-- Left Sidebar -->
+            <div id="main-sidebar" class="toc">
+
+                <div class="ui vertical sticky menu border-less">
+
+                    <div class="logo">
+                        <a href="/"><img src="/src/img/logo.png"/></a>
+                    </div>
+
+                    <div class="ui secondary vertical menu">
+                        <a class="active item">
+                            Start
+                        </a>
+                        <a class="item">
+                            Feed
+                            <div class="ui label">1</div>
+                        </a>
+                        <a class="item">
+                            Store
+                        </a>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Main Container -->
+            <div id="main-container">
+
+                <!-- Masthead -->
+                <!-- top: 0;
+left: 0;
+right: auto;
+bottom: auto;position: fixed;
+z-index: 101;
+margin: 0;
+width: 100%;-->
+                <div id="masthead" class="ui container">
+
+                    <div class="ui container content-row-flexible">
+
+                        <div class="col-left">
+
+                            <div class="ui secondary  menu">
+
+                                <a class="launch icon item menu-icon">
+                                    <i class="content icon"></i>
+                                </a>
+
+                                <div class="ui item">
+                                    <div class="ui large breadcrumb">
+                                        <a class="active section">Start</a>
+                                        <!--<i class="right chevron icon divider"></i>
+                                        <a class="section">Registration</a>
+                                        <i class="right chevron icon divider"></i>
+                                        <div class="active section">Personal Information</div>
+-->
+
+                                    </div>
+                                </div>
+
+                                <div class="right menu no-space-right">
+
+                                    <!--<div class="item">
+                                        <div class="ui hidden right aligned search input category"  id="search2">
+                                            <div class="ui icon input">
+                                                <input class="prompt" type="text" placeholder="Search...">
+                                                <i class="search link icon" data-content="Search UI"></i>
+                                            </div>
+                                            <div class="results"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="item">
+                                        <div class="ui category search">
+                                            <div class="ui icon input">
+                                                <input class="prompt" placeholder="Search sets..." type="text">
+                                                <i class="search icon"></i>
+                                            </div>
+                                            <div class="results"></div>
+                                        </div>
+                                    </div>
+-->
+                                    <div class="item">
+                                        <!-- hidden -->
+                                        <div class="ui right aligned search input" id="search">
+                                            <!-- transparent -->
+                                            <div class="ui icon input">
+                                                <input class="prompt" type="text" placeholder="Search...">
+                                                <!-- inverted link-->
+                                                <i class="search link icon" data-content="Search UI"></i>
+                                            </div>
+                                            <div class="results"></div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Right Content -->
+                        <div class="col-right ui dividing right rail">
+
+                            <div class="ui secondary menu">
+
+                                <div class="right menu text no-space-right">
+                                    <div class="item">
+                                        <a class="alarm-icon item right floated">
+                                            <i class="alarm outline icon"></i>
+                                        </a>
+
+                                        <div id="user" class="ui pointing dropdown top right ">
+                                            <div class="text">
+                                                <img class="ui avatar image"
+                                                     src="https://semantic-ui.com/images/avatar/large/elliot.jpg"
+                                                     alt="">
+                                            </div>
+                                            <div class="menu">
+                                                <div class="item">
+                                                    Profil
+                                                </div>
+                                                <div class="item">
+                                                    Einstellungen
+                                                </div>
+                                                <div class="item">
+                                                    Logout
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                    <!-- Filter -->
+                    <div class="ui container content-row">
+
+                        <!-- Filter -->
+                        <div class="ui secondary  menu">
+
+                            <div class="ui item">
+                                <div class="ui dropdown simple">
+                                    <div class="text">File</div>
+                                    <i class="dropdown icon"></i>
+                                    <div class="menu">
+                                        <div class="item">New</div>
+                                        <div class="item">
+                                            <span class="description">ctrl + o</span>
+                                            Open...
+                                        </div>
+                                        <div class="item">
+                                            <span class="description">ctrl + s</span>
+                                            Save as...
+                                        </div>
+                                        <div class="item">
+                                            <span class="description">ctrl + r</span>
+                                            Rename
+                                        </div>
+                                        <div class="item">Make a copy</div>
+                                        <div class="item">
+                                            <i class="folder icon"></i>
+                                            Move to folder
+                                        </div>
+                                        <div class="item">
+                                            <i class="trash icon"></i>
+                                            Move to trash
+                                        </div>
+                                        <div class="divider"></div>
+                                        <div class="item">Download As...</div>
+                                        <div class="item">
+                                            <i class="dropdown icon"></i>
+                                            Publish To Web
+                                            <div class="menu">
+                                                <div class="item">Google Docs</div>
+                                                <div class="item">Google Drive</div>
+                                                <div class="item">Dropbox</div>
+                                                <div class="item">Adobe Creative Cloud</div>
+                                                <div class="item">Private FTP</div>
+                                                <div class="item">Another Service...</div>
+                                            </div>
+                                        </div>
+                                        <div class="item">E-mail Collaborators</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="right menu">
+                                <div class="item">
+                                    <div class="ui dropdown">
+                                        <div class="text">File</div>
+                                        <i class="dropdown icon"></i>
+                                        <div class="menu">
+                                            <div class="item">New</div>
+                                            <div class="item">
+                                                <span class="description">ctrl + o</span>
+                                                Open...
+                                            </div>
+                                            <div class="item">
+                                                <span class="description">ctrl + s</span>
+                                                Save as...
+                                            </div>
+                                            <div class="item">
+                                                <span class="description">ctrl + r</span>
+                                                Rename
+                                            </div>
+                                            <div class="item">Make a copy</div>
+                                            <div class="item">
+                                                <i class="folder icon"></i>
+                                                Move to folder
+                                            </div>
+                                            <div class="item">
+                                                <i class="trash icon"></i>
+                                                Move to trash
+                                            </div>
+                                            <div class="divider"></div>
+                                            <div class="item">Download As...</div>
+                                            <div class="item">
+                                                <i class="dropdown icon"></i>
+                                                Publish To Web
+                                                <div class="menu">
+                                                    <div class="item">Google Docs</div>
+                                                    <div class="item">Google Drive</div>
+                                                    <div class="item">Dropbox</div>
+                                                    <div class="item">Adobe Creative Cloud</div>
+                                                    <div class="item">Private FTP</div>
+                                                    <div class="item">Another Service...</div>
+                                                </div>
+                                            </div>
+                                            <div class="item">E-mail Collaborators</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="ui divider"></div>
+
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div id="content" class="ui container content-row">
+
+                    <!-- Right Content -->
+                    <div id="content-right" class="ui dividing right rail">
+
+                        <div class="ui">
+
+                            <button class="new-set-btn ui primary button">
+                                Neues Set erstellen
+                            </button>
+
+                        </div>
+
+
+                    </div>
+
+                    <!-- Left Main -->
+                    <div id="content-left" class="left-main">
+
+
+                        <!-- settings -->
+                        <div class="ui grid">
+                            <div class="sixteen wide column">
+
+                                <form class="ui form">
+                                    <h4 class="ui dividing header">Popup</h4>
+                                    <div class="field">
+                                        <label>Häufigkeit</label>
+                                        <div class="field">
+                                            <input type="text" placeholder="Häufigkeit">
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <label>Menge</label>
+                                        <div class="field">
+                                            <input type="text" placeholder="Menge">
+                                        </div>
+                                    </div>
+
+                                    <h4 class="ui dividing header">Synchronisation</h4>
+                                    <div class="field">
+                                        <label>Häufigkeit</label>
+                                        <div class="field">
+                                            <input type="text" placeholder="Häufigkeit">
+                                        </div>
+                                    </div>
+
+                                    <div class="fields">
+
+                                        <div class="eight wide field"></div>
+                                        <div class="four wide field right floated">
+
+
+                                        </div>
+                                        <div class="four wide field ">
+                                            <button class="ui button right fluid floated " type="submit">speichern
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                </form>
+
+
+
+                            </div>
+                        </div>
+
+                        <!-->
+
+                        <div class="ui grid">
+                            <div class="sixteen wide column">
+
+                                <form class="ui form">
+
+                                    <div class="field">
+                                        <label>Titel</label>
+                                        <div class="field">
+                                            <input type="text" placeholder="Titel">
+                                        </div>
+                                    </div>
+
+
+                                    <div class="field">
+                                        <label>Aufgabe</label>
+                                        <div class="field">
+                                            <div id="editor"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="field">
+                                        <label>Antwort</label>
+                                        <div class="field">
+                                            <input type="text" placeholder="Antwort">
+                                        </div>
+                                    </div>
+
+                                    <div class="fields">
+
+                                        <div class="eight wide field"></div>
+                                        <div class="four wide field right floated">
+
+                                            <button class="ui button right fluid floated "
+                                                    style="background:none !important;" type="submit">abbrechen
+                                            </button>
+
+                                        </div>
+                                        <div class="four wide field ">
+                                            <button class="ui button right fluid floated " type="submit">speichern
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                </form>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="ui grid">
+                            <div class="sixteen wide column">
+
+                                <div>
+                                    Welche Bedeutung hat das Symbol?<br/>
+                                    <img src="https://cdn.pixabay.com/photo/2014/03/09/20/20/water-284095_960_720.png"
+                                         height="200px;"/>
+                                </div>
+
+                                <form class="ui form">
+
+                                    <div class="field">
+                                        <label>Antwort</label>
+                                        <div class="field">
+                                            <input type="text" placeholder="Antwort">
+                                        </div>
+                                    </div>
+
+                                    <div class="fields">
+
+                                        <div class="eight wide field"></div>
+                                        <div class="four wide field right floated">
+
+                                            <button class="ui button right fluid floated "
+                                                    style="background:none !important;" type="submit">weiß nicht
+                                            </button>
+
+                                        </div>
+                                        <div class="four wide field ">
+                                            <button class="ui button right fluid floated " type="submit">antworten
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                </form>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="ui three column doubling stackable masonry grid">
+
+                            <div class="column">
+
+                                <div class="ui fluid card">
+                                    <div class="content">
+                                        <div class="right floated meta">14h</div>
+                                        <img class="ui avatar image"
+                                             src="https://semantic-ui.com/images/avatar/large/elliot.jpg">
+                                        Elliot
+                                    </div>
+                                    <div class="blurring dimmable image">
+                                        <div class="ui dimmer">
+                                            <div class="content">
+                                                <div class="center">
+                                                    <div class="ui inverted button">Add Friend</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <img src="https://pbs.twimg.com/profile_images/1418282604/EnglishTwitterAvatar.jpg">
+                                    </div>
+                                    <div class="content">
+    <span class="right floated">
+      <i class="heart outline like icon"></i>
+      17 likes
+    </span>
+                                        <i class="comment icon"></i>
+                                        3 comments
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <div class="ui fluid  card">
+                                    <div class="content">
+                                        <div class="right floated meta">14h</div>
+                                        <img class="ui avatar image"
+                                             src="https://semantic-ui.com/images/avatar/large/elliot.jpg">
+                                        Elliot
+                                    </div>
+                                    <div class="blurring dimmable image">
+                                        <div class="ui dimmer">
+                                            <div class="content">
+                                                <div class="center">
+                                                    <div class="ui inverted button">Add Friend</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <img src="https://pbs.twimg.com/profile_images/1418282604/EnglishTwitterAvatar.jpg">
+                                    </div>
+                                    <div class="content">
+    <span class="right floated">
+      <i class="heart outline like icon"></i>
+      17 likes
+    </span>
+                                        <i class="comment icon"></i>
+                                        3 comments
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <div class="ui fluid  card">
+                                    <div class="content">
+                                        <div class="right floated meta">14h</div>
+                                        <img class="ui avatar image"
+                                             src="https://semantic-ui.com/images/avatar/large/elliot.jpg">
+                                        Elliot
+                                    </div>
+                                    <div class="blurring dimmable image">
+                                        <div class="ui dimmer">
+                                            <div class="content">
+                                                <div class="center">
+                                                    <div class="ui inverted button">Add Friend</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <img src="https://pbs.twimg.com/profile_images/1418282604/EnglishTwitterAvatar.jpg">
+                                    </div>
+                                    <div class="content">
+    <span class="right floated">
+      <i class="heart outline like icon"></i>
+      17 likes
+    </span>
+                                        <i class="comment icon"></i>
+                                        3 comments
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <div class="ui fluid  card">
+                                    <div class="content">
+                                        <div class="right floated meta">14h</div>
+                                        <img class="ui avatar image"
+                                             src="https://semantic-ui.com/images/avatar/large/elliot.jpg">
+                                        Elliot
+                                    </div>
+                                    <div class="blurring dimmable image">
+                                        <div class="ui dimmer">
+                                            <div class="content">
+                                                <div class="center">
+                                                    <div class="ui inverted button">Add Friend</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <img src="https://pbs.twimg.com/profile_images/1418282604/EnglishTwitterAvatar.jpg">
+                                    </div>
+                                    <div class="content">
+    <span class="right floated">
+      <i class="heart outline like icon"></i>
+      17 likes
+    </span>
+                                        <i class="comment icon"></i>
+                                        3 comments
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column">
+
+                                <div class="ui fluid card">
+                                    <div class="content">
+                                        <div class="right floated meta">14h</div>
+                                        <img class="ui avatar image"
+                                             src="https://semantic-ui.com/images/avatar/large/elliot.jpg">
+                                        Elliot
+                                    </div>
+                                    <div class="blurring dimmable image">
+                                        <div class="ui dimmer">
+                                            <div class="content">
+                                                <div class="center">
+                                                    <div class="ui inverted button">Add Friend</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <img src="https://pbs.twimg.com/profile_images/1418282604/EnglishTwitterAvatar.jpg">
+                                    </div>
+                                    <div class="content">
+    <span class="right floated">
+      <i class="heart outline like icon"></i>
+      17 likes
+    </span>
+                                        <i class="comment icon"></i>
+                                        3 comments
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <div class="ui fluid  card">
+                                    <div class="content">
+                                        <div class="right floated meta">14h</div>
+                                        <img class="ui avatar image"
+                                             src="https://semantic-ui.com/images/avatar/large/elliot.jpg">
+                                        Elliot
+                                    </div>
+                                    <div class="blurring dimmable image">
+                                        <div class="ui dimmer">
+                                            <div class="content">
+                                                <div class="center">
+                                                    <div class="ui inverted button">Add Friend</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <img src="https://pbs.twimg.com/profile_images/1418282604/EnglishTwitterAvatar.jpg">
+                                    </div>
+                                    <div class="content">
+    <span class="right floated">
+      <i class="heart outline like icon"></i>
+      17 likes
+    </span>
+                                        <i class="comment icon"></i>
+                                        3 comments
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <div class="ui fluid  card">
+                                    <div class="content">
+                                        <div class="right floated meta">14h</div>
+                                        <img class="ui avatar image"
+                                             src="https://semantic-ui.com/images/avatar/large/elliot.jpg">
+                                        Elliot
+                                    </div>
+                                    <div class="blurring dimmable image">
+                                        <div class="ui dimmer">
+                                            <div class="content">
+                                                <div class="center">
+                                                    <div class="ui inverted button">Add Friend</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <img src="https://pbs.twimg.com/profile_images/1418282604/EnglishTwitterAvatar.jpg">
+                                    </div>
+                                    <div class="content">
+    <span class="right floated">
+      <i class="heart outline like icon"></i>
+      17 likes
+    </span>
+                                        <i class="comment icon"></i>
+                                        3 comments
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <div class="ui fluid  card">
+                                    <div class="content">
+                                        <div class="right floated meta">14h</div>
+                                        <img class="ui avatar image"
+                                             src="https://semantic-ui.com/images/avatar/large/elliot.jpg">
+                                        Elliot
+                                    </div>
+                                    <div class="blurring dimmable image">
+                                        <div class="ui dimmer">
+                                            <div class="content">
+                                                <div class="center">
+                                                    <div class="ui inverted button">Add Friend</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <img src="https://pbs.twimg.com/profile_images/1418282604/EnglishTwitterAvatar.jpg">
+                                    </div>
+                                    <div class="content">
+    <span class="right floated">
+      <i class="heart outline like icon"></i>
+      17 likes
+    </span>
+                                        <i class="comment icon"></i>
+                                        3 comments
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    $('#user').dropdown({});
+</script>
+
+</body>
+</html>
