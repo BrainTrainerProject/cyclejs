@@ -1,45 +1,52 @@
 import { Reducer, Sinks, Sources, State } from "../../../common/interfaces";
-import { GetSetsApi } from "../../../common/api/GetSets";
 import { CardItem } from "./CardItem";
 import Collection from "@cycle/collection";
 import { StateSource } from "cycle-onionify";
-import xs, { Stream } from "xstream";
+import { Stream } from "xstream";
+import { div } from "@cycle/dom";
 
-export type CardViewSources = Sources & { onion: StateSource<CardViewState> };
-export type CardViewSinks = Sinks & { onion: Stream<Reducer> };
-export interface CardViewState extends State {
+type CardViewSources = Sources & { onion: StateSource<CardViewState> };
+type CardViewSinks = Sinks & { onion: Stream<Reducer> };
+interface CardViewState extends State {
 
 }
 
-export interface CardViewProps {
-    showRating: boolean,
-    showImport: boolean
+export interface CardItemListProps {
+    showRating?: boolean,
+    showImport?: boolean,
+    requestId: string
 }
 
-export default function CardView(sources: CardViewSources, props: CardViewProps): CardViewSinks {
+export default function CardItemList(sources: CardViewSources, props: CardItemListProps): CardViewSinks {
 
     const {DOM, HTTP} = sources;
 
-    const tasksState$ = HTTP.select(GetSetsApi.ID)
+    const tasksState$ = sources.HTTP.select(props.requestId)
         .flatten()
         .map(({text}) => JSON.parse(text))
         .map(items => Object.keys(items)
             .map(key => items[key])
             .map(item => ({
                 id: item._id,
-                props: item
+                props: {
+                    ...item,
+                    showRating: props.showRating || false,
+                    showImport: props.showImport || false
+                }
             })))
         .startWith([]);
 
     const lessonSets$ = Collection.gather(CardItem, sources, tasksState$, 'id', key => `${key}$`);
-
-    const refreshList$ = xs.of(GetSetsApi.buildRequest());
-
     const lessonsListView$ = Collection.pluck(lessonSets$, item => item.DOM);
+    //const lessonsListRouter$ = Collection.pluck(lessonSets$, item => item.router);
+    const lessonsListRouter$ = Collection.merge(lessonSets$, item => item.router);
 
     const sinks = {
-        DOM: lessonsListView$,
-        HTTP: refreshList$
+        DOM: lessonsListView$
+            .map(vtree => div('.ui.three.column.doubling.stackable.grid',
+                vtree
+            )),
+        router: lessonsListRouter$
     };
 
     return sinks;

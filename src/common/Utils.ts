@@ -17,6 +17,14 @@ export class Utils {
         return '/src/img/' + Utils.slashCheck(url)
     };
 
+    static imageOrPlaceHolder(url) {
+        if(url === ''){
+            return '/src/img/' + Utils.slashCheck('/card-placeholder.png')
+        }else{
+            return url
+        }
+    };
+
     static jsonHasChilds(json) {
         for (let itm in json)
             return true;
