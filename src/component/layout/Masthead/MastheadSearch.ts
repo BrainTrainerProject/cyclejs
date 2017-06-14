@@ -1,5 +1,6 @@
-import { a, div, i, img, input } from "@cycle/dom";
+import { a, div, i, input } from "@cycle/dom";
 import xs from "xstream";
+import delay from "xstream/extra/delay";
 
 export default function MastheadSearch(sources) {
 
@@ -14,7 +15,10 @@ export default function MastheadSearch(sources) {
     return {
         DOM: xs.of(view()),
         router: route$,
-        search: searchInput$
+        filter: searchInput$.filter(value => value.length > 2).map(value => ({
+            action: 'search',
+            value: value
+        })).compose(delay(200))
     }
 
 }

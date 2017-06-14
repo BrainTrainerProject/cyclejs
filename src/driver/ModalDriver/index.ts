@@ -4,7 +4,7 @@ import { DevToolEnabledSource } from "@cycle/run";
 import { isNullOrUndefined } from "util";
 import { Component } from "../../common/interfaces";
 
-/*export class ModalSource {
+/*export class FilterSource {
 
     constructor(private _res$$) {
     }
@@ -27,9 +27,9 @@ export interface ModalClose {
 
 export type ModalAction = ModalOpen | ModalClose;
 
-export function makeModalDriver() {
+export function makeFilterDriver() {
 
-    function modalDriver(request$) {
+    function filterDriver(request$) {
 
         const response$ = xs.create({
             start: listener => {
@@ -60,7 +60,7 @@ export function makeModalDriver() {
         }
     }
 
-    return modalDriver
+    return filterDriver
 
 }
 

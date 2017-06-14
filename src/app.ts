@@ -13,11 +13,13 @@ import { captureClicks, makeHistoryDriver } from "@cycle/history";
 import switchPath from "switch-path";
 import { makeRouterDriver, RouterSource } from "cyclic-router";
 import { Router } from "./component/Router";
+import { FilterSource, makeFilterDriver } from "./driver/FilterDriver/index";
+import  xs from 'xstream';
 
 const config = require('./config.json');
 
-export type AppSources = Sources & { onion: StateSource<AppState> };
-export type AppSinks = Sinks & { onion: Stream<Reducer>, modal: Stream<any> };
+export type AppSources = Sources & { onion: StateSource<AppState>, filter: any };
+export type AppSinks = Sinks & { onion: Stream<Reducer>, modal: Stream<any>, filter: Stream<any> };
 export interface AppState extends State {
 }
 
@@ -32,17 +34,21 @@ run(onionify(wrappedModalify(App, ModalWrapper)), {
             redirect: true,
             redirectUrl: config.auth0.callbackUrl,
         }
-    })
+    }),
+    filter: makeFilterDriver()
 });
 
 function App(sources: AppSources): AppSinks {
     const routerSinks = Router(sources);
-    console.log(routerSinks);
+
+    const filterListener$ = sources.filter.select('search')
+
     return {
         ...routerSinks,
         HTTP: routerSinks.HTTP.debug("HTTP REQUEST"),
         DOM: view(routerSinks.DOM),
-        auth0: routerSinks.auth0.debug('AUTH APP')
+        auth0: routerSinks.auth0.debug('AUTH APP'),
+        filter: xs.merge(routerSinks.filter, filterListener$)
     };
 }
 

@@ -19,8 +19,6 @@ export function MainLayoutWrapper(component: MainLayoutComponent) {
         const sidebarSinks = Sidebar(sources);
         const mastheadSinks = Masthead(sources);
 
-        const newSources = {...sources}
-
         const componentSinks = component(sources);
 
         const vdom$ = xs.combine(sidebarSinks.DOM, mastheadSinks.DOM);
