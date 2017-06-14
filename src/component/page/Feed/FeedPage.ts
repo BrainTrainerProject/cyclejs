@@ -5,7 +5,7 @@ import { ModalAction } from "cyclejs-modal";
 import { AppSinks, AppSources } from "../../../app";
 import MainLayout from "../../layout/MainLayout";
 import xs from 'xstream'
-import CardView from "../../CardView/index";
+import CardView from "../../cards/index";
 const jwt = require("jwt-decode");
 
 export default function FeedPage(sources: AppSources): AppSinks {

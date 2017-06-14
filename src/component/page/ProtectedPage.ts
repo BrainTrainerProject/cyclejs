@@ -6,8 +6,6 @@ import LoginPage from "./Login/LoginPage";
 export function ProtectedPage(component: Component) {
     return function (sources) {
 
-        const prevUrl$ = xs.of(null).debug('prevUrl');
-
         const {auth0} = sources;
 
         const tokens$ = sources.auth0.tokens$;
@@ -39,7 +37,7 @@ export function ProtectedPage(component: Component) {
                         ...request,
                         headers: {
                             ...request.headers,
-                            "Authorization": "Bearer:" + token
+                            "Authorization": "Bearer " + token.accessToken
                         }
                     }
                 }

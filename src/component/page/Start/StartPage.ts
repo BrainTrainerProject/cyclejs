@@ -5,7 +5,7 @@ import { VNode } from "snabbdom/vnode";
 import { ModalAction } from "cyclejs-modal";
 import { AppSinks, AppSources } from "../../../app";
 import { Sidebar } from "../../layout/Sidebar";
-import CardView from "../../CardView/index";
+import CardView from "../../cards/index";
 const jwt = require("jwt-decode");
 
 export default function StartPage(sources: AppSources): AppSinks {

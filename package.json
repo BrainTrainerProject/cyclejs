@@ -62,6 +62,7 @@
     "npm-run-all": "^4.0.2",
     "ramda": "^0.24.1",
     "require-dir": "^0.3.1",
+    "route-parser": "0.0.5",
     "run-sequence": "^1.2.2",
     "shx": "^0.2.2",
     "switch-path": "^1.2.0",

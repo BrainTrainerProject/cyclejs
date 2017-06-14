@@ -1,9 +1,8 @@
 import { Component, Sinks, Sources } from "../../common/interfaces";
 import { isNullOrUndefined } from "util";
-import { extractSinks, mergeSinks } from "cyclejs-utils";
 import xs, { Stream } from "xstream";
 import { div, DOMSource, i } from "@cycle/dom";
-import { adapt } from "@cycle/run/lib/adapt";
+import { protect } from "cyclejs-auth0";
 import { Close, ModalAction, Props } from "cyclejs-modal";
 
 export interface ModalProps extends Props {
@@ -15,14 +14,26 @@ export function ModalWrapper(sources: Sources, component: Component, props: Moda
     const hasProps = !isNullOrUndefined(props);
     const title = (hasProps && !isNullOrUndefined(props.title)) ? props.title : "";
 
-    const compSinks: Sinks = component(sources);
+    const compSinks = protect(component, {
+        decorators: {
+            HTTP: (request, tokens) => {
+                return {
+                    ...request,
+                    headers: {
+                        ...request.headers,
+                        "Authorization": "Bearer " + tokens.accessToken
+                    }
+                }
+            }
+        }
+    })(sources);
 
     const closeClick$: Stream<ModalAction> = (sources.DOM as DOMSource).select('.close.icon')
         .events('click')
         .mapTo({type: "close"} as Close);
 
     const sinks = {
-            ...compSinks,
+        ...compSinks,
         DOM: compSinks.DOM.map(content =>
             // Semantic ui style
             div(".ui.modal.transition.visible.active", [

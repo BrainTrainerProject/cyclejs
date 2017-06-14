@@ -24,6 +24,7 @@ export function model(sources: any, state$: any, intent: any, prevState?: Noteca
                 description: '',
                 tags: '',
                 visibility: Visibility.PRIVATE,
+                imageUrl: '',
                 errors: {}
             };
         }
@@ -112,7 +113,8 @@ function generateRequest(state): HttpRequest {
                 'title': state.title,
                 'description': state.description,
                 'tags': state.tags,
-                'visibility': state.visibility
+                'visibility': state.visibility === Visibility.PUBLIC,
+                'photourl': state.imageUrl
             });
         case CRUDType.DELETE:
             return PostSetApi.buildRequest({
@@ -120,7 +122,8 @@ function generateRequest(state): HttpRequest {
                 'title': state.title,
                 'description': state.description,
                 'tags': state.tags,
-                'visibility': state.visibility
+                'visibility': state.visibility === Visibility.PUBLIC,
+                'photourl': state.imageUrl
             });
         case CRUDType.UPDATE:
             return PostSetApi.buildRequest({
@@ -128,7 +131,8 @@ function generateRequest(state): HttpRequest {
                 'title': state.title,
                 'description': state.description,
                 'tags': state.tags,
-                'visibility': state.visibility
+                'visibility': state.visibility === Visibility.PUBLIC,
+                'photourl': state.imageUrl
             });
     }
 }
