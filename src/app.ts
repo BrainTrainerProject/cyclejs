@@ -41,14 +41,14 @@ run(onionify(wrappedModalify(App, ModalWrapper)), {
 function App(sources: AppSources): AppSinks {
     const routerSinks = Router(sources);
 
-    const filterListener$ = sources.filter.select('search')
+    const filterListener$ = sources.filter.select('search').map(search => console.log("Suche: " + search));
 
     return {
         ...routerSinks,
         HTTP: routerSinks.HTTP.debug("HTTP REQUEST"),
         DOM: view(routerSinks.DOM),
         auth0: routerSinks.auth0.debug('AUTH APP'),
-        filter: xs.merge(routerSinks.filter, filterListener$)
+        filter: xs.merge(routerSinks.filter.debug('Filter'), filterListener$)
     };
 }
 

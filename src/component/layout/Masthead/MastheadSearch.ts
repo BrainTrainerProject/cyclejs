@@ -1,6 +1,7 @@
 import { a, div, i, input } from "@cycle/dom";
 import xs from "xstream";
 import delay from "xstream/extra/delay";
+import debounce from "xstream/extra/debounce";
 
 export default function MastheadSearch(sources) {
 
@@ -18,7 +19,7 @@ export default function MastheadSearch(sources) {
         filter: searchInput$.filter(value => value.length > 2).map(value => ({
             action: 'search',
             value: value
-        })).compose(delay(200))
+        })).compose(debounce(200))
     }
 
 }

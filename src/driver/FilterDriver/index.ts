@@ -1,6 +1,5 @@
 import { adapt } from "@cycle/run/lib/adapt";
 import { DevToolEnabledSource } from "@cycle/run";
-import { isNullOrUndefined } from "util";
 import xs from "xstream";
 
 
@@ -33,35 +32,41 @@ export type FilterAction = SearchAction | OrderAction;
 
 export function makeFilterDriver() {
 
-
     const actions = {
         "search": function (lock) {
-
+            console.log("Search Action");
         },
 
         "order": function (lock) {
-
+            console.log("Order Action");
         },
-
     };
 
     function auth0Driver(action$) {
 
-        const noop = () => {};
+        const noop = () => {
+        };
 
         const actionDone$ = action$
             .map(action => {
-                var actionFn = actions[action.action];
+
+                if(!action){
+                    return false
+                }
+
+                const actionFn = actions[action.action];
+
                 if (!actionFn) {
                     console.error(`[FilterDriver] not available method: ${action.action}`);
                     return false;
                 }
-                var promise = actionFn(action.params);
+
                 return {
-                    action: action.action
+                    action: action.action,
+                    value: action.value
                 }
-            })
-            .remember();
+
+            });
 
         const select = responseSelector(actionDone$);
 
@@ -76,35 +81,28 @@ export function makeFilterDriver() {
 
 }
 
-function isValidRequest(request: any): boolean {
-    if (typeof request === 'object') {
-        switch (request.action) {
-            case 'search':
-            case 'order':
-                return true;
-            default:
-                return false;
-        }
-    }
-    return false;
-}
-
 
 function responseSelector(action$) {
 
+    console.log('Select Filter')
+
     function selectEvent(event, action$) {
+
         var driversEvents = ["search", "order"];
+
+        console.log('Selected Event: ' + event);
 
         if (driversEvents.indexOf(event) > -1) {
             return action$
                 .filter(action => action.action === event)
-                .map(action => action.response$)
-                .flatten()
-                .map(response => ({event, response}))
+                .map(action => action.value)
         }
         return xs
             .create({
-                start: (listener) => listener.next({event}),
+                start: (listener) => {
+                    console.log('start')
+                    listener.next({action: 'search', value: 'xxx'})
+                },
                 stop: () => {
                 }
             })
@@ -116,7 +114,10 @@ function responseSelector(action$) {
             .map(sel => sel.replace(/ */, ""))
             .filter(sel => !!sel);
 
-        const events$ = events.map(event => selectEvent(event, action$))
+        const events$ = events.map(event => {
+            console.log('event: ' + event);
+            return selectEvent(event, action$)
+        })
 
         return xs.merge(...events$);
     }
