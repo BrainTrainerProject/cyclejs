@@ -37,7 +37,7 @@ export function ProtectedPage(component: Component) {
                         ...request,
                         headers: {
                             ...request.headers,
-                            "Authorization": "Bearer " + token.accessToken
+                            "Authorization": "Bearer " + token.idToken
                         }
                     }
                 }

@@ -32,7 +32,7 @@ run(onionify(wrappedModalify(App, ModalWrapper)), {
             params: {scope: "openid nickname"},
             responseType: "token",
             redirect: true,
-            redirectUrl: config.auth0.callbackUrl,
+            redirectUrl: config.auth0.callbackUrl
         }
     }),
     filter: makeFilterDriver()
