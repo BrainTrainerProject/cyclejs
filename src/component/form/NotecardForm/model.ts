@@ -1,16 +1,17 @@
-import xs, { Stream } from "xstream";
-import sampleCombine from "xstream/extra/sampleCombine";
-import { NotecardFormState } from "./index";
-import { Reducer } from "../../../common/interfaces";
-import { assoc, assocPath, dissocPath } from "ramda";
-import { title } from "@cycle/dom";
-import { CRUDType } from "../../../common/CRUDType";
-import { Visibility } from "../../../common/Visibility";
-import { INP_DESC, INP_TAGS, INP_TITLE } from "./view";
-import { Utils } from "../../../common/Utils";
-import { HttpRequest } from "../../../common/api/HttpRequest";
-import { PostSetApi } from "../../../common/api/PostSet";
-import { GetNotecardsApi } from "../../../common/api/GetNotecards";
+import xs, {Stream} from 'xstream';
+import sampleCombine from 'xstream/extra/sampleCombine';
+import {NotecardFormState} from './index';
+import {Reducer} from '../../../common/interfaces';
+import {assoc, assocPath, dissocPath} from 'ramda';
+import {title} from '@cycle/dom';
+import {CRUDType} from '../../../common/CRUDType';
+import {Visibility} from '../../../common/Visibility';
+import {INP_DESC, INP_TAGS, INP_TITLE} from './view';
+import {Utils} from '../../../common/Utils';
+import {HttpRequest} from '../../../common/api/HttpRequest';
+import {PostSetApi} from '../../../common/api/PostSet';
+import {GetNotecardsApi} from '../../../common/api/GetNotecards';
+import {ModalAction} from 'cyclejs-modal';
 
 export function model(sources: any, state$: any, intent: any, prevState?: NotecardFormState) {
 
@@ -67,13 +68,13 @@ export function model(sources: any, state$: any, intent: any, prevState?: Noteca
                 state = errorMsg(INP_TAGS, 'Tags eingeben!', state);
             }
             return state;
-        })
+        });
 
     const submitRequest$ = submitValid$
         .compose(sampleCombine(state$))
         .map(([submitEvent, state]) => state)
         .filter(state => isFormValid(state))
-        .map(state => generateRequest(state))
+        .map(state => generateRequest(state));
 
     const request$ = submitRequest$;
 
@@ -86,9 +87,18 @@ export function model(sources: any, state$: any, intent: any, prevState?: Noteca
         submitValid$
     );
 
+    const successResponse$ = HTTP
+        .select(PostSetApi.ID)
+        .flatten()
+        .filter(response => response.ok).debug('Sussess Response');
+
+    const close$ = successResponse$
+        .mapTo({type: 'close'} as ModalAction);
+
     const sinks = {
         HTTP: request$,
-        onion: reducer$
+        onion: reducer$,
+        modal: close$
     };
 
     return sinks;
@@ -100,8 +110,8 @@ function isFormValid(state) {
     if (state.title === '') err++;
     if (state.description === '') err++;
     if (state.tags === '') err++;
-    if (Utils.jsonHasChilds(state.errors)) err++
-    return err === 0
+    if (Utils.jsonHasChilds(state.errors)) err++;
+    return err === 0;
 
 }
 

@@ -72,8 +72,9 @@ function showExtraContent(props: CardItemProps) {
 
         (props.showImport) ? span(".right.floated", [
             a({
-                "attributes": {
-                    "href": ""
+                "attrs": {
+                    "href": "",
+                    "stype": ""
                 }
             }, [
                 i(".download.icon")

@@ -31,7 +31,8 @@ function NotecardForm(sources : NotecardFormSources) : NotecardFormSinks {
     const sinks = {
         DOM: vdom$,
         HTTP: reducer$.HTTP,
-        onion: reducer$.onion
+        onion: reducer$.onion,
+        modal: reducer$.modal
     };
     return sinks;
 }

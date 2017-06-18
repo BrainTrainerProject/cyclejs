@@ -21,7 +21,7 @@ export function ModalWrapper(sources: Sources, component: Component, props: Moda
                     ...request,
                     headers: {
                         ...request.headers,
-                        "Authorization": "Bearer " + tokens.accessToken
+                        "Authorization": "Bearer " + tokens.idToken
                     }
                 }
             }
