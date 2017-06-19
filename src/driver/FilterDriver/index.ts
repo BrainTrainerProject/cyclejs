@@ -1,18 +1,4 @@
-import { adapt } from "@cycle/run/lib/adapt";
-import { DevToolEnabledSource } from "@cycle/run";
 import xs from "xstream";
-
-
-export class FilterSource {
-
-    constructor(private _res$$) {
-    }
-
-    public get() {
-        return adapt(this._res$$) as DevToolEnabledSource;
-    }
-
-}
 
 export interface SearchAction {
     action: 'search';
@@ -21,26 +7,25 @@ export interface SearchAction {
 
 export interface OrderAction {
     action: 'order';
-    value: OrderActionTypes
+    orderBy: OrderTypes;
+    sortDirection: SortTypes
 }
 
-export enum OrderActionTypes{
+export interface ResetAction {
+    action: 'reset';
+}
+
+export enum SortTypes{
+    DESC, ASC
+}
+
+export enum OrderTypes{
     DATE, RATING
 }
 
-export type FilterAction = SearchAction | OrderAction;
+export type FilterAction = ResetAction | SearchAction | OrderAction;
 
 export function makeFilterDriver() {
-
-    const actions = {
-        "search": function (lock) {
-            console.log("Search Action");
-        },
-
-        "order": function (lock) {
-            console.log("Order Action");
-        },
-    };
 
     function auth0Driver(action$) {
 
@@ -50,27 +35,22 @@ export function makeFilterDriver() {
         const actionDone$ = action$
             .map(action => {
 
-                if(!action){
+                if (!action) {
                     return false
                 }
 
-                const actionFn = actions[action.action];
-
-                if (!actionFn) {
-                    console.error(`[FilterDriver] not available method: ${action.action}`);
+                if (!isValidRequest(action)) {
+                    console.error(`[FilterDriver] not available method: ${action}`);
                     return false;
                 }
 
-                return {
-                    action: action.action,
-                    value: action.value
-                }
+                return {...action}
 
             });
 
         const select = responseSelector(actionDone$);
 
-        actionDone$.addListener({next: noop, error: noop, complete: noop})
+        actionDone$.addListener({next: noop, error: noop, complete: noop});
 
         return {
             select: select
@@ -81,31 +61,31 @@ export function makeFilterDriver() {
 
 }
 
+function isValidRequest(request: FilterAction): boolean {
+    if (typeof request === 'object') {
+        switch (request.action) {
+            case 'search':
+            case 'order':
+            case 'reset':
+                return true;
+            default:
+                return false;
+        }
+    }
+    return false;
+}
 
 function responseSelector(action$) {
 
-    console.log('Select Filter')
-
     function selectEvent(event, action$) {
 
-        var driversEvents = ["search", "order"];
-
-        console.log('Selected Event: ' + event);
-
-        if (driversEvents.indexOf(event) > -1) {
+        if (isValidRequest({action: event})) {
             return action$
                 .filter(action => action.action === event)
-                .map(action => action.value)
+                .map(action => action)
         }
-        return xs
-            .create({
-                start: (listener) => {
-                    console.log('start')
-                    listener.next({action: 'search', value: 'xxx'})
-                },
-                stop: () => {
-                }
-            })
+
+        return xs.empty();
     }
 
     return function selectResponse(selector) {
@@ -115,10 +95,10 @@ function responseSelector(action$) {
             .filter(sel => !!sel);
 
         const events$ = events.map(event => {
-            console.log('event: ' + event);
             return selectEvent(event, action$)
-        })
+        });
 
         return xs.merge(...events$);
     }
+
 }
