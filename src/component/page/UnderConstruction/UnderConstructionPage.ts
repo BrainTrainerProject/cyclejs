@@ -1,11 +1,6 @@
-import { a, br, button, div, i, img, input, span } from "@cycle/dom";
-import NotecardForm from "../../form/NotecardForm/index";
-import { VNode } from "snabbdom/vnode";
-import { ModalAction } from "cyclejs-modal";
+import { br, div, img, span } from "@cycle/dom";
 import { AppSinks, AppSources } from "../../../app";
-import MainLayout from "../../layout/MainLayout";
-import xs from 'xstream'
-import CardView from "../../cards/index";
+import xs from "xstream";
 const jwt = require("jwt-decode");
 
 export default function UnderConstructionPage(sources: AppSources): AppSinks {
@@ -30,6 +25,6 @@ function cunstructionView() {
         props: {
             src: 'http://i.imgur.com/322D84i.jpg'
         }
-    }), br(),br(),br(),
-    span({props:{style:'font-size:24px;'}},[window.location.pathname])])
+    }), br(), br(), br(),
+        span({props: {style: 'font-size:24px;'}}, [window.location.pathname])])
 }

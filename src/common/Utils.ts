@@ -18,7 +18,7 @@ export class Utils {
     };
 
     static imageOrPlaceHolder(url) {
-        if(url === ''){
+        if(url === '' || url === null || url === undefined){
             return '/src/img/' + Utils.slashCheck('/card-placeholder.png')
         }else{
             return url

@@ -1,10 +1,10 @@
-import { Component, Sinks, Sources } from "../../common/interfaces";
+import { Sinks, Sources } from "../../common/interfaces";
 import { Sidebar } from "./Sidebar";
 import Masthead from "./Masthead/Masthead";
 import xs, { Stream } from "xstream";
 import { div } from "@cycle/dom";
 import { VNode } from "snabbdom/vnode";
-import { extractSinks, filterProp, mergeSinks } from "cyclejs-utils";
+import { mergeSinks } from "cyclejs-utils";
 import { Utils } from "../../common/Utils";
 const R = require('ramda');
 

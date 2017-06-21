@@ -1,13 +1,15 @@
 import { Stream } from "xstream";
 import { DOMSource, VNode } from "@cycle/dom";
 import { HTTPSource, RequestOptions } from "@cycle/http";
+import { StateSource } from "cycle-onionify";
 
 export type Sources = {
     DOM: DOMSource;
     HTTP: HTTPSource;
-    modal: any,
-    router: any,
-    auth0: any
+    onion: StateSource<any>;
+    modal: any;
+    router: any;
+    auth0: any;
 };
 
 export type RootSinks = {
