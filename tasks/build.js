@@ -4,6 +4,7 @@ const shell = require('gulp-shell');
 const _ = require('underscore');
 const mkdirp = require('mkdirp');
 const runSequence = require('run-sequence');
+const babel = require('gulp-babel');
 
 var dependencies = [
     // Example: '@angular/**/*.js',
@@ -16,6 +17,7 @@ var modules = [
 const folders = [
     'public/src/js',
     'public/src/css',
+    'public/src/js/mobile_bundle',
 ];
 
 
@@ -100,3 +102,23 @@ gulp.task("watch", ["views"], function () {
     gulp.watch("./sources/css/*.styl", ["views"]);
     gulp.watch("./sources/templates/*.html", ["views"]);
 });
+
+// Für Mobile
+gulp.task("mobile_bundle", ["make-folders"], function () {
+    return gulp.src('./lib/app.js', {read: false})
+        .pipe(shell(['mkdirp ./public/src/js/']))
+        .pipe(shell(['browserify ./lib/app.js --outfile=./public/src/js/mobile_bundle/bundle.js']))
+});
+
+gulp.task("transpile", ["mobile_bundle"], function() {
+    return gulp.src("./public/src/js/mobile_bundle/bundle.js")
+        .pipe(babel({
+            ignore: "build.js",
+            presets: ["es2015"]
+        }))
+        .pipe(gulp.dest("./public/src/js"));
+});
+
+gulp.task("build_mobile",
+    runSequence("ts", "config", ["transpile", "styles", "templates", "images", "js"])
+);
