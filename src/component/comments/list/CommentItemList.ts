@@ -38,6 +38,7 @@ export default function CardItemList(sources: CardViewSources, props: CardItemLi
 
     const lessonSets$ = Collection.gather(CardItem, sources, tasksState$, 'id', key => `${key}$`);
     const lessonsListView$ = Collection.pluck(lessonSets$, item => item.DOM);
+    //const lessonsListRouter$ = Collection.pluck(lessonSets$, item => item.router);
     const lessonsListRouter$ = Collection.merge(lessonSets$, item => item.router);
 
     const sinks = {

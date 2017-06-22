@@ -1,7 +1,7 @@
 import { Stream } from "xstream";
 import { button, div, form, img, input, label, li, option, select, textarea, ul } from "@cycle/dom";
 import { VNode } from "snabbdom/vnode";
-import { NotecardFormState } from "./index";
+import { SetFormState } from "./index";
 import { Visibility } from "../../../common/Visibility";
 import { isNullOrUndefined, isUndefined } from "util";
 import { Utils } from "../../../common/Utils";
@@ -15,7 +15,7 @@ export const INP_VISBILITY = '.inp_visibility';
 
 export const ERR_TITLE = 'err_title';
 
-export function view(state$: Stream<NotecardFormState>): Stream<VNode> {
+export function view(state$: Stream<SetFormState>): Stream<VNode> {
     return state$
         .map(state => {
             return getCreateForm(state);
@@ -33,7 +33,7 @@ function errorMessage(state) {
     }
 }
 
-function imageUpload(event, state: NotecardFormState) {
+function imageUpload(event, state: SetFormState) {
     let file = event.target.files[0];
 
     if (!file.type.match('image.*')) {
@@ -53,7 +53,7 @@ function imageUpload(event, state: NotecardFormState) {
     }
 }
 
-function getCreateForm(state: NotecardFormState): VNode {
+function getCreateForm(state: SetFormState): VNode {
 
     const errJson = (!isNullOrUndefined(state.errors)) ? state.errors : isUndefined;
     const hasTitleError: boolean = (!isNullOrUndefined(errJson) && errJson.hasOwnProperty(INP_TITLE));

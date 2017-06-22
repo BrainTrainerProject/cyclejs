@@ -65,6 +65,7 @@
     "route-parser": "0.0.5",
     "run-sequence": "^1.2.2",
     "shx": "^0.2.2",
+    "string-to-dom": "^0.1.5",
     "switch-path": "^1.2.0",
     "symbol-observable": "^1.0.4",
     "typescript": "^2.3.2",

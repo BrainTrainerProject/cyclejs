@@ -1,6 +1,6 @@
 import xs, {Stream} from 'xstream';
 import sampleCombine from 'xstream/extra/sampleCombine';
-import {NotecardFormState} from './index';
+import {SetFormState} from './index';
 import {Reducer} from '../../../common/interfaces';
 import {assoc, assocPath, dissocPath} from 'ramda';
 import {title} from '@cycle/dom';
@@ -13,7 +13,7 @@ import {PostSetApi} from '../../../common/api/PostSet';
 import {GetNotecardsApi} from '../../../common/api/GetNotecards';
 import {ModalAction} from 'cyclejs-modal';
 
-export function model(sources: any, state$: any, intent: any, prevState?: NotecardFormState) {
+export function model(sources: any, state$: any, intent: any, prevState?: SetFormState) {
 
     const {HTTP} = sources;
 

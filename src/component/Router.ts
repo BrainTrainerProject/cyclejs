@@ -10,6 +10,7 @@ import { MainLayoutWrapper } from "./layout/MainLayoutWrapper";
 import UnderConstructionPage from "./page/UnderConstruction/UnderConstructionPage";
 import dropRepeats from "xstream/extra/dropRepeats";
 import SetPage from "./page/Set/SetPage";
+import FeedPage from "./page/Feed/FeedPage";
 
 const routedComponent = (sources) => ({path, value}) => value({...sources, router: sources.router.path(path)});
 const protectedPage = (page) => ProtectedPage(page);
@@ -18,7 +19,7 @@ const protectedMainLayout = (Component) => protectedPage(mainLayout(Component));
 
 const routes = {
     '/start': protectedMainLayout(StartPage),
-    '/feed': protectedMainLayout(UnderConstructionPage),
+    '/feed': protectedMainLayout(FeedPage),
     '/store': protectedMainLayout(UnderConstructionPage),
     '/profile': protectedMainLayout(UnderConstructionPage),
     '/settings': protectedMainLayout(UnderConstructionPage),

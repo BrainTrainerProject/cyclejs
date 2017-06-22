@@ -13,8 +13,8 @@ import { captureClicks, makeHistoryDriver } from "@cycle/history";
 import switchPath from "switch-path";
 import { makeRouterDriver, RouterSource } from "cyclic-router";
 import { Router } from "./component/Router";
-import { FilterSource, makeFilterDriver } from "./driver/FilterDriver/index";
 import  xs from 'xstream';
+import { makeFilterDriver } from "./driver/FilterDriver/index";
 
 const config = require('./config.json');
 

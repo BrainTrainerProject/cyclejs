@@ -8,9 +8,9 @@ import {Visibility} from '../../../common/Visibility';
 import {CRUDType} from '../../../common/CRUDType';
 import { GetNotecardsApi } from "../../../common/api/GetNotecards";
 
-export type NotecardFormSources = Sources & { onion : StateSource<NotecardFormState> };
-export type NotecardFormSinks = Sinks & { onion : Stream<Reducer> };
-export interface NotecardFormState extends State {
+export type SetFormSources = Sources & { onion : StateSource<SetFormState> };
+export type SetFormSinks = Sinks & { onion : Stream<Reducer> };
+export interface SetFormState extends State {
     isLoading : false;
     type : CRUDType;
     imageUrl: string;
@@ -21,7 +21,7 @@ export interface NotecardFormState extends State {
     errors : {};
 }
 
-function NotecardForm(sources : NotecardFormSources) : NotecardFormSinks {
+function SetForm(sources : SetFormSources) : SetFormSinks {
 
     const state$ = sources.onion.state$;
     const action$ = intent(sources);
@@ -37,4 +37,4 @@ function NotecardForm(sources : NotecardFormSources) : NotecardFormSinks {
     return sinks;
 }
 
-export default NotecardForm;
+export default SetForm;

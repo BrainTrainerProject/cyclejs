@@ -1,66 +1,120 @@
-import { a, button, div, i, img, input, span } from "@cycle/dom";
-import NotecardForm from "../../form/NotecardForm/index";
-import { VNode } from "snabbdom/vnode";
-import { ModalAction } from "cyclejs-modal";
-import { AppSinks, AppSources } from "../../../app";
-import MainLayout from "../../layout/MainLayout";
-import xs from 'xstream'
-import CardView from "../../cards/index";
-const jwt = require("jwt-decode");
+import xs, { Stream } from "xstream";
+import { Reducer, Sinks, Sources, State } from "../../../common/interfaces";
+import { AppState } from "../../../app";
+import { StateSource } from "cycle-onionify";
+import { a, div, img, p } from "@cycle/dom";
+import { GetFeedsApi, GetFeedsApiProps } from "../../../common/api/GetFeeds";
+import Collection from "@cycle/collection";
 
-export default function FeedPage(sources: AppSources): AppSinks {
-
-    const actions = intent(sources);
-    const reducer = model(actions);
-
-    // Cards
-    const lessonsSinks = CardView(sources);
-
-    const leftView$ = lessonsSinks.DOM;
-    const rightView$ = xs.of(contentRight());
-
-    //const mainLayoutSinks = MainLayout(sources)(leftView$, rightView$);
-
-    const sinks = {
-        DOM_LEFT: leftView$,
-        DOM_RIGHT: rightView$,
-        HTTP: lessonsSinks.HTTP,
-        modal: reducer.modal,
-        onion: lessonsSinks.onion
-    };
-
-    return sinks;
+export type FeedPageSources = Sources & { onion: StateSource<AppState>, filter: any };
+export type FeedPageSinks = Sinks & { onion: Stream<Reducer>, modal: Stream<any>, filter: Stream<any> };
+export interface FeedPageState extends State {
 }
 
-function intent(sources: AppSources) {
+export default function FeedPage(sources) {
 
-    const {DOM} = sources;
+
+    const feedListSinks = FeedItemList(sources);
+
+    // TODO stopped here
+    // next step einfach die daten für den Feed laden
+    return {
+        DOM_LEFT: xs.combine(xs.of(div(['DUMP'])), feedListSinks.DOM),
+        DOM_RIGHT: xs.of([]),
+        HTTP: xs.of(GetFeedsApi.buildRequest({page: 1} as GetFeedsApiProps))
+    }
+}
+
+function leftView([dump, list]){
+
+    return [
+        div([dump]),
+        list
+    ]
+
+}
+
+export interface FeedItemProps {
+    feedType: string,
+    sender: {
+        id: string,
+        name: string,
+        image: string,
+    }
+}
+
+function FeedItem(sources) {
+
+    const {DOM, props$} = sources;
 
     return {
-        newSetClick$: DOM.select('.new-set-btn').events('click')
+        DOM: props$.map(feed => {
+            return view({} as FeedItemProps)
+        })
     };
+
 }
 
-function model(actions) {
+function view(props: FeedItemProps) {
+    return div(".column", [
+        div(".ui.card.fluid", [
+            a(".card-cover.image", {
+                "attrs": {
+                    "href": '/profile/' + props.sender.id
+                }
+            }, [
+                img({
+                    "attrs": {
+                        "src": props.sender.image
+                    }
+                })
+            ]),
+            div(".card-title.content", [
+                a(".header", {
+                    "attrs": {
+                        "href": '/profile/' + props.sender.id
+                    }
+                }, [props.sender.name])
+            ])
+        ])
+    ])
+}
 
-    const openNotecardModal$ = actions.newSetClick$.mapTo({
-        type: 'open',
-        props: {
-            title: 'Neues Set erstellen'
-        },
-        component: NotecardForm
-    } as ModalAction);
+function FeedItemList(sources) {
 
-    const $modal = openNotecardModal$;
+    const {DOM, HTTP} = sources;
+
+    const feedState$ = sources.HTTP.select(GetFeedsApi.ID)
+        .flatten()
+        .map(({text}) => JSON.parse(text))
+        .map(items => Object.keys(items)
+            .map(key => items[key])
+            .map(item => ({
+                id: item._id,
+                props: {
+                    ...item
+                }
+            })))
+        .startWith([]);
+
+    const feedCollection$ = Collection.gather(FeedItem, sources, feedState$, 'id', key => `${key}$`);
+    const feedCollectionVTree$ = Collection.pluck(feedCollection$, item => item.DOM);
+    const feedCollectionRouter$ = Collection.merge(feedCollection$, item => item.router);
 
     const sinks = {
-        modal: $modal
-    };
-    return sinks;
-}
+        DOM: feedCollectionVTree$
+            .map(vtree => {
 
-function contentRight() {
-    return div('.ui', [
-        button('.new-set-btn.ui.primary.button', [`Neues Set erstellen`])
-    ]);
+                const list = (vtree.length === 0) ?
+                    div('.ui.column', p(['Keine Feeds vorhanden']))
+                    : vtree;
+
+                return div('.ui.three.column.doubling.stackable.grid',
+                    list
+                )
+            }),
+        router: feedCollectionRouter$
+    };
+
+    return sinks;
 }
