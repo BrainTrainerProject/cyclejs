@@ -17,7 +17,6 @@ var modules = [
 const folders = [
     'public/src/js',
     'public/src/css',
-    'public/src/js/mobile_bundle',
 ];
 
 
@@ -104,14 +103,8 @@ gulp.task("watch", ["views"], function () {
 });
 
 // Für Mobile
-gulp.task("mobile_bundle", ["make-folders"], function () {
-    return gulp.src('./lib/app.js', {read: false})
-        .pipe(shell(['mkdirp ./public/src/js/']))
-        .pipe(shell(['browserify ./lib/app.js --outfile=./public/src/js/mobile_bundle/bundle.js']))
-});
-
-gulp.task("transpile", ["mobile_bundle"], function() {
-    return gulp.src("./public/src/js/mobile_bundle/bundle.js")
+gulp.task("transpile", ["bundle"], function() {
+    return gulp.src("./public/src/js/bundle.js")
         .pipe(babel({
             ignore: "build.js",
             presets: ["es2015"]
