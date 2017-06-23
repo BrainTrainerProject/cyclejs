@@ -1,10 +1,11 @@
-import { Stream } from "xstream";
-import { button, div, form, img, input, label, li, option, select, textarea, ul } from "@cycle/dom";
-import { VNode } from "snabbdom/vnode";
-import { SetFormState } from "./index";
-import { Visibility } from "../../../common/Visibility";
-import { isNullOrUndefined, isUndefined } from "util";
-import { Utils } from "../../../common/Utils";
+import {Stream} from 'xstream';
+import {button, div, form, img, input, label, option, select, textarea} from '@cycle/dom';
+import {VNode} from 'snabbdom/vnode';
+import {SetFormState} from './index';
+import {Visibility} from '../../../common/Visibility';
+import {isNullOrUndefined, isUndefined} from 'util';
+import {Utils} from '../../../common/Utils';
+import {errorMessage} from '../../../common/GuiUtils';
 const R = require('ramda');
 
 export const BTN_SUBMIT = '.btn_submit';
@@ -22,17 +23,6 @@ export function view(state$: Stream<SetFormState>): Stream<VNode> {
         });
 }
 
-function errorMessage(state) {
-    if (!isNullOrUndefined(state.errors) && Utils.jsonHasChilds(state.errors)) {
-        return div('.ui.error.message', [
-            ul('.list', R.values(R.map(error => li([error.msg]), state.errors))
-            )
-        ]);
-    } else {
-        return null;
-    }
-}
-
 function imageUpload(event, state: SetFormState) {
     let file = event.target.files[0];
 
@@ -41,8 +31,8 @@ function imageUpload(event, state: SetFormState) {
     } else {
 
         const reader = new FileReader();
-        reader.onload = (function (file) {
-            return function (e) {
+        reader.onload = (function(file) {
+            return function(e) {
                 const imgSrc = e.target.result;
                 const preview = document.getElementById('set-image');
                 preview.src = state.imageUrl = imgSrc;
@@ -63,21 +53,21 @@ function getCreateForm(state: SetFormState): VNode {
     return div('.ui.grid', [
         div('.four.wide.column', [
 
-            div(".blurring.dimmable.image", [
-                div(".ui.dimmer", [
-                    div(".content", [
-                        div(".center", [
+            div('.blurring.dimmable.image', [
+                div('.ui.dimmer', [
+                    div('.content', [
+                        div('.center', [
 
-                            div(".ui.inverted.button", {
+                            div('.ui.inverted.button', {
                                 hook: {
                                     insert: (vnode) => {
-                                        $("#file").change(function (e) {
+                                        $('#file').change(function(e) {
                                             imageUpload(e, state);
                                             $(vnode.elm).parent().parent().parent().dimmer('hide');
                                         });
 
-                                        $(vnode.elm).on('click', function () {
-                                            $("#file").trigger('click')
+                                        $(vnode.elm).on('click', function() {
+                                            $('#file').trigger('click');
                                         });
                                     }
                                 }

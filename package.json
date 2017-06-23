@@ -48,6 +48,7 @@
     "cyclejs-modal": "git+https://github.com/AndrejSperling/cyclejs-modal.git",
     "cyclejs-utils": "^1.0.4",
     "cyclic-router": "^4.0.5",
+    "froala-editor": "^2.6.2",
     "gulp": "^3.9.1",
     "gulp-clean": "^0.3.2",
     "gulp-require-tasks": "^1.1.0",

@@ -1,6 +1,6 @@
-import { Sinks } from "./interfaces";
-import { extractSinks, filterProp } from "cyclejs-utils";
-import xs from "xstream";
+import {Reducer, Sinks} from './interfaces';
+import {extractSinks, filterProp} from 'cyclejs-utils';
+import xs, {Stream} from 'xstream';
 const config = require('../config.json');
 
 export class Utils {
@@ -10,18 +10,18 @@ export class Utils {
     }
 
     static apiUrl(urlCall) {
-        return config.apiUrl + Utils.slashCheck(urlCall)
+        return config.apiUrl + Utils.slashCheck(urlCall);
     };
 
     static imageUrl(url) {
-        return '/src/img/' + Utils.slashCheck(url)
+        return '/src/img/' + Utils.slashCheck(url);
     };
 
     static imageOrPlaceHolder(url) {
-        if(url === '' || url === null || url === undefined){
-            return '/src/img/' + Utils.slashCheck('/card-placeholder.png')
-        }else{
-            return url
+        if (url === '' || url === null || url === undefined) {
+            return '/src/img/' + Utils.slashCheck('/card-placeholder.png');
+        } else {
+            return url;
         }
     };
 
@@ -34,7 +34,7 @@ export class Utils {
     static filterPropsByArray(sinks: any, props: string[]) {
         let currSinks: Sinks = sinks;
         for (let prop of props) {
-            currSinks = filterProp(extractSinks(xs.of(currSinks), Object.keys(currSinks)), prop)
+            currSinks = filterProp(extractSinks(xs.of(currSinks), Object.keys(currSinks)), prop);
         }
         return currSinks;
 

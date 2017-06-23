@@ -39,7 +39,7 @@ export default function NestedCardItemList(sources: NestedCardItemListSources, p
         })
         .map(({text}) => JSON.parse(text))
         .map(item => {
-            console.log("ITTTEEEMMMM");
+            console.log("ITTTEEEMMMM!!!!11!1!!!");
             console.log(item);
             return ({
                 id: item._id,

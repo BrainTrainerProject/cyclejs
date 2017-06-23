@@ -2,7 +2,7 @@ import xs, {Stream} from 'xstream';
 import sampleCombine from 'xstream/extra/sampleCombine';
 import {SetFormState} from './index';
 import {Reducer} from '../../../common/interfaces';
-import {assoc, assocPath, dissocPath} from 'ramda';
+import {assoc} from 'ramda';
 import {title} from '@cycle/dom';
 import {CRUDType} from '../../../common/CRUDType';
 import {Visibility} from '../../../common/Visibility';
@@ -10,8 +10,8 @@ import {INP_DESC, INP_TAGS, INP_TITLE} from './view';
 import {Utils} from '../../../common/Utils';
 import {HttpRequest} from '../../../common/api/HttpRequest';
 import {PostSetApi} from '../../../common/api/PostSet';
-import {GetNotecardsApi} from '../../../common/api/GetNotecards';
 import {ModalAction} from 'cyclejs-modal';
+import {inputErrorState, inputStream} from '../../../common/GuiUtils';
 
 export function model(sources: any, state$: any, intent: any, prevState?: SetFormState) {
 
@@ -32,9 +32,9 @@ export function model(sources: any, state$: any, intent: any, prevState?: SetFor
         return prevState;
     });
 
-    const titleChange$: Stream<Reducer> = dynamicInputStream(intent.inputTitle$, 'title', INP_TITLE);
-    const descChange$: Stream<Reducer> = dynamicInputStream(intent.inputDescription$, 'description', INP_DESC);
-    const tagsChange$: Stream<Reducer> = dynamicInputStream(intent.inputTags$, 'tags', INP_TAGS);
+    const titleChange$: Stream<Reducer> = inputStream(INP_TITLE, 'title', intent.inputTitle$);
+    const descChange$: Stream<Reducer> = inputStream(INP_DESC, 'description', intent.inputDescription$);
+    const tagsChange$: Stream<Reducer> = inputStream(INP_TAGS, 'tags', intent.inputTags$);
 
     const visibilityChange$: Stream<Reducer> = intent.selectVisibility$
         .map(ev => {
@@ -56,16 +56,16 @@ export function model(sources: any, state$: any, intent: any, prevState?: SetFor
 
     const submitValid$: Stream<Reducer> = intent.submit$
         .map(submit => function submitReducer(state) {
-            if (state.title == '') {
-                state = errorMsg(INP_TITLE, 'Titel eingeben!', state);
+            if (!state.title) {
+                state = inputErrorState(INP_TITLE, 'Titel eingeben!', state);
             }
 
-            if (state.description == '') {
-                state = errorMsg(INP_DESC, 'Beschreibung eingeben!', state);
+            if (!state.description) {
+                state = inputErrorState(INP_DESC, 'Beschreibung eingeben!', state);
             }
 
-            if (state.tags == '') {
-                state = errorMsg(INP_TAGS, 'Tags eingeben!', state);
+            if (!state.tags) {
+                state = inputErrorState(INP_TAGS, 'Tags eingeben!', state);
             }
             return state;
         });
@@ -145,16 +145,4 @@ function generateRequest(state): HttpRequest {
                 'photourl': state.imageUrl
             });
     }
-}
-
-function errorMsg(selectorKey, msg, prevState) {
-    return assocPath(['errors', selectorKey, 'msg'], msg, prevState);
-}
-
-function dynamicInputStream(start$, valueKey, selectorKey): Stream<Reducer> {
-    return start$.map(value => function reducer(state) {
-        state = dissocPath(['errors', selectorKey], state);
-        state = assoc(valueKey, value, state);
-        return state;
-    });
 }

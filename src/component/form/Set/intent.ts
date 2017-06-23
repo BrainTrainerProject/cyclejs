@@ -1,9 +1,9 @@
-import { BTN_SUBMIT, INP_DESC, INP_TAGS, INP_TITLE, INP_VISBILITY } from './view';
-import { DOMSource } from '@cycle/dom';
+import {BTN_SUBMIT, INP_DESC, INP_TAGS, INP_TITLE, INP_VISBILITY} from './view';
+import {DOMSource} from '@cycle/dom';
 
-export function intent(sources) : any {
+export function intent(sources): any {
 
-    const DOM : DOMSource = sources.DOM;
+    const DOM: DOMSource = sources.DOM;
 
     const inputEvents = (selector) => DOM.select(selector).events('input').map(ev => (ev.target as HTMLInputElement).value);
     const clickEvents = (selector) => DOM.select(selector).events('click').map(ev => {
