@@ -1,3 +1,4 @@
+import "babel-polyfill";
 import { div, makeDOMDriver } from "@cycle/dom";
 import { makeHTTPDriver } from "@cycle/http";
 import { Stream } from "xstream";

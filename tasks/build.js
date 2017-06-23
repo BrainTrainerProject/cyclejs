@@ -4,6 +4,7 @@ const shell = require('gulp-shell');
 const _ = require('underscore');
 const mkdirp = require('mkdirp');
 const runSequence = require('run-sequence');
+const babel = require('gulp-babel');
 
 var dependencies = [
     // Example: '@angular/**/*.js',
@@ -100,3 +101,17 @@ gulp.task("watch", ["views"], function () {
     gulp.watch("./sources/css/*.styl", ["views"]);
     gulp.watch("./sources/templates/*.html", ["views"]);
 });
+
+// Für Mobile
+gulp.task("transpile", ["bundle"], function() {
+    return gulp.src("./public/src/js/bundle.js")
+        .pipe(babel({
+            ignore: "build.js",
+            presets: ["es2015"]
+        }))
+        .pipe(gulp.dest("./public/src/js"));
+});
+
+gulp.task("build_mobile",
+    runSequence("ts", "config", ["transpile", "styles", "templates", "images", "js"])
+);
