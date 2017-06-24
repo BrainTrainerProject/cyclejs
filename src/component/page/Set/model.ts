@@ -1,32 +1,35 @@
 import xs from 'xstream';
-import {SetPageState} from './SetPage';
-import {Utils} from '../../../common/Utils';
-import {ModalAction} from 'cyclejs-modal';
+import { SetPageState } from './SetPage';
+import { Utils } from '../../../common/Utils';
+import { ModalAction } from 'cyclejs-modal';
 import NotecardForm from '../../form/Notecard/Notecard';
-import {GetPracticeApi, GetPracticeProps} from '../../../common/api/GetPractice';
+import { GetPracticeApi, GetPracticeProps } from '../../../common/api/GetPractice';
 
-export function model(action: any) {
+export function model(action: any, state$) {
 
     const sinks = {
         onion: reducer(action),
         HTTP: httpRequests(action),
-        modal: modalRequests(action)
+        modal: modalRequests(action, state$)
     };
 
     return sinks;
 
 }
 
-function modalRequests(action: any): any {
+function modalRequests(action: any, state$): any {
     const newNotecardOpenModal$ = action.newNotecardClicked$
-        .mapTo({
+        .mapTo(state$.map(state => state.set.id))
+        .flatten()
+        .take(1)
+        .map(id => ({
             type: 'open',
             props: {
                 title: 'Notecard erstellen',
-                refSet: 'MeinSetttId'
+                refSet: id
             },
             component: NotecardForm
-        } as ModalAction).debug('OpenModal');
+        } as ModalAction)).debug('OpenModal');
 
     return xs.merge(newNotecardOpenModal$);
 }
@@ -36,7 +39,8 @@ function httpRequests(action: any) {
     const requestRandomNotecard$ = action.randomNotecardClicked$
         .mapTo(GetPracticeApi.buildRequest({requestId: ''} as GetPracticeProps));
 
-    return xs.merge(requestRandomNotecard$);
+
+    return xs.merge(requestRandomNotecard$, action.requestSetInfo$);
 
 }
 
@@ -86,7 +90,7 @@ function reducer(action: any) {
                     notecards: set.notecard
                 }
             };
-        });
+        }).debug('RESPONSE');
 
     return xs.merge(
         initReducer$,

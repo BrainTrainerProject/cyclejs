@@ -30,6 +30,7 @@ export function intent(sources: AppSources) {
     const httpResponseSetInfo$ = HTTP.select(GetSetApi.ID).flatten().startWith(null).filter(r => !!r).debug('RESPONSE');
 
     return {
+        getSetId$: getSetId$,
         newNotecardClicked$: newNotecardButtonClicked$,
         randomNotecardClicked$: randomNotecardButtonClicked$,
         editNotecardClicked$: xs.never(),

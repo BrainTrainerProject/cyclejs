@@ -37,9 +37,9 @@ export default function SetPage(sources) {
 
     const {router} = sources;
 
-    const state$ = sources.onion.state$;
+    const state$ = sources.onion.state$.debug("STATE");
     const actions = intent(sources);
-    const reducer = model(actions);
+    const reducer = model(actions, state$);
 
     const {notecardSinks, commentSinks} = loadOtherComponents(sources, state$);
 
