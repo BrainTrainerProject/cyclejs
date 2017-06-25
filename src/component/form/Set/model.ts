@@ -31,6 +31,8 @@ export function model(sources: any, state$: any, intent: any, formAction: SetFor
         .filter(res => res.ok)
         .map(({text}) => JSON.parse(text));
 
+    // reducer
+
     const default$: Stream<Reducer> = xs.of(function defaultReducer(): any {
         return {
             action: formAction,
@@ -95,12 +97,6 @@ export function model(sources: any, state$: any, intent: any, formAction: SetFor
             return state;
         });
 
-    const submitRequest$ = submitValid$
-        .compose(sampleCombine(state$))
-        .map(([submitEvent, state]) => state)
-        .filter(state => !Utils.jsonHasChilds(state.errors))
-        .map(state => generateRequest(state));
-
     const reducer$ = xs.merge(
         default$,
         loadedDataReducer$,
@@ -111,13 +107,13 @@ export function model(sources: any, state$: any, intent: any, formAction: SetFor
         submitValid$
     );
 
-    const successResponse$ = HTTP
-        .select(PostSetApi.ID)
-        .flatten()
-        .filter(response => response.ok).debug('Sussess Response');
+    // http
 
-    const close$ = xs.merge(successResponse$, intent.delete$)
-        .mapTo({type: 'close'} as ModalAction);
+    const submitRequest$ = submitValid$
+        .compose(sampleCombine(state$))
+        .map(([submitEvent, state]) => state)
+        .filter(state => !Utils.jsonHasChilds(state.errors))
+        .map(state => generateRequest(state));
 
     const deleteRequest$ = intent.delete$
         .mapTo(state$.map(state => state.id))
@@ -127,13 +123,20 @@ export function model(sources: any, state$: any, intent: any, formAction: SetFor
             id: id
         } as DeleteSetProps));
 
+    // modal
+
+    const closeModal$ = xs.merge(submitRequest$, intent.delete$)
+        .mapTo({type: 'close'} as ModalAction);
+
+    // router
+
     const goToSetsIfDelete$ = intent.delete$
         .mapTo('/start');
 
     const sinks = {
         HTTP: xs.merge(submitRequest$, loadSetData$, deleteRequest$),
         onion: reducer$,
-        modal: close$,
+        modal: closeModal$,
         router: goToSetsIfDelete$
     };
 
