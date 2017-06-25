@@ -2,7 +2,7 @@ import xs from "xstream";
 import { SetPageState } from "./SetPage";
 import { Utils } from "../../../common/Utils";
 import { ModalAction } from "cyclejs-modal";
-import NotecardForm from "../../form/Notecard/Notecard";
+import NotecardForm, { CreateNotecardFormAction } from "../../form/Notecard/Notecard";
 import { GetPracticeApi, GetPracticeProps } from "../../../common/api/GetPractice";
 import { EditSetFormAction, SetForm } from "../../form/Set/SetForm";
 
@@ -43,11 +43,11 @@ function modalRequests(action: any, state$): any {
         .map(id => ({
             type: 'open',
             props: {
-                type: 'create',
                 title: 'Notecard erstellen',
-                payload: {
-                    refSet: id
-                }
+                action: {
+                    type: 'create',
+                    setId: id
+                } as CreateNotecardFormAction
             },
             component: NotecardForm
         } as ModalAction));

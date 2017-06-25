@@ -1,4 +1,4 @@
-import {Utils} from '../Utils';
+import {Utils} from '../../Utils';
 
 export interface PostNotecardProps {
     send: {
@@ -6,7 +6,7 @@ export interface PostNotecardProps {
         task: string;
         answer: string;
     }
-    refSet?: string;
+    refSet: string;
     reqId?: string;
 }
 

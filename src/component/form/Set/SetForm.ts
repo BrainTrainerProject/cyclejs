@@ -21,6 +21,7 @@ export interface SetFormState extends State {
 
 export interface CreateSetFormAction {
     type: 'create';
+    setId: string;
 }
 
 export interface EditSetFormAction {

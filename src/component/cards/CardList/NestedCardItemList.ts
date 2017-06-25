@@ -4,7 +4,7 @@ import Collection from "@cycle/collection";
 import { StateSource } from "cycle-onionify";
 import xs, { Stream } from "xstream";
 import { div, p } from "@cycle/dom";
-import { GetNotecardApi, GetNotecardProps } from "../../../common/api/GetNotecard";
+import { GetNotecardApi, GetNotecardProps } from "../../../common/api/notecard/GetNotecard";
 import { NestedCardItem } from "./NestedCardItem";
 import delay from "xstream/extra/delay";
 import flattenSequentially from "xstream/extra/flattenSequentially";
