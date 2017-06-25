@@ -1,4 +1,4 @@
-import {BTN_SUBMIT, INP_DESC, INP_TAGS, INP_TITLE, INP_VISBILITY} from './view';
+import { BTN_SUBMIT, ID_DELETE_BTN, INP_DESC, INP_TAGS, INP_TITLE, INP_VISBILITY } from './view';
 import {DOMSource} from '@cycle/dom';
 
 export function intent(sources): any {
@@ -12,6 +12,7 @@ export function intent(sources): any {
     });
 
     return {
+        delete$: clickEvents(ID_DELETE_BTN).debug("DELETE"),
         submit$: clickEvents(BTN_SUBMIT),
         inputTitle$: inputEvents(INP_TITLE),
         inputDescription$: inputEvents(INP_DESC),

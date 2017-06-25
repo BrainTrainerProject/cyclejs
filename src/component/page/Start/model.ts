@@ -1,20 +1,23 @@
 import xs from "xstream";
 import { ModalAction } from "cyclejs-modal";
-import NotecardForm from "../../form/Set/index";
+import { CreateSetFormAction, SetForm } from "../../form/Set/SetForm";
 
 export function model(action: any) {
 
-    const openNotecardModal$ = action.newSetClick$.mapTo({
+    const openCreateSetModal$ = action.createSet$.mapTo({
         type: 'open',
         props: {
-            title: 'Neues Set erstellen'
+            title: 'Set erstellen',
+            action: {
+                type: 'create',
+            } as CreateSetFormAction
         },
-        component: NotecardForm
-    } as ModalAction).debug('OpenModal');
+        component: SetForm
+    } as ModalAction);
 
 
     const reducerActions$ = reducer(action);
-    const modalActions$ = openNotecardModal$;
+    const modalActions$ = openCreateSetModal$;
 
     const sinks = {
         onion: reducerActions$,

@@ -1,5 +1,5 @@
 import { button, div, form, h3, h5, i, img, p, textarea } from "@cycle/dom";
-import { ID_RATING_FORM, SetPageState } from "./SetPage";
+import { ID_EDIT_SET_BTN, ID_RATING_FORM, SetPageState } from "./SetPage";
 export function viewLeft([state, notecards, comments]) {
 
     const set = (state as SetPageState).set;
@@ -47,16 +47,14 @@ export function viewLeft([state, notecards, comments]) {
 
                     // Buttons
                     div(".eight.wide.column", [
-                        button(".ui.icon.button.right.floated", [
+                        button(ID_EDIT_SET_BTN + ".ui.icon.button.right.floated", [
                             i(".icon.edit")
                         ])
                     ]),
 
                     // Beschreibung
                     div(".sixteen.wide.column", [
-
                         p([set.description])
-
                     ])
 
                 ])

@@ -4,7 +4,7 @@ import { model } from "./model";
 import { viewLeft } from "./viewLeft";
 import { viewRight } from "./viewRight";
 import CardItemList from "../../cards/CardList/CardItemList";
-import { GetSetsApi } from "../../../common/api/GetSets";
+import { GetSetsApi } from "../../../common/api/set/GetSets";
 import xs from 'xstream';
 const jwt = require('jwt-decode');
 

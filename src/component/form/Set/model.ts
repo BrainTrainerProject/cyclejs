@@ -1,36 +1,61 @@
-import xs, {Stream} from 'xstream';
-import sampleCombine from 'xstream/extra/sampleCombine';
-import {SetFormState} from './index';
-import {Reducer} from '../../../common/interfaces';
-import {assoc} from 'ramda';
-import {title} from '@cycle/dom';
-import {CRUDType} from '../../../common/CRUDType';
-import {Visibility} from '../../../common/Visibility';
-import {INP_DESC, INP_TAGS, INP_TITLE} from './view';
-import {Utils} from '../../../common/Utils';
-import {HttpRequest} from '../../../common/api/HttpRequest';
-import {PostSetApi} from '../../../common/api/PostSet';
-import {ModalAction} from 'cyclejs-modal';
-import {inputErrorState, inputStream} from '../../../common/GuiUtils';
+import xs, { Stream } from "xstream";
+import sampleCombine from "xstream/extra/sampleCombine";
+import { Reducer } from "../../../common/interfaces";
+import { assoc } from "ramda";
+import { title } from "@cycle/dom";
+import { Visibility } from "../../../common/Visibility";
+import { INP_DESC, INP_TAGS, INP_TITLE } from "./view";
+import { Utils } from "../../../common/Utils";
+import { HttpRequest } from "../../../common/api/HttpRequest";
+import { PostSetApi } from "../../../common/api/set/PostSet";
+import { ModalAction } from "cyclejs-modal";
+import { inputErrorState, inputStream } from "../../../common/GuiUtils";
+import { SetFormAction } from "./SetForm";
+import { GetSetApi, GetSetProps } from "../../../common/api/set/GetSet";
+import { DeleteSetApi, DeleteSetProps } from "../../../common/api/set/DeleteSet";
+import { UpdateSetApi } from "../../../common/api/set/UpdateSet";
 
-export function model(sources: any, state$: any, intent: any, prevState?: SetFormState) {
+export function model(sources: any, state$: any, intent: any, formAction: SetFormAction) {
 
     const {HTTP} = sources;
 
+    const loadSetData$ = xs.of(formAction)
+        .filter(action => action.type == 'edit')
+        .map(action => action.setId)
+        .map(id => GetSetApi.buildRequest({
+            id: id
+        } as GetSetProps));
+
+    const setDataResponse$ = HTTP.select(GetSetApi.ID)
+        .flatten()
+        .filter(res => res.ok)
+        .map(({text}) => JSON.parse(text));
+
     const default$: Stream<Reducer> = xs.of(function defaultReducer(): any {
-        if (typeof prevState === 'undefined') {
-            return {
-                type: CRUDType.ADD,
-                title: '',
-                description: '',
-                tags: '',
-                visibility: Visibility.PRIVATE,
-                imageUrl: '',
-                errors: {}
-            };
-        }
-        return prevState;
+        return {
+            action: formAction,
+            id: (formAction.type === 'edit') ? formAction.setId : '',
+            title: '',
+            description: '',
+            tags: '',
+            visibility: Visibility.PRIVATE,
+            imageUrl: '',
+            errors: {}
+        };
     });
+
+    const loadedDataReducer$: Stream<Reducer> = setDataResponse$
+        .map(res => (state) => {
+            return {
+                ...state,
+                id: res._id,
+                title: res.title,
+                description: res.description,
+                tags: res.tags,
+                visibility: res.visibility,
+                imageUrl: Utils.imageOrPlaceHolder(res.photourl)
+            }
+        });
 
     const titleChange$: Stream<Reducer> = inputStream(INP_TITLE, 'title', intent.inputTitle$);
     const descChange$: Stream<Reducer> = inputStream(INP_DESC, 'description', intent.inputDescription$);
@@ -73,13 +98,12 @@ export function model(sources: any, state$: any, intent: any, prevState?: SetFor
     const submitRequest$ = submitValid$
         .compose(sampleCombine(state$))
         .map(([submitEvent, state]) => state)
-        .filter(state => isFormValid(state))
+        .filter(state => !Utils.jsonHasChilds(state.errors))
         .map(state => generateRequest(state));
-
-    const request$ = submitRequest$;
 
     const reducer$ = xs.merge(
         default$,
+        loadedDataReducer$,
         titleChange$,
         descChange$,
         tagsChange$,
@@ -92,57 +116,54 @@ export function model(sources: any, state$: any, intent: any, prevState?: SetFor
         .flatten()
         .filter(response => response.ok).debug('Sussess Response');
 
-    const close$ = successResponse$
+    const close$ = xs.merge(successResponse$, intent.delete$)
         .mapTo({type: 'close'} as ModalAction);
 
+    const deleteRequest$ = intent.delete$
+        .mapTo(state$.map(state => state.id))
+        .flatten()
+        .take(1)
+        .map(id => DeleteSetApi.buildRequest({
+            id: id
+        } as DeleteSetProps));
+
+    const goToSetsIfDelete$ = intent.delete$
+        .mapTo('/start');
+
     const sinks = {
-        HTTP: request$,
+        HTTP: xs.merge(submitRequest$, loadSetData$, deleteRequest$),
         onion: reducer$,
-        modal: close$
+        modal: close$,
+        router: goToSetsIfDelete$
     };
 
     return sinks;
 }
 
-function isFormValid(state) {
+function generateRequest(state): HttpRequest {
+    switch (state.action.type) {
+        case 'edit':
 
-    let err = 0;
-    if (state.title === '') err++;
-    if (state.description === '') err++;
-    if (state.tags === '') err++;
-    if (Utils.jsonHasChilds(state.errors)) err++;
-    return err === 0;
+            return UpdateSetApi.buildRequest({
+                id: state.id,
+                send: getSendValuesFromState(state)
+            });
 
+        case 'create':
+
+            return PostSetApi.buildRequest(
+                getSendValuesFromState(state)
+            );
+
+    }
 }
 
-function generateRequest(state): HttpRequest {
-    switch (state.type) {
-        case CRUDType.ADD:
-            return PostSetApi.buildRequest({
-                'type': state.type,
-                'title': state.title,
-                'description': state.description,
-                'tags': state.tags,
-                'visibility': state.visibility === Visibility.PUBLIC,
-                'photourl': state.imageUrl
-            });
-        case CRUDType.DELETE:
-            return PostSetApi.buildRequest({
-                'type': state.type,
-                'title': state.title,
-                'description': state.description,
-                'tags': state.tags,
-                'visibility': state.visibility === Visibility.PUBLIC,
-                'photourl': state.imageUrl
-            });
-        case CRUDType.UPDATE:
-            return PostSetApi.buildRequest({
-                'type': state.type,
-                'title': state.title,
-                'description': state.description,
-                'tags': state.tags,
-                'visibility': state.visibility === Visibility.PUBLIC,
-                'photourl': state.imageUrl
-            });
+function getSendValuesFromState(state) {
+    return {
+        title: state.title,
+        description: state.description,
+        tags: state.tags,
+        visibility: state.visibility === Visibility.PUBLIC,
+        photourl: state.imageUrl
     }
 }

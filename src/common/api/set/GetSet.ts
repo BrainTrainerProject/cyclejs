@@ -1,7 +1,8 @@
-import { Utils } from "../Utils";
+import { Utils } from "../../Utils";
 
-interface GetSetProps {
-    id: string
+export interface GetSetProps {
+    id: string,
+    requestId?: string,
 }
 
 export class GetSetApi {
@@ -12,7 +13,7 @@ export class GetSetApi {
         return {
             url: Utils.apiUrl('/set/' + props.id),
             method: 'GET',
-            category: GetSetApi.ID,
+            category: GetSetApi.ID.concat(props.requestId ? props.requestId : ''),
             type: 'application/json'
         };
     }

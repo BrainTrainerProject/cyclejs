@@ -110,14 +110,19 @@ function model(actions: any, state$: any, props?: any, prevState?: NotecardFormS
         .compose(sampleCombine(state$))
         .map(([submitEvent, state]) => state)
         .filter(state => !Utils.jsonHasChilds(state.errors))
-        .map(state => (PostNotecardApi.buildRequest({
-            send: {
-                title: state.title,
-                task: state.task,
-                answer: state.answer
-            },
-            refSet: props.refSet
-        } as PostNotecardProps)))
+        .map(state => {
+
+
+
+            return (PostNotecardApi.buildRequest({
+                send: {
+                    title: state.title,
+                    task: state.task,
+                    answer: state.answer
+                },
+                refSet: props.refSet
+            } as PostNotecardProps))
+        })
         .debug('SubmitRequest');
 
     return {

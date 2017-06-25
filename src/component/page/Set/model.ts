@@ -1,9 +1,10 @@
-import xs from 'xstream';
-import { SetPageState } from './SetPage';
-import { Utils } from '../../../common/Utils';
-import { ModalAction } from 'cyclejs-modal';
-import NotecardForm from '../../form/Notecard/Notecard';
-import { GetPracticeApi, GetPracticeProps } from '../../../common/api/GetPractice';
+import xs from "xstream";
+import { SetPageState } from "./SetPage";
+import { Utils } from "../../../common/Utils";
+import { ModalAction } from "cyclejs-modal";
+import NotecardForm from "../../form/Notecard/Notecard";
+import { GetPracticeApi, GetPracticeProps } from "../../../common/api/GetPractice";
+import { EditSetFormAction, SetForm } from "../../form/Set/SetForm";
 
 export function model(action: any, state$) {
 
@@ -18,25 +19,46 @@ export function model(action: any, state$) {
 }
 
 function modalRequests(action: any, state$): any {
-    const newNotecardOpenModal$ = action.newNotecardClicked$
+
+    const openEditSetModal$ = action.editSet$
         .mapTo(state$.map(state => state.set.id))
         .flatten()
         .take(1)
         .map(id => ({
             type: 'open',
             props: {
+                title: 'Set bearbeiten',
+                action: {
+                    type: 'edit',
+                    setId: id
+                } as EditSetFormAction
+            },
+            component: SetForm
+        } as ModalAction));
+
+    const openCreateNotecardModal$ = action.createNotecard$
+        .mapTo(state$.map(state => state.set.id))
+        .flatten()
+        .take(1)
+        .map(id => ({
+            type: 'open',
+            props: {
+                type: 'create',
                 title: 'Notecard erstellen',
-                refSet: id
+                payload: {
+                    refSet: id
+                }
             },
             component: NotecardForm
-        } as ModalAction)).debug('OpenModal');
+        } as ModalAction));
 
-    return xs.merge(newNotecardOpenModal$);
+    return xs.merge(openEditSetModal$, openCreateNotecardModal$);
+
 }
 
 function httpRequests(action: any) {
 
-    const requestRandomNotecard$ = action.randomNotecardClicked$
+    const requestRandomNotecard$ = action.showRandomNotecard$
         .mapTo(GetPracticeApi.buildRequest({requestId: ''} as GetPracticeProps));
 
 
@@ -63,16 +85,6 @@ function reducer(action: any) {
         } as SetPageState;
     });
 
-    const ratingInputReducer$ = action.inputRatingComment$
-        .map(comment => function ratingInputReducer(state) {
-            return {
-                ...state,
-                rating: {
-                    ...state.rating,
-                    comment: comment
-                }
-            };
-        });
 
     const loadSetInfoReducer$ = action.responseSetInfo$
         .filter(response => response.ok)
@@ -94,7 +106,6 @@ function reducer(action: any) {
 
     return xs.merge(
         initReducer$,
-        ratingInputReducer$,
         loadSetInfoReducer$
     );
 

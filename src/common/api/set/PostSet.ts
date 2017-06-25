@@ -1,9 +1,7 @@
-import { CRUDType } from "../CRUDType";
-import { Visibility } from "../Visibility";
-import { Utils } from "../Utils";
+import { CRUDType } from "../../CRUDType";
+import { Utils } from "../../Utils";
 
 export interface PostSetProps {
-    type: CRUDType.ADD;
     title: string;
     description: string;
     tags: string;

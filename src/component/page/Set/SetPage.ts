@@ -1,13 +1,13 @@
-import xs, {Stream} from 'xstream';
-import {Reducer, Sinks, Sources, State} from '../../../common/interfaces';
-import {AppState} from '../../../app';
-import {StateSource} from 'cycle-onionify';
-import {intent} from './intent';
-import {model} from './model';
-import {viewRight} from './viewRight';
-import {viewLeft} from './viewLeft';
-import Comments from '../../comments/Comments';
-import NestedCardItemList from '../../cards/CardList/NestedCardItemList';
+import xs, { Stream } from "xstream";
+import { Reducer, Sinks, Sources, State } from "../../../common/interfaces";
+import { AppState } from "../../../app";
+import { StateSource } from "cycle-onionify";
+import { intent } from "./intent";
+import { model } from "./model";
+import { viewRight } from "./viewRight";
+import { viewLeft } from "./viewLeft";
+import Comments from "../../comments/Comments";
+import NestedCardItemList from "../../cards/CardList/NestedCardItemList";
 const Route = require('route-parser');
 
 export type SetPageSources = Sources & { onion: StateSource<AppState>, filter: any };
@@ -29,7 +29,7 @@ export interface SetPageState extends State {
 
 export const ID_NEW_NOTECARD_BTN = '.new-set-btn';
 export const ID_RANDOM_NOTECARD_BTN = '.random-notecard-btn';
-export const ID_EDIT_SET_BTN = '.new-set-btn';
+export const ID_EDIT_SET_BTN = '.edit-set-btn';
 export const ID_RATING_BTN = '.new-set-btn';
 export const ID_RATING_FORM = '.rating-form';
 
@@ -57,11 +57,14 @@ export default function SetPage(sources) {
 
 function loadOtherComponents(sources, state$) {
 
-    const getNotecardsSinks = state$.map(state => {
-        return NestedCardItemList(sources, {
-            apiCalls: state.set.notecards
+    const getNotecardsSinks = xs.of(state$)
+        .flatten()
+        .take(1)
+        .map(state => {
+            return NestedCardItemList(sources, {
+                apiCalls: state.set.notecards
+            });
         });
-    });
 
     const getCommentsSinks = Comments(sources, {
         setId: '59404bd79eccad225fdd9b8b'

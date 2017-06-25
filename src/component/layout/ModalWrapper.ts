@@ -17,6 +17,7 @@ export function ModalWrapper(sources: Sources, component: Component, props: Moda
     const compSinks = protect(component, {
         decorators: {
             HTTP: (request, tokens) => {
+                console.log("REQQQ!", request);
                 return {
                     ...request,
                     headers: {

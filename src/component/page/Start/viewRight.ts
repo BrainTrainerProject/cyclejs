@@ -4,7 +4,7 @@ import { ID_NEW_SET_BTN } from "./StartPage";
 export function viewRight(state$: any) {
 
     return state$.map(state => div('.ui', [
-        button(ID_NEW_SET_BTN + '.ui.primary.button', ['Neues Set erstellen'])
+        button(ID_NEW_SET_BTN + '.ui.primary.button', ['Set erstellen'])
     ]))
 
 }

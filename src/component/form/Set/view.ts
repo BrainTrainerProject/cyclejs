@@ -1,13 +1,14 @@
 import {Stream} from 'xstream';
-import {button, div, form, img, input, label, option, select, textarea} from '@cycle/dom';
+import { button, div, form, i, img, input, label, option, select, textarea } from '@cycle/dom';
 import {VNode} from 'snabbdom/vnode';
-import {SetFormState} from './index';
 import {Visibility} from '../../../common/Visibility';
 import {isNullOrUndefined, isUndefined} from 'util';
 import {Utils} from '../../../common/Utils';
 import {errorMessage} from '../../../common/GuiUtils';
+import { SetFormState } from "./SetForm";
 const R = require('ramda');
 
+export const ID_DELETE_BTN = '.btn_delete';
 export const BTN_SUBMIT = '.btn_submit';
 export const INP_TITLE = '.inp_title';
 export const INP_DESC = '.inp_desc';
@@ -111,7 +112,7 @@ function getCreateForm(state: SetFormState): VNode {
                                 'placeholder': 'Beschreibung',
                                 'value': state.description
                             }
-                        })
+                        },[state.description])
                     ])
                 ]),
                 div('.field', {class: {error: hasTagsError}}, [
@@ -127,7 +128,15 @@ function getCreateForm(state: SetFormState): VNode {
                     ])
                 ]),
                 div('.fields', [
-                    div('.eight.wide.field'),
+                    div('.eight.wide.field',[
+                        (state.action.type !== 'edit') ? null : button(ID_DELETE_BTN + '.ui.icon.red.basic.button.', {
+                            'attrs': {
+                                'type': 'submit'
+                            }
+                        }, [
+                            i('.icon.trash.outline')
+                        ])
+                    ]),
                     div('.four.wide.field.right.floated', [
                         select(INP_VISBILITY + '.ui.right.floated.dropdown', [
                             option({
@@ -150,9 +159,8 @@ function getCreateForm(state: SetFormState): VNode {
                         button(BTN_SUBMIT + '.ui.button.right.fluid.floated.', {
                             'attrs': {
                                 'type': 'submit',
-                                'className': 'ui button right fluid floated '
                             }
-                        }, [`Submit`])
+                        }, [ (state.action.type === 'edit') ? 'bearbeiten' : 'erstellen'])
                     ])
                 ])
             ]),
