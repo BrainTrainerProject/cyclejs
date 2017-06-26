@@ -2,8 +2,9 @@ import { Reducer, Sinks, Sources, State } from "../../../common/interfaces";
 import { CardItem } from "./CardItem";
 import Collection from "@cycle/collection";
 import { StateSource } from "cycle-onionify";
-import { Stream } from "xstream";
+import xs, { Stream } from "xstream";
 import { div, p } from "@cycle/dom";
+import { GetSetsApi } from "../../../common/api/set/GetSets";
 
 type CardViewSources = Sources & { onion: StateSource<CardViewState> };
 type CardViewSinks = Sinks & { onion: Stream<Reducer> };
@@ -20,6 +21,8 @@ export interface CardItemListProps {
 export default function CardItemList(sources: CardViewSources, props: CardItemListProps): CardViewSinks {
 
     const {DOM, HTTP} = sources;
+    console.log("CardList");
+    console.log(sources);
 
     const tasksState$ = sources.HTTP.select(props.requestId)
         .flatten()
@@ -52,7 +55,8 @@ export default function CardItemList(sources: CardViewSources, props: CardItemLi
                     list
                 )
             }),
-        router: lessonsListRouter$
+        router: lessonsListRouter$,
+        HTTP: xs.of(GetSetsApi.buildRequest())
     };
 
     return sinks;

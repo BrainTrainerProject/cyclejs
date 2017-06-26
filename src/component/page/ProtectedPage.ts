@@ -33,9 +33,6 @@ export function ProtectedPage(component: Component) {
         const componentSinks = protect(component, {
             decorators: {
                 HTTP: (request, token) => {
-
-                    console.log("REQQQQQQQQQQQQQQQQQQQQ!!!!", request);
-
                     return {
                         ...request,
                         headers: {

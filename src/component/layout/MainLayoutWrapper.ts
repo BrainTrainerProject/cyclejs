@@ -6,6 +6,10 @@ import { div } from "@cycle/dom";
 import { VNode } from "snabbdom/vnode";
 import { mergeSinks } from "cyclejs-utils";
 import { Utils } from "../../common/Utils";
+import isolate  from "@cycle/isolate";
+import { ModalAction } from "cyclejs-modal";
+import { CreateSetFormAction, SetForm } from "../form/Set/SetForm";
+import { isolateSink } from "@cycle/http/lib/isolate";
 const R = require('ramda');
 
 export type MainLayoutSources = Sources & {};
@@ -20,11 +24,14 @@ export function MainLayoutWrapper(component: MainLayoutComponent) {
         const mastheadSinks = Masthead(sources);
 
         const componentSinks = component(sources);
+        console.log(componentSinks);
 
         const vdom$ = xs.combine(sidebarSinks.DOM, mastheadSinks.DOM);
 
         let mergedSinks = mergeSinks(sidebarSinks, mastheadSinks, componentSinks);
         mergedSinks = Utils.filterPropsByArray(mergedSinks, ['DOM_LEFT', 'DOM_RIGHT']);
+
+        console.log(mergedSinks);
 
         const sinks = {
             ...mergedSinks,
@@ -32,7 +39,7 @@ export function MainLayoutWrapper(component: MainLayoutComponent) {
                 vdom$,
                 componentSinks.DOM_LEFT || xs.never(),
                 componentSinks.DOM_RIGHT || xs.never()
-            ).map(view),
+            ).map(view)
         };
 
         return sinks;

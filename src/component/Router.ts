@@ -11,6 +11,7 @@ import UnderConstructionPage from "./page/UnderConstruction/UnderConstructionPag
 import dropRepeats from "xstream/extra/dropRepeats";
 import SetPage from "./page/Set/SetPage";
 import FeedPage from "./page/Feed/FeedPage";
+import isolate  from "@cycle/isolate";
 
 const routedComponent = (sources) => ({path, value}) => value({...sources, router: sources.router.path(path)});
 const protectedPage = (page) => ProtectedPage(page);
@@ -39,13 +40,13 @@ export function Router(sources: AppSources): AppSinks {
         .mapTo('/start');
 
     return {
-        DOM: page$.map(c => c.DOM || xs.empty()).flatten(),
-        HTTP: page$.map(c => c.HTTP || xs.empty()).flatten(),
-        router: xs.merge(page$.map(c => c.router || xs.empty()).flatten(), redirectStartpage$),
-        onion: page$.map(c => c.onion || xs.empty()).flatten(),
-        modal: page$.map(c => c.modal || xs.empty()).flatten(),
-        auth0: page$.map(c => c.auth0 || xs.empty()).flatten(),
-        filter: page$.map(c => c.filter || xs.empty()).flatten()
+        DOM: page$.map(c => c.DOM || xs.never()).flatten(),
+        HTTP: page$.map(c => c.HTTP || xs.never()).flatten(),
+        router: xs.merge(page$.map(c => c.router || xs.never()).flatten(), redirectStartpage$),
+        onion: page$.map(c => c.onion || xs.never()).flatten(),
+        modal: page$.map(c => c.modal || xs.never()).flatten(),
+        auth0: page$.map(c => c.auth0 || xs.never()).flatten(),
+        filter: page$.map(c => c.filter || xs.never()).flatten()
     };
 
 }

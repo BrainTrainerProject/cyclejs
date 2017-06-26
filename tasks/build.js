@@ -103,7 +103,7 @@ gulp.task("watch", ["views"], function () {
 });
 
 // Für Mobile
-gulp.task("transpile", ["bundle"], function() {
+/*gulp.task("transpile", ["bundle"], function() {
     return gulp.src("./public/src/js/bundle.js")
         .pipe(babel({
             ignore: "build.js",
@@ -114,4 +114,4 @@ gulp.task("transpile", ["bundle"], function() {
 
 gulp.task("build_mobile",
     runSequence("ts", "config", ["transpile", "styles", "templates", "images", "js"])
-);
+);*/

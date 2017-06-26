@@ -9,7 +9,7 @@ export function intent(sources: AppSources) {
     const {DOM,HTTP} = sources;
 
     return {
-        createSet$: DOM.select(ID_NEW_SET_BTN).events('click').debug('CLICK'),
+        createSet$: DOM.select(ID_NEW_SET_BTN).events('click').debug('CLICK').remember(),
         refreshSetList$: xs.of(GetSetsApi.buildRequest()),
         newSetResponse$: HTTP.select(PostSetApi.ID).flatten().startWith(null).filter(r=> !!r)
     };

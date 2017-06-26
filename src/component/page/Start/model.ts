@@ -15,12 +15,10 @@ export function model(action: any) {
         component: SetForm
     } as ModalAction);
 
-
-    const reducerActions$ = reducer(action);
     const modalActions$ = openCreateSetModal$;
 
     const sinks = {
-        onion: reducerActions$,
+        onion: reducer(action),
         modal: modalActions$,
         HTTP: action.refreshSetList$
     };
@@ -32,29 +30,8 @@ export function model(action: any) {
 function reducer(action: any) {
 
     const initReducer$ = xs.of(function initReducer(state) {
-        return {
-            showNewCardMessage: false,
-            newCardMessage: {}
-        }
+        return { }
     });
 
-    const newCardMessageReducer$ = action.newSetResponse$
-        .filter(response => response.ok)
-        .map(res => ({
-            id: res.body._id,
-            title: res.body.title
-        }))
-        .map(res => function cardMessageReducer(state) {
-            return {
-                ...state,
-                showNewCardMessage: true,
-                newCardMessage: {
-                    id: res.id,
-                    title: res.title
-                }
-            }
-        });
-
-
-    return xs.merge(initReducer$, newCardMessageReducer$);
+    return xs.merge(initReducer$);
 }

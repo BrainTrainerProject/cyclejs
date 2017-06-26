@@ -12,21 +12,23 @@ export interface CardItemProps {
     showImport: boolean
 }
 
+const ID_CARD_CLICK = '.card-clicked';
+
 export function CardItem(sources) {
 
     const {DOM, props$} = sources;
 
     // intent
-    const cardClick$ = DOM.select('.card-cover').events('click').map(e => e.preventDefault());
-    const titleClick$ = DOM.select('.card-title').events('click').map(e => e.preventDefault());
+    const linkClick$ = DOM.select(ID_CARD_CLICK).events('click').map(event => event.preventDefault());
 
-    const clickStreams$ = xs.merge(cardClick$, titleClick$)
+    const clickStreams$ = linkClick$
         .map(s => props$.map(set => set._id))
         .flatten()
-        .map(setId => '/set/' + setId)
+        .map(setId => '/set/' + setId);
 
     return {
         DOM: props$.map(set => {
+            console.log("SET", set);
             return view({
                 title: set.title,
                 imageUrl: Utils.imageOrPlaceHolder(set.photourl),
@@ -44,7 +46,7 @@ export function CardItem(sources) {
 function view(props: CardItemProps) {
     return div(".column", [
         div(".ui.card.fluid", [
-            a(".card-cover.image", {
+            a(ID_CARD_CLICK + ".card-cover.image", {
                 "attrs": {
                     "href": props.url
                 }
@@ -56,7 +58,7 @@ function view(props: CardItemProps) {
                 })
             ]),
             div(".card-title.content", [
-                a(".header", {
+                a(ID_CARD_CLICK + ".header", {
                     "attrs": {
                         "href": props.url
                     }

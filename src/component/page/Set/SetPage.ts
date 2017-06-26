@@ -8,6 +8,8 @@ import { viewRight } from "./viewRight";
 import { viewLeft } from "./viewLeft";
 import Comments from "../../comments/Comments";
 import NestedCardItemList from "../../cards/CardList/NestedCardItemList";
+import { div } from "@cycle/dom";
+import isolate from "@cycle/isolate";
 const Route = require('route-parser');
 
 export type SetPageSources = Sources & { onion: StateSource<AppState>, filter: any };
@@ -61,9 +63,11 @@ function loadOtherComponents(sources, state$) {
         .flatten()
         .take(1)
         .map(state => {
-            return NestedCardItemList(sources, {
-                apiCalls: state.set.notecards
+
+            return isolate(NestedCardItemList)(sources, {
+                apiCalls: (state.set) ? state.set.notecards : []
             });
+
         });
 
     const getCommentsSinks = Comments(sources, {
