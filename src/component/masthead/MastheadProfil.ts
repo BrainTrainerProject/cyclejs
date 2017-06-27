@@ -1,18 +1,30 @@
 import { a, div, i, img } from "@cycle/dom";
 import xs from "xstream";
+import { ModalAction } from "cyclejs-modal";
+import SettingsForm from "../form/Settings/Settings";
 
 export default function MastheadProfil(sources) {
 
-    const feedClick$ = sources.DOM.select('.alarm-icon').events('click').mapTo('/feed')
+    const feedClick$ = sources.DOM.select('.alarm-icon').events('click').mapTo('/feed');
     const profileClick$ = sources.DOM.select('.nav-profile').events('click').mapTo('/profile');
-    const settingsClick$ = sources.DOM.select('.nav-settings').events('click').mapTo('/settings');
+    const settingsClick$ = sources.DOM.select('.nav-settings').events('click');
     const logoutClick$ = sources.DOM.select('.nav-logout').events('click').mapTo('/logout');
 
-    const route$ = xs.merge(profileClick$, settingsClick$, logoutClick$, feedClick$);
+    const route$ = xs.merge(profileClick$, logoutClick$, feedClick$);
+
+    const openSettingsModal$ = settingsClick$
+        .mapTo({
+            type: 'open',
+            props: {
+                title: 'Einstellungen',
+            },
+            component: SettingsForm
+        } as ModalAction);
 
     return {
         DOM: xs.of(view()),
-        router: route$
+        router: route$,
+        modal: openSettingsModal$
     }
 
 }

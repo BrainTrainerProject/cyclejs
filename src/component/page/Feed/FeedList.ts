@@ -2,7 +2,7 @@ import Collection from '@cycle/collection';
 import {GetFeedsApi} from '../../../common/api/GetFeeds';
 import {a, div, img, p} from '@cycle/dom';
 import xs from 'xstream';
-import {GetProfileApi, GetProfileProps} from '../../../common/api/GetProfile';
+import {GetProfileApi, GetProfileProps} from '../../../common/api/profile/GetProfile';
 import {isNullOrUndefined} from 'util';
 
 export default function FeedItemList(sources) {

@@ -2,7 +2,7 @@ import { div } from "@cycle/dom";
 import xs, { Stream } from "xstream";
 import { VNode } from "snabbdom/vnode";
 import { Sidebar } from "./Sidebar";
-import Masthead from "./Masthead/Masthead";
+import Masthead from "../masthead/Masthead";
 
 
 export default function MainLayout(sources) {

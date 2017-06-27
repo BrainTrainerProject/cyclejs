@@ -40,4 +40,9 @@ export class Utils {
 
     }
 
+    static isNumber(number){
+        const res = parseInt(number);
+        return !isNaN(res);
+    }
+
 }

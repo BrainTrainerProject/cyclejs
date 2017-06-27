@@ -18,7 +18,8 @@ export default function Masthead(sources) {
     return {
         DOM: xs.combine(searchSinks.DOM, profileSinks.DOM, filterSinks.DOM).map(view),
         router: xs.merge(profileSinks.router, routeChange$),
-        filter: searchSinks.filter
+        filter: searchSinks.filter,
+        modal: profileSinks.modal
     }
 
 }

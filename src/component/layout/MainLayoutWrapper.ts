@@ -1,6 +1,6 @@
 import { Sinks, Sources } from "../../common/interfaces";
 import { Sidebar } from "./Sidebar";
-import Masthead from "./Masthead/Masthead";
+import Masthead from "../masthead/Masthead";
 import xs, { Stream } from "xstream";
 import { div } from "@cycle/dom";
 import { VNode } from "snabbdom/vnode";
