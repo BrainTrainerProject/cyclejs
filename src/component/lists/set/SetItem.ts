@@ -14,7 +14,7 @@ export interface CardItemProps {
 
 const ID_CARD_CLICK = '.card-clicked';
 
-export function CardItem(sources) {
+export function SetItem(sources) {
 
     const {DOM, props$} = sources;
 

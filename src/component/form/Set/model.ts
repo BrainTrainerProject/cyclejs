@@ -31,7 +31,7 @@ export function model(sources: any, state$: any, intent: any, formAction: SetFor
         .filter(res => res.ok)
         .map(({text}) => JSON.parse(text));
 
-    // reducer
+    // model
 
     const default$: Stream<Reducer> = xs.of(function defaultReducer(): any {
         return {

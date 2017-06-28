@@ -7,7 +7,7 @@ export interface GetProfileProps {
 
 export class GetProfileApi {
 
-    static readonly ID: string = 'get-notecard-by-id';
+    static readonly ID: string = 'get-profile-by-id';
 
     static buildRequest(props: GetProfileProps) {
         return {

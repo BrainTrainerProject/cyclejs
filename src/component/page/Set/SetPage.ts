@@ -7,8 +7,7 @@ import { model } from "./model";
 import { viewRight } from "./viewRight";
 import { viewLeft } from "./viewLeft";
 import Comments from "../../comments/Comments";
-import NestedCardItemList from "../../cards/CardList/NestedCardItemList";
-import { div } from "@cycle/dom";
+import NotecardItemList from "../../lists/notecard/NotecardItemList";
 import isolate from "@cycle/isolate";
 const Route = require('route-parser');
 
@@ -37,7 +36,11 @@ export const ID_RATING_FORM = '.rating-form';
 
 export default function SetPage(sources) {
 
+    console.log("Set page");
+
     const {router} = sources;
+    console.log(sources);
+    console.log(sources);
 
     const state$ = sources.onion.state$.debug("STATE");
     const actions = intent(sources);
@@ -52,7 +55,7 @@ export default function SetPage(sources) {
         DOM_LEFT: leftDOM$,
         DOM_RIGHT: rightDOM$,
         HTTP: xs.merge(reducer.HTTP, notecardSinks.HTTP),
-        onion: reducer.onion,
+        onion: xs.merge(reducer.onion, notecardSinks.onion),
         modal: reducer.modal
     };
 }
@@ -64,8 +67,8 @@ function loadOtherComponents(sources, state$) {
         .take(1)
         .map(state => {
 
-            return isolate(NestedCardItemList)(sources, {
-                apiCalls: (state.set) ? state.set.notecards : []
+            return isolate(NotecardItemList, 'notecardlist')(sources, {
+                setId: (state.set) ? state.set.id : null
             });
 
         });
@@ -77,7 +80,8 @@ function loadOtherComponents(sources, state$) {
     return {
         notecardSinks: {
             DOM: getNotecardsSinks.map(c => c.DOM || xs.never()).flatten(),
-            HTTP: getNotecardsSinks.map(c => c.HTTP || xs.never()).flatten()
+            HTTP: getNotecardsSinks.map(c => c.HTTP || xs.never()).flatten(),
+            onion: getNotecardsSinks.map(c => c.onion || xs.never()).flatten()
         },
         commentSinks: getCommentsSinks
     };

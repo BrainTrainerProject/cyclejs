@@ -27,6 +27,11 @@ export interface NotecardFormState extends State {
     errors: ErrorMessageState;
 }
 
+export interface ShowNotecardFormAction {
+    type: 'show',
+    notecardId: string
+}
+
 export interface CreateNotecardFormAction {
     type: 'create';
     setId: string;
@@ -70,11 +75,11 @@ function intent(sources: NotecardFormSources): any {
 
     const {DOM} = sources;
 
-    const delete$       = DOM.select(ID_DELETE_BTN).events('click');
-    const inputTitle$   = DOM.select(ID_TITLE).events('input').map(e => e.target.value);
-    const inputTask$    = DOM.select(ID_TASK).events('input').map(e => e.target.value);
-    const inputAnswer$  = DOM.select(ID_ANSWER).events('input').map(e => e.target.value);
-    const submit$       = DOM.select(ID_SUBMIT).events('click');
+    const delete$ = DOM.select(ID_DELETE_BTN).events('click');
+    const inputTitle$ = DOM.select(ID_TITLE).events('input').map(e => e.target.value);
+    const inputTask$ = DOM.select(ID_TASK).events('input').map(e => e.target.value);
+    const inputAnswer$ = DOM.select(ID_ANSWER).events('input').map(e => e.target.value);
+    const submit$ = DOM.select(ID_SUBMIT).events('click');
 
     return {
         inputTitle$,

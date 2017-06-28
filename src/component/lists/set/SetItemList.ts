@@ -1,10 +1,10 @@
 import { Reducer, Sinks, Sources, State } from "../../../common/interfaces";
-import { CardItem } from "./CardItem";
 import Collection from "@cycle/collection";
 import { StateSource } from "cycle-onionify";
 import xs, { Stream } from "xstream";
 import { div, p } from "@cycle/dom";
 import { GetSetsApi } from "../../../common/api/set/GetSets";
+import { SetItem } from "./SetItem";
 
 type CardViewSources = Sources & { onion: StateSource<CardViewState> };
 type CardViewSinks = Sinks & { onion: Stream<Reducer> };
@@ -18,7 +18,7 @@ export interface CardItemListProps {
     requestId: string
 }
 
-export default function CardItemList(sources: CardViewSources, props: CardItemListProps): CardViewSinks {
+export default function SetItemList(sources: CardViewSources, props: CardItemListProps): CardViewSinks {
 
     const {DOM, HTTP} = sources;
     console.log("CardList");
@@ -39,7 +39,7 @@ export default function CardItemList(sources: CardViewSources, props: CardItemLi
             })))
         .startWith([]);
 
-    const lessonSets$ = Collection.gather(CardItem, sources, tasksState$, 'id', key => `${key}$`);
+    const lessonSets$ = Collection.gather(SetItem, sources, tasksState$, 'id', key => `${key}$`);
     const lessonsListView$ = Collection.pluck(lessonSets$, item => item.DOM);
     const lessonsListRouter$ = Collection.merge(lessonSets$, item => item.router);
 

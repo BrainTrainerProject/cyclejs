@@ -20,6 +20,7 @@ export default function Comments(sources: CommentsSources, props: CommentsProps)
 
     const {router} = sources;
 
+
     return {
         DOM: xs.of(view())
     }
