@@ -1,7 +1,6 @@
 import { div } from "@cycle/dom";
-import xs, { Stream } from "xstream";
+import xs from "xstream";
 import MastheadProfil from "./MastheadProfil";
-import { VNode } from "snabbdom/vnode";
 import MastheadFilter from "./MastheadFilter";
 import MastheadSearch from "./MastheadSearch";
 
@@ -19,7 +18,9 @@ export default function Masthead(sources) {
         DOM: xs.combine(searchSinks.DOM, profileSinks.DOM, filterSinks.DOM).map(view),
         router: xs.merge(profileSinks.router, routeChange$),
         filter: searchSinks.filter,
-        modal: profileSinks.modal
+        modal: profileSinks.modal,
+        onion: profileSinks.onion,
+        HTTP: profileSinks.HTTP
     }
 
 }
