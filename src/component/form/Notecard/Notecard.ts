@@ -27,11 +27,6 @@ export interface NotecardFormState extends State {
     errors: ErrorMessageState;
 }
 
-export interface ShowNotecardFormAction {
-    type: 'show',
-    notecardId: string
-}
-
 export interface CreateNotecardFormAction {
     type: 'create';
     setId: string;
