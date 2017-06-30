@@ -1,15 +1,15 @@
-import { Sinks, Sources } from "../../common/interfaces";
-import { Sidebar } from "./Sidebar";
-import Masthead from "../masthead/Masthead";
-import xs, { Stream } from "xstream";
-import { div } from "@cycle/dom";
-import { VNode } from "snabbdom/vnode";
-import { mergeSinks } from "cyclejs-utils";
-import { Utils } from "../../common/Utils";
-import isolate  from "@cycle/isolate";
-import { ModalAction } from "cyclejs-modal";
-import { CreateSetFormAction, SetForm } from "../form/Set/SetForm";
-import { isolateSink } from "@cycle/http/lib/isolate";
+import {Sinks, Sources} from '../../common/interfaces';
+import {Sidebar} from './Sidebar';
+import Masthead from '../masthead/Masthead';
+import xs, {Stream} from 'xstream';
+import {div} from '@cycle/dom';
+import {VNode} from 'snabbdom/vnode';
+import {mergeSinks} from 'cyclejs-utils';
+import {Utils} from '../../common/Utils';
+import isolate  from '@cycle/isolate';
+import {ModalAction} from 'cyclejs-modal';
+import {CreateSetFormAction, SetForm} from '../form/Set/SetForm';
+import {isolateSink} from '@cycle/http/lib/isolate';
 const R = require('ramda');
 
 export type MainLayoutSources = Sources & {};
@@ -18,10 +18,10 @@ export type MainLayoutComponent = (s: MainLayoutSources) => MainLayoutSinks;
 
 export function MainLayoutWrapper(component: MainLayoutComponent) {
 
-    return function (sources: MainLayoutSources) {
+    return function(sources: MainLayoutSources) {
 
         const sidebarSinks = Sidebar(sources);
-        const mastheadSinks = Masthead(sources);
+        const mastheadSinks = isolate(Masthead, 'masthead')(sources);
 
         const componentSinks = component(sources);
         console.log(componentSinks);
@@ -43,7 +43,7 @@ export function MainLayoutWrapper(component: MainLayoutComponent) {
         };
 
         return sinks;
-    }
+    };
 }
 
 function view([[sidebar, masthead], contentLeft, contentRight]) {
@@ -54,21 +54,21 @@ function view([[sidebar, masthead], contentLeft, contentRight]) {
             masthead,
             contentView(contentLeft, contentRight)
         ])
-    ]
+    ];
 
 }
 
 function contentView(contentLeftVNode: VNode, contentRightVNode: VNode) {
-    return div("#content.ui.container.content-row", [
+    return div('#content.ui.container.content-row', [
         contentRight(contentRightVNode),
         contentLeft(contentLeftVNode)
-    ])
+    ]);
 }
 
 function contentRight(content: VNode) {
-    return div("#content-right.ui.dividing.right.rail", content)
+    return div('#content-right.ui.dividing.right.rail', content);
 }
 
 function contentLeft(content: VNode) {
-    return div("#content-left.left-main", content)
+    return div('#content-left.left-main', content);
 }
