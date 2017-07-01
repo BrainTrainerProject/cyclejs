@@ -1,17 +1,18 @@
-import { Sources, State } from "../../../common/interfaces";
-import { StateSource } from "cycle-onionify";
-import xs, { Stream } from "xstream";
-import { div, p } from "@cycle/dom";
-import { GetNotecardApi } from "../../../common/api/notecard/GetNotecard";
-import { VNode } from "snabbdom/vnode";
-import { RequestOptions } from "@cycle/http";
-import { GetSetApi } from "../../../common/api/set/GetSet";
-import { NotecardItem } from "./NotecardItem";
-import flattenConcurrently from "xstream/extra/flattenConcurrently";
-import Collection from "@cycle/collection";
-import { GetProfileApi } from "../../../common/api/profile/GetProfile";
-import { ModalAction } from "cyclejs-modal";
-import NotecardForm, { EditNotecardFormAction, ShowNotecardFormAction } from "../../form/Notecard/Notecard";
+import {Sources, State} from '../../../common/interfaces';
+import {StateSource} from 'cycle-onionify';
+import xs, {Stream} from 'xstream';
+import {div, p} from '@cycle/dom';
+import {GetNotecardApi} from '../../../common/api/notecard/GetNotecard';
+import {VNode} from 'snabbdom/vnode';
+import {RequestOptions} from '@cycle/http';
+import {GetSetApi} from '../../../common/api/set/GetSet';
+import {NotecardItem} from './NotecardItem';
+import flattenConcurrently from 'xstream/extra/flattenConcurrently';
+import Collection from '@cycle/collection';
+import {GetProfileApi} from '../../../common/api/profile/GetProfile';
+import {ModalAction} from 'cyclejs-modal';
+import NotecardForm, {EditNotecardFormAction, ShowNotecardFormAction} from '../../form/Notecard/Notecard';
+import {CreateSetFormAction} from '../../form/Set/SetForm';
 
 export const ID_GET_CARDS = 'get_nested_request';
 
@@ -40,13 +41,13 @@ export interface NotecardItemListProps {
 
 function userIsOwnerOfNotecards(sources: NotecardItemListSources) {
     const state$ = sources.onion.state$;
-    console.log("UserIsOwner");
-    return state$.map(state => state.currUserId === state.setOwnerId).flatten()
+    console.log('UserIsOwner');
+    return state$.map(state => state.currUserId === state.setOwnerId).flatten();
 }
 
 export default function NotecardItemList(sources: NotecardItemListSources, props: NotecardItemListProps): NotecardItemListSinks {
 
-    console.log("Show NestedItemList");
+    console.log('Show NestedItemList');
 
     const {DOM, HTTP} = sources;
     const state$ = sources.onion.state$.debug('STATE');
@@ -67,7 +68,7 @@ export default function NotecardItemList(sources: NotecardItemListSources, props
     const lessonsListView$ = Collection.pluck(lessonSets$, item => item.DOM);
     const itemClicks$ = Collection.pluck(lessonSets$, item => item.itemClick$);
 
-     // TODO ITEMS CLICKS REALISIEREN.
+    // TODO ITEMS CLICKS REALISIEREN.
 
     const editNotecardForm$ = itemClicks$
         .filter(userIsOwnerOfNotecards(sources))
@@ -99,9 +100,21 @@ export default function NotecardItemList(sources: NotecardItemListSources, props
 
     const reducer = model(sources, props);
 
+    const openModal$ = itemClicks$
+        .mapTo({
+            type: 'open',
+            props: {
+                title: 'Notecard erstellen',
+                action: {
+                    type: 'create'
+                } as CreateSetFormAction
+            },
+            component: NotecardForm
+        } as ModalAction)
+
     const sinks = {
-        DOM: lessonsListView$
-            .map(vtree => {
+        DOM: xs.combine(lessonsListView$, itemClicks$)
+            .map(([vtree, item]) => {
 
                 const list = (vtree.length === 0) ?
                     div('.ui.column', p(['Keine Einträge vorhanden']))
@@ -109,11 +122,11 @@ export default function NotecardItemList(sources: NotecardItemListSources, props
 
                 return div('.ui.three.column.doubling.stackable.grid',
                     list
-                )
+                );
             }),
         HTTP: reducer.HTTP,
         onion: reducer.onion,
-        modal: xs.merge(showNotecardForm$, editNotecardForm$)
+        modal: xs.merge(openModal$)
     };
 
     return sinks;
@@ -154,7 +167,7 @@ function model(sources: NotecardItemListSources, props: NotecardItemListProps) {
         return {
             currUserId: null,
             setOwnerId: null,
-        } as NotecardItemListState
+        } as NotecardItemListState;
     });
 
     const ownerReducer$ = responseSetInfo$
@@ -172,6 +185,6 @@ function model(sources: NotecardItemListSources, props: NotecardItemListProps) {
     return {
         HTTP: xs.merge(requestSetInfo$, requestNotecards$, currUserRequest$),
         onion: xs.merge(init$, userReducer$, ownerReducer$)
-    }
+    };
 
 }

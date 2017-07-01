@@ -85,7 +85,6 @@ function reducer(action: any) {
         } as SetPageState;
     });
 
-
     const loadSetInfoReducer$ = action.responseSetInfo$
         .filter(response => response.ok)
         .map(response => JSON.parse(response.text))

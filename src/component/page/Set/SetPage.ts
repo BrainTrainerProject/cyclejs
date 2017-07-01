@@ -1,14 +1,16 @@
-import xs, { Stream } from "xstream";
-import { Reducer, Sinks, Sources, State } from "../../../common/interfaces";
-import { AppState } from "../../../app";
-import { StateSource } from "cycle-onionify";
-import { intent } from "./intent";
-import { model } from "./model";
-import { viewRight } from "./viewRight";
-import { viewLeft } from "./viewLeft";
-import Comments from "../../comments/Comments";
-import NotecardItemList from "../../lists/notecard/NotecardItemList";
-import isolate from "@cycle/isolate";
+import xs, {Stream} from 'xstream';
+import {Reducer, Sinks, Sources, State} from '../../../common/interfaces';
+import {AppState} from '../../../app';
+import {StateSource} from 'cycle-onionify';
+import {intent} from './intent';
+import {model} from './model';
+import {viewRight} from './viewRight';
+import {viewLeft} from './viewLeft';
+import Comments from '../../comments/Comments';
+import isolate from '@cycle/isolate';
+import List from './List';
+import NotecardItemList from '../../lists/notecard/NotecardItemList';
+
 const Route = require('route-parser');
 
 export type SetPageSources = Sources & { onion: StateSource<AppState>, filter: any };
@@ -36,13 +38,11 @@ export const ID_RATING_FORM = '.rating-form';
 
 export default function SetPage(sources) {
 
-    console.log("Set page");
+    console.log('Set page');
 
     const {router} = sources;
-    console.log(sources);
-    console.log(sources);
 
-    const state$ = sources.onion.state$.debug("STATE");
+    const state$ = sources.onion.state$.debug('STATE');
     const actions = intent(sources);
     const reducer = model(actions, state$);
 
@@ -56,7 +56,7 @@ export default function SetPage(sources) {
         DOM_RIGHT: rightDOM$,
         HTTP: xs.merge(reducer.HTTP, notecardSinks.HTTP),
         onion: xs.merge(reducer.onion, notecardSinks.onion),
-        modal: reducer.modal
+        modal: xs.merge(reducer.modal, notecardSinks.modal)
     };
 }
 
@@ -67,6 +67,9 @@ function loadOtherComponents(sources, state$) {
         .take(1)
         .map(state => {
 
+            return isolate(List, 'notecards')(sources);
+
+            //return isolate(List, 'notecardlist')(sources);
             return isolate(NotecardItemList, 'notecardlist')(sources, {
                 setId: (state.set) ? state.set.id : null
             });
@@ -81,7 +84,8 @@ function loadOtherComponents(sources, state$) {
         notecardSinks: {
             DOM: getNotecardsSinks.map(c => c.DOM || xs.never()).flatten(),
             HTTP: getNotecardsSinks.map(c => c.HTTP || xs.never()).flatten(),
-            onion: getNotecardsSinks.map(c => c.onion || xs.never()).flatten()
+            onion: getNotecardsSinks.map(c => c.onion || xs.never()).flatten(),
+            modal: getNotecardsSinks.map(c => c.modal || xs.never()).flatten()
         },
         commentSinks: getCommentsSinks
     };

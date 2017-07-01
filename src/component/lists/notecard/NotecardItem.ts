@@ -1,54 +1,49 @@
-import { Utils } from '../../../common/Utils';
-import { a, div, i, img, span } from '@cycle/dom';
+import {Utils} from '../../../common/Utils';
+import {a, div, img} from '@cycle/dom';
 import xs from 'xstream';
 
-export interface CardItemProps {
-    title: string
-    imageUrl: string
-    url: string
-    rating: number
-    ratingCount: number,
-    showRating: boolean,
-    showImport: boolean
+export interface NotecardItemProps {
+    title: string;
+    imageUrl: string;
 }
+
+const ID_CLICK = '.click-id';
 
 export function NotecardItem(sources) {
 
-    console.log("Call NotecardItem");
+    console.log('Call NotecardItem');
 
     const {DOM, props} = sources;
+    console.log(sources);
 
     // intent
-    const cardClick$ = DOM.select('.card-cover').events('click').map(e => e.preventDefault());
-    const titleClick$ = DOM.select('.card-title').events('click').map(e => e.preventDefault());
+    const cardClick$ = DOM.select('a').events('click').map(event => event.preventDefault(event));
 
-    const clickStreams$ = xs.merge(cardClick$, titleClick$)
-        .map(s => props.map(set => set._id))
-        .flatten();
+    const clickStreams$ = cardClick$
+        .mapTo(props.id)
+        .map(id => console.log("ID: ", id))
+        .debug('CLICKED');
 
     return {
         DOM: xs.of(view({
             title: props.title,
-            imageUrl: Utils.imageOrPlaceHolder(props.photourl),
-            url: '/notecard/' + props._id,
-            rating: 3,
-            ratingCount: 42,
-            showRating: props.showRating,
-            showImport: props.showImport
-        } as CardItemProps)),
+            imageUrl: Utils.imageOrPlaceHolder(props.photourl)
+        } as NotecardItemProps)),
         remove$: xs.never(),
-        itemClick$: clickStreams$.debug('CLICK ITEM')
+        itemClick$: clickStreams$,
+        action$: clickStreams$.map(id => ({
+            type: 'modal', payload: {id: id}
+        }))
     };
 }
 
-function view(props: CardItemProps) {
-
+function view(props: NotecardItemProps) {
 
     return div('.column', [
         div('.ui.card.fluid', [
-            span('.card-cover.image', {
-                'attrs': {
-                    'href': props.url
+            a(ID_CLICK + '.card-cover.image', {
+                attrs: {
+                    href: '#'
                 }
             }, [
                 img({
@@ -56,47 +51,11 @@ function view(props: CardItemProps) {
                         'src': props.imageUrl
                     }
                 })
-            ]),
+                ]),
             div('.card-title.content', [
-                span('.header', {
-                    'attrs': {
-                        'href': props.url
-                    }
-                }, [props.title])
-            ]),
-            showExtraContent(props)
+                a(ID_CLICK + '.header', [props.title])
+            ])
         ])
     ]);
+
 }
-
-function showExtraContent(props: CardItemProps) {
-    return (props.showImport || props.showRating) ? div('.extra.content', [
-
-        (props.showImport) ? span('.right.floated', [
-            a({
-                'attrs': {
-                    'href': '',
-                    'stype': ''
-                }
-            }, [
-                i('.download.icon')
-            ])
-        ]) : null,
-
-        (props.showRating) ? div('ui', [div('.ui.rating', {
-            'attrs': {
-                'data-rating': props.rating,
-                'data-max-rating': '5'
-            },
-            hook: {
-                insert: (vnode) => {
-                    $(vnode.elm).rating('disable');
-                }
-            }
-        }),
-            span('.rating-count', ['(' + props.ratingCount + ')'])
-        ]) : null
-
-    ]) : null;
-}
-

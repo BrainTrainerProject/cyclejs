@@ -1,28 +1,27 @@
-import { button, div, h3, i, img, p } from "@cycle/dom";
-import { ID_EDIT_SET_BTN, SetPageState } from "./SetPage";
-import { Utils } from "../../../common/Utils";
+import {button, div, h3, i, img, p} from '@cycle/dom';
+import {ID_EDIT_SET_BTN, SetPageState} from './SetPage';
+import {Utils} from '../../../common/Utils';
 export function viewLeft([state, notecards, comments]) {
 
     const set = (state as SetPageState).set;
 
     if (!set) {
-        return ['Loading ...']
+        return ['Loading ...'];
     } else {
 
         return [
 
-
-            div(".ui.grid", [
+            div('.ui.grid', [
 
                 // Cover
-                div(".three.wide.column", [
-                    div(".ui.one.column.grid", [
-                        div(".column", [
-                            div(".ui.fluid.card", [
-                                div(".image", [
+                div('.three.wide.column', [
+                    div('.ui.one.column.grid', [
+                        div('.column', [
+                            div('.ui.fluid.card', [
+                                div('.image', [
                                     img({
-                                        "attrs": {
-                                            "src": Utils.imageOrPlaceHolder(set.image)
+                                        'attrs': {
+                                            'src': Utils.imageOrPlaceHolder(set.image)
                                         }
                                     })
                                 ])
@@ -33,32 +32,32 @@ export function viewLeft([state, notecards, comments]) {
 
 
                 // Title
-                div(".thirteen.wide.column", {
-                    "attributes": {
-                        "className": "eight wide column"
+                div('.thirteen.wide.column', {
+                    'attributes': {
+                        'className': 'eight wide column'
                     },
-                    "style": {
-                        "name": "style",
-                        "value": "padding-top: 1.75em"
+                    'style': {
+                        'name': 'style',
+                        'value': 'padding-top: 1.75em'
                     }
                 }, [
 
-                    div(".ui.grid", [
+                    div('.ui.grid', [
 
                         // Title
-                        div(".eight.wide.column.middle.aligned", [
-                            h3(".ui.medium.header", [set.title])
+                        div('.eight.wide.column.middle.aligned', [
+                            h3('.ui.medium.header', [set.title])
                         ]),
 
                         // Buttons
-                        div(".eight.wide.column", [
-                            button(ID_EDIT_SET_BTN + ".ui.icon.button.right.floated", [
-                                i(".icon.edit")
+                        div('.eight.wide.column', [
+                            button(ID_EDIT_SET_BTN + '.ui.icon.button.right.floated', [
+                                i('.icon.edit')
                             ])
                         ]),
 
                         // Beschreibung
-                        div(".sixteen.wide.column", [
+                        div('.sixteen.wide.column', [
                             p([set.description])
                         ])
 
@@ -68,11 +67,11 @@ export function viewLeft([state, notecards, comments]) {
 
             ]),
 
-            div(".ui.divider"),
+            div('.ui.divider'),
             notecards,
-            div(".ui.divider"),
+            div('.ui.divider'),
             comments
-        ]
+        ];
 
     }
 }
