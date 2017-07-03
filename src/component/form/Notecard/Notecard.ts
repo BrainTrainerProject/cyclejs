@@ -171,6 +171,7 @@ function buildSubmitRequest(state) {
                     task: state.task,
                     answer: state.answer
                 },
+                refSet: state.action.setId
             } as UpdateNotecardProps);
     }
 

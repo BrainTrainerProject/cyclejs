@@ -1,4 +1,4 @@
-import {Utils} from '../../Utils';
+import { Utils } from "../../Utils";
 
 export interface UpdateNotecardProps {
     id: string,
@@ -7,6 +7,7 @@ export interface UpdateNotecardProps {
         task: string;
         answer: string;
     }
+    refSet: string;
     reqId?: string;
 }
 
@@ -20,7 +21,9 @@ export class UpdateNotecardApi {
         return {
             url: Utils.apiUrl('/notecard/' + props.id),
             method: 'PUT',
-            category: UpdateNotecardApi.ID.concat((props.reqId) ? props.reqId : ''),
+            category: UpdateNotecardApi.ID
+                .concat((props.reqId) ? props.reqId : '')
+                .concat((props.refSet) ? props.refSet : ''),
             send: props.send
         };
 

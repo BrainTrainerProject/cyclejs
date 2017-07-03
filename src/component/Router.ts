@@ -12,6 +12,7 @@ import dropRepeats from "xstream/extra/dropRepeats";
 import SetPage from "./page/Set/SetPage";
 import FeedPage from "./page/Feed/FeedPage";
 import isolate  from "@cycle/isolate";
+import StorePage from "./page/Store/StorePage";
 
 const routedComponent = (sources) => ({path, value}) => value({...sources, router: sources.router.path(path)});
 const protectedPage = (page) => ProtectedPage(page);
@@ -21,7 +22,7 @@ const protectedMainLayout = (Component) => protectedPage(mainLayout(Component));
 const routes = {
     '/start': protectedMainLayout(StartPage),
     '/feed': protectedMainLayout(FeedPage),
-    '/store': protectedMainLayout(UnderConstructionPage),
+    '/store': protectedMainLayout(StorePage),
     '/profile': protectedMainLayout(UnderConstructionPage),
     '/settings': protectedMainLayout(UnderConstructionPage),
     '/set': protectedMainLayout(SetPage),

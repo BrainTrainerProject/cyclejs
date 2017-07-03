@@ -13,7 +13,7 @@ export interface PostNotecardProps {
 
 export class PostNotecardApi {
 
-    public static readonly ID: string = 'post-set';
+    public static readonly ID: string = 'post-notecard';
 
     public static buildRequest(props: PostNotecardProps) {
 
@@ -26,7 +26,9 @@ export class PostNotecardApi {
         return {
             url: Utils.apiUrl(apiUrl),
             method: 'POST',
-            category: PostNotecardApi.ID.concat((props.reqId) ? props.reqId : ''),
+            category: PostNotecardApi.ID
+                .concat((props.reqId) ? props.reqId : '')
+                .concat((props.refSet) ? props.refSet : ''),
             send: props.send
         };
     }
