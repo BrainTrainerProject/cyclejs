@@ -1,22 +1,22 @@
-import xs, { Stream } from "xstream";
-import { Sinks, Sources, State } from "../../../common/interfaces";
-import { AppState } from "../../../app";
-import { StateSource } from "cycle-onionify";
-import { viewRight } from "./viewRight";
-import { viewLeft } from "./viewLeft";
-import Comments from "../../comments/Comments";
-import CardList, { State as ListState } from "../../lists/cards/CardList";
-import isolate from "@cycle/isolate";
-import flattenConcurrently from "xstream/extra/flattenConcurrently";
-import { GetNotecardApi } from "../../../common/api/notecard/GetNotecard";
-import { div } from "@cycle/dom";
-import { VNode } from "snabbdom/vnode";
-import { GetSetApi } from "../../../common/api/set/GetSet";
-import { CreateSetFormAction, SetForm } from "../../form/Set/SetForm";
-import { ModalAction } from "cyclejs-modal";
-import NotecardForm, { CreateNotecardFormAction } from "../../form/Notecard/Notecard";
-import { PostNotecardApi } from "../../../common/api/notecard/PostNotecard";
-import { UpdateNotecardApi } from "../../../common/api/notecard/UpdateNotecard";
+import xs, {Stream} from 'xstream';
+import {Sinks, Sources, State} from '../../../common/interfaces';
+import {AppState} from '../../../app';
+import {StateSource} from 'cycle-onionify';
+import {viewRight} from './viewRight';
+import {viewLeft} from './viewLeft';
+import Comments from '../../comments/Comments';
+import CardList, {State as ListState} from '../../lists/cards/CardList';
+import isolate from '@cycle/isolate';
+import flattenConcurrently from 'xstream/extra/flattenConcurrently';
+import {GetNotecardApi} from '../../../common/api/notecard/GetNotecard';
+import {div} from '@cycle/dom';
+import {VNode} from 'snabbdom/vnode';
+import {GetSetApi} from '../../../common/api/set/GetSet';
+import {EditSetFormAction, SetForm} from '../../form/Set/SetForm';
+import {ModalAction} from 'cyclejs-modal';
+import NotecardForm, {CreateNotecardFormAction, EditNotecardFormAction} from '../../form/Notecard/Notecard';
+import {PostNotecardApi} from '../../../common/api/notecard/PostNotecard';
+import {UpdateNotecardApi} from '../../../common/api/notecard/UpdateNotecard';
 
 const Route = require('route-parser');
 
@@ -152,7 +152,7 @@ function model(actions: Actions): Stream<Reducer> {
             return {
                 ...state,
                 list: updateListState(state, change)
-            }
+            };
         });
 
     const addReducer$ = actions.httpResponseNotecards$
@@ -173,9 +173,10 @@ function addListState(state, notecard): ListState {
         key: String(Date.now()),
         id: notecard._id,
         title: notecard.title,
+        owner: notecard.owner,
         showImport: false,
         showRating: false
-    })
+    });
 }
 
 function updateListState(state, notecard): ListState {
@@ -188,7 +189,7 @@ function updateListState(state, notecard): ListState {
         }
     }
 
-    return addListState(state, notecard)
+    return addListState(state, notecard);
 
 }
 
@@ -220,17 +221,13 @@ export default function SetPage(sources) {
     const leftDOM$ = xs.combine(state$, notecardSinks.DOM, commentSinks.DOM).map(viewLeft);
     const rightDOM$ = viewRight(state$);
 
-    const click$ = notecardSinks.action.filter(action => action.type === 'click');
-    const openModal$ = click$.mapTo({
-        type: 'open',
-        props: {
-            title: 'Set erstellen',
-            action: {
-                type: 'create',
-            } as CreateSetFormAction
-        },
-        component: SetForm
-    } as ModalAction);
+    const click$ = notecardSinks.action.filter(action => action.type === 'click')
+        .map(action => action.item);
+
+    const editSet$ = openEditSetModal(action, state$);
+    const editNotecard$ = openEditNotecardModal(click$, state$);
+//    const showNotecard$ = showNotecardModal(show, state$)
+
 
     const openCreateNotecardModal$ = action.createNotecardClicked$
         .mapTo(state$.map(state => state.set._id))
@@ -253,6 +250,45 @@ export default function SetPage(sources) {
         DOM_RIGHT: rightDOM$,
         HTTP: action.httpRequests$,
         onion: xs.merge(reducer$),
-        modal: xs.merge(openCreateNotecardModal$, openModal$)
+        modal: xs.merge(openCreateNotecardModal$, editNotecard$, editSet$)
     };
+}
+
+function openEditNotecardModal(click$, state$) {
+    return click$
+        .map(item => state$.map(state => ({
+            item,
+            user: state.user
+        })).take(1))
+        .flatten()
+        .filter(obj => obj.item.owner === obj.user._id)
+        .map(obj => obj.item)
+        .map(item => ({
+            type: 'open',
+            props: {
+                title: 'Notecard bearbeiten',
+                action: {
+                    type: 'edit',
+                    notecardId: item.id
+                } as EditNotecardFormAction
+            },
+            component: SetForm
+        } as ModalAction));
+}
+
+
+function openEditSetModal(action, state$) {
+    return action.editSetClicked$.mapTo(state$.map(state => state.set._id).take(1))
+        .flatten()
+        .map(id => ({
+            type: 'open',
+            props: {
+                title: 'Set bearbeiten',
+                action: {
+                    type: 'edit',
+                    setId: id
+                } as EditSetFormAction
+            },
+            component: SetForm
+        } as ModalAction));
 }

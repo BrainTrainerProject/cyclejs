@@ -1,50 +1,55 @@
+'use strict';
 import xs, { Stream } from 'xstream';
 import { DOMSource, VNode } from '@cycle/dom';
 import { StateSource } from 'cycle-onionify';
-import {default as SetsList, State as ListState } from './SetsList';
+import {default as SetsList, State as ListState } from '../ActionList';
 import isolate from '@cycle/isolate';
 import dropRepeats from 'xstream/extra/dropRepeats';
-import { GetSetsApi } from '../../common/api/set/GetSets';
+import { GetSetsApi } from '../../../common/api/set/GetSets';
 import { HTTPSource } from '@cycle/http';
 import flattenSequentially from 'xstream/extra/flattenSequentially';
-import { SearchSetsApi } from '../../common/api/set/SearchSets';
-import { HttpRequest } from '../../common/api/HttpRequest';
+import { SearchSetsApi } from '../../../common/api/set/SearchSets';
+import { HttpRequest } from '../../../common/api/HttpRequest';
+import SetsItem from './SetsItem';
+import ActionList from '../ActionList';
 
-export type OwnerSetAction = {
+export type ShowOwnSets = {
     type: 'own'
 };
 
-export type SpecificSetAction = {
-    type: 'byId',
+export type ShowSpecificSets = {
+    type: 'specific',
     setId: string
 };
 
 export enum OrderType {
-    DATE = ':date',
-    RATING = ':rating'
+    DATE = 'date',
+    RATING = 'rating'
 }
 
 export enum SortType{
-    ASC = ':asc',
-    DESC = ':desc'
+    ASC = 'asc',
+    DESC = 'desc'
 }
 
-export type SearchSetAction = {
+export type ShowSearchedSets = {
     type: 'search',
     search: {
         param: string,
         orderBy: OrderType,
-        sort: SortType
+        sortBy: SortType
     }
 };
 
-export type ListAction = OwnerSetAction | SpecificSetAction | SearchSetAction;
+export type ShowOptions = ShowOwnSets | ShowSpecificSets | ShowSearchedSets;
 
 export type State = {
-    action: ListAction
+    show: ShowOptions
     list: ListState,
     page: number,
-    limit: number
+    limit: number,
+    showRating: boolean,
+    showImport: boolean
 };
 
 export type ItemClickAction = {
@@ -74,12 +79,12 @@ export type Sinks = {
     onion: Stream<Reducer>;
 };
 
-export default function SetsComponent(sources: Sources): Sinks {
+export default function SetComponent(sources: Sources): Sinks {
 
     console.log('SetComponents');
-    const state$ = sources.onion.state$.debug('SetsComponent STATE');
+    const state$ = sources.onion.state$;
 
-    const listSinks = isolate(SetsList, 'list')(sources);
+    const listSinks = isolate(ActionList, 'list')(sources, SetsItem);
     const reducer$ = reducer(sources);
 
     return {
@@ -92,17 +97,19 @@ export default function SetsComponent(sources: Sources): Sinks {
 function defaultState(state: State): State {
     return {
         ...state,
-        action: {
+        show: {
             type: 'search',
             search: {
                 param: '',
                 orderBy: OrderType.DATE,
-                sort: SortType.DESC
+                sortBy: SortType.DESC
             }
-        } as SearchSetAction,
+        } as ShowSearchedSets,
         list: [],
         page: 0,
-        limit: 10
+        limit: 10,
+        showRating: false,
+        showImport: false
     };
 }
 
@@ -137,7 +144,9 @@ function reducer({HTTP}: Sources): Stream<any> {
                 ...state,
                 list: state.list.concat({
                     key: Date.now(),
-                    ...item
+                    item: {...item, ratingCount: item.valuations.length},
+                    showRating: !!(state.showRating),
+                    showImport: !!(state.showImport)
                 })
             }));
     }
@@ -150,32 +159,34 @@ function reducer({HTTP}: Sources): Stream<any> {
 
 function httpRequests$(state$: Stream<any>): Stream<any> {
 
-    function filterActionFromState$(type: String, compareFn: (prev: ListAction, now: ListAction) => boolean): Stream<any> {
+    function filterActionFromState$(type: String, compareFn: (prev: ShowOptions, now: ShowOptions) => boolean): Stream<any> {
         return state$
-            .map(state => state.action)
-            .filter(action => action.type === type)
+            .map(state => state.show as ShowOptions)
+            .filter(show => show.type === type)
             .compose(dropRepeats(<SearchSetAction>(prev, now) => compareFn(prev, now)));
     }
 
-    const searchSetsRequest$ = filterActionFromState$('search',
-        (prev: SearchSetAction, now: SearchSetAction) => prev.search === now.search)
+    const searchSetRequest$ = filterActionFromState$('search',
+        (prev: ShowSearchedSets, now: ShowSearchedSets) => prev.search === now.search)
         .map(state => state.search)
-        .map(search => SearchSetsApi.buildRequest({
-            param: search.param,
-            orderBy: search.orderBy,
-            sort: search.sort
-        }));
+        .map(search => {
+            return SearchSetsApi.buildRequest({
+                param: encodeURIComponent(search.param),
+                orderBy: search.orderBy,
+                sort: search.sortBy
+            });
+        });
 
-    const ownSetsRequest$ = filterActionFromState$('own',
-        (prev: OwnerSetAction, now: OwnerSetAction) => prev.type === now.type)
+    const ownSetRequest$ = filterActionFromState$('own',
+        (prev: ShowOwnSets, now: ShowOwnSets) => prev.type === now.type)
         .map(state => GetSetsApi.buildRequest());
 
     const specificSetRequest$ = filterActionFromState$('byId',
-        (prev: SpecificSetAction, now: SpecificSetAction) => prev.setId === now.setId)
+        (prev: ShowSpecificSets, now: ShowSpecificSets) => prev.setId === now.setId)
         .map(action => GetSetsApi.buildRequest({
             setId: action.setId
         }));
 
-    return xs.merge(ownSetsRequest$, specificSetRequest$, searchSetsRequest$);
+    return xs.merge(ownSetRequest$, specificSetRequest$, searchSetRequest$);
 
 }

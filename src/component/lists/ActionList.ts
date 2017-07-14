@@ -1,9 +1,10 @@
-import {Stream} from 'xstream';
-import {div, DOMSource, p, VNode} from '@cycle/dom';
-import {StateSource} from 'cycle-onionify';
-import Item, {State as ItemState} from './SetsItem';
+import { Stream } from 'xstream';
+import { div, DOMSource, p, VNode } from '@cycle/dom';
+import { StateSource } from 'cycle-onionify';
+import Item, {State as ItemState } from './sets/SetsItem';
+import { Component } from '../../common/interfaces';
 
-export type State = Array<ItemState & { key: string }>;
+export type State = Array<{ key: string, item: ItemState }>;
 
 export type Reducer = (prev?: State) => State | undefined;
 
@@ -29,15 +30,15 @@ function view(itemVNodes: Array<VNode>) {
 
 }
 
-export default function SetsList(sources: Sources): Sinks {
+export default function ActionList(sources: Sources, itemComponent: Component): Sinks {
 
-    const items = sources.onion.toCollection(Item)
+    const items = sources.onion.toCollection(itemComponent)
         .uniqueBy(s => s.key)
         .isolateEach(key => key)
         .build(sources);
 
     const vdom$ = items.pickCombine('DOM').map((itemVNodes: Array<VNode>) => view(itemVNodes));
-    const action$ = items.pickMerge('action').debug('clicked!!!');
+    const action$ = items.pickMerge('action');
 
     return {
         DOM: vdom$,

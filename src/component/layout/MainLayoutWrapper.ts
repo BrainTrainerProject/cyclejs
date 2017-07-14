@@ -10,6 +10,7 @@ import isolate  from '@cycle/isolate';
 import {ModalAction} from 'cyclejs-modal';
 import {CreateSetFormAction, SetForm} from '../form/Set/SetForm';
 import {isolateSink} from '@cycle/http/lib/isolate';
+import {GetProfileApi} from '../../common/api/profile/GetProfile';
 const R = require('ramda');
 
 export type MainLayoutSources = Sources & {};
@@ -24,14 +25,13 @@ export function MainLayoutWrapper(component: MainLayoutComponent) {
         const mastheadSinks = isolate(Masthead, 'masthead')(sources);
 
         const componentSinks = component(sources);
-        console.log(componentSinks);
 
         const vdom$ = xs.combine(sidebarSinks.DOM, mastheadSinks.DOM);
 
         let mergedSinks = mergeSinks(sidebarSinks, mastheadSinks, componentSinks);
         mergedSinks = Utils.filterPropsByArray(mergedSinks, ['DOM_LEFT', 'DOM_RIGHT']);
 
-        console.log(mergedSinks);
+        const reducer$ = reducer(sources);
 
         const sinks = {
             ...mergedSinks,
@@ -39,14 +39,46 @@ export function MainLayoutWrapper(component: MainLayoutComponent) {
                 vdom$,
                 componentSinks.DOM_LEFT || xs.never(),
                 componentSinks.DOM_RIGHT || xs.never()
-            ).map(view)
+            ).map(view),
+            HTTP: xs.merge(mergedSinks.HTTP || xs.never(), reducer$.HTTP),
+            onion: xs.merge(mergedSinks.onion || xs.never(), reducer$.onion)
         };
 
         return sinks;
     };
 }
 
-function view([[sidebar, masthead], contentLeft, contentRight]) {
+function reducer({HTTP}) {
+
+    // request User profile
+    const httpRequestUserInfo$ = xs.of(GetProfileApi.buildRequest({id: '', requestId: 'userprofile'}));
+    const httpResponseUserInfo$ = HTTP.select(GetProfileApi.ID + 'userprofile')
+        .flatten()
+        .map(({text}) => JSON.parse(text)).debug('Profile response!');
+
+    //
+    const initProfileReducer$ = xs.of(function initReducer(prev) {
+        return {
+            ...prev,
+            user: null
+        };
+    });
+    const profileReducer$ = httpResponseUserInfo$
+        .map(profile => (prevState) => {
+            return {
+                ...prevState,
+                user: profile
+            };
+        });
+
+    return {
+        HTTP: httpRequestUserInfo$,
+        onion: xs.merge(initProfileReducer$, profileReducer$)
+    };
+
+}
+
+function view([[sidebar, masthead], contentLeft, contentRight]): VNode[] {
 
     return [
         sidebar,
@@ -58,17 +90,17 @@ function view([[sidebar, masthead], contentLeft, contentRight]) {
 
 }
 
-function contentView(contentLeftVNode: VNode, contentRightVNode: VNode) {
+function contentView(contentLeftVNode: VNode, contentRightVNode: VNode): VNode {
     return div('#content.ui.container.content-row', [
         contentRight(contentRightVNode),
         contentLeft(contentLeftVNode)
     ]);
 }
 
-function contentRight(content: VNode) {
+function contentRight(content: VNode): VNode {
     return div('#content-right.ui.dividing.right.rail', content);
 }
 
-function contentLeft(content: VNode) {
+function contentLeft(content: VNode): VNode {
     return div('#content-left.left-main', content);
 }

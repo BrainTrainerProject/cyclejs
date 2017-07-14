@@ -1,14 +1,14 @@
-import xs from "xstream";
+import xs from 'xstream';
 
 export interface SearchAction {
     action: 'search';
-    value: string
+    value: string;
 }
 
 export interface OrderAction {
     action: 'order';
     orderBy: OrderTypes;
-    sortDirection: SortTypes
+    sortDirection: SortTypes;
 }
 
 export interface ResetAction {
@@ -27,7 +27,7 @@ export type FilterAction = ResetAction | SearchAction | OrderAction;
 
 export function makeFilterDriver() {
 
-    function auth0Driver(action$) {
+    function filterDriver(action$) {
 
         const noop = () => {
         };
@@ -36,7 +36,7 @@ export function makeFilterDriver() {
             .map(action => {
 
                 if (!action) {
-                    return false
+                    return false;
                 }
 
                 if (!isValidRequest(action)) {
@@ -44,7 +44,7 @@ export function makeFilterDriver() {
                     return false;
                 }
 
-                return {...action}
+                return {...action};
 
             });
 
@@ -57,7 +57,7 @@ export function makeFilterDriver() {
         };
     }
 
-    return auth0Driver;
+    return filterDriver;
 
 }
 
@@ -82,7 +82,7 @@ function responseSelector(action$) {
         if (isValidRequest({action: event})) {
             return action$
                 .filter(action => action.action === event)
-                .map(action => action)
+                .map(action => action);
         }
 
         return xs.empty();
@@ -90,15 +90,15 @@ function responseSelector(action$) {
 
     return function selectResponse(selector) {
         const events = selector
-            .split(",")
-            .map(sel => sel.replace(/ */, ""))
+            .split(',')
+            .map(sel => sel.replace(/ */, ''))
             .filter(sel => !!sel);
 
         const events$ = events.map(event => {
-            return selectEvent(event, action$)
+            return selectEvent(event, action$);
         });
 
         return xs.merge(...events$);
-    }
+    };
 
 }

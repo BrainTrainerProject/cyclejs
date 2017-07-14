@@ -13,6 +13,7 @@ import SetPage from "./page/Set/SetPage";
 import FeedPage from "./page/Feed/FeedPage";
 import isolate  from "@cycle/isolate";
 import StorePage from "./page/Store/StorePage";
+import ProfilePage from './page/Profile/ProfilePage';
 
 const routedComponent = (sources) => ({path, value}) => value({...sources, router: sources.router.path(path)});
 const protectedPage = (page) => ProtectedPage(page);
@@ -23,7 +24,7 @@ const routes = {
     '/start': protectedMainLayout(StartPage),
     '/feed': protectedMainLayout(FeedPage),
     '/store': protectedMainLayout(StorePage),
-    '/profile': protectedMainLayout(UnderConstructionPage),
+    '/profile': protectedMainLayout(ProfilePage),
     '/settings': protectedMainLayout(UnderConstructionPage),
     '/set': protectedMainLayout(SetPage),
     '/login': protectedPage(LoginPage),

@@ -1,21 +1,21 @@
-import "babel-polyfill";
-import { div, makeDOMDriver } from "@cycle/dom";
-import { makeHTTPDriver } from "@cycle/http";
-import { Stream } from "xstream";
-import { run } from "@cycle/run";
-import onionify, { StateSource } from "cycle-onionify";
-import { Reducer, Sinks, Sources, State } from "./common/interfaces";
-import { VNode } from "snabbdom/vnode";
-import { wrappedModalify } from "cyclejs-modal";
-import { ModalWrapper } from "./component/layout/ModalWrapper";
-import { makeAuth0Driver, protect } from "cyclejs-auth0";
-import { createBrowserHistory } from "history";
-import { captureClicks, makeHistoryDriver } from "@cycle/history";
-import switchPath from "switch-path";
-import { makeRouterDriver, RouterSource } from "cyclic-router";
-import { Router } from "./component/Router";
+import 'babel-polyfill';
+import { div, makeDOMDriver } from '@cycle/dom';
+import { makeHTTPDriver } from '@cycle/http';
+import { Stream } from 'xstream';
+import { run } from '@cycle/run';
+import onionify, { StateSource } from 'cycle-onionify';
+import { Reducer, Sinks, Sources, State } from './common/interfaces';
+import { VNode } from 'snabbdom/vnode';
+import { wrappedModalify } from 'cyclejs-modal';
+import { ModalWrapper } from './component/layout/ModalWrapper';
+import { makeAuth0Driver, protect } from 'cyclejs-auth0';
+import { createBrowserHistory } from 'history';
+import { captureClicks, makeHistoryDriver } from '@cycle/history';
+import switchPath from 'switch-path';
+import { makeRouterDriver, RouterSource } from 'cyclic-router';
+import { Router } from './component/Router';
 import  xs from 'xstream';
-import { makeFilterDriver } from "./driver/FilterDriver/index";
+import { makeFilterDriver } from './driver/FilterDriver/index';
 
 const config = require('./config.json');
 
@@ -30,8 +30,8 @@ run(onionify(wrappedModalify(App, ModalWrapper)), {
     router: makeRouterDriver(createBrowserHistory(), switchPath),
     auth0: makeAuth0Driver(config.auth0.clientId, config.auth0.domain, {
         auth: {
-            params: {scope: "openid nickname"},
-            responseType: "token",
+            params: {scope: 'openid nickname'},
+            responseType: 'token',
             redirect: true,
             redirectUrl: config.auth0.callbackUrl
         }
@@ -42,11 +42,11 @@ run(onionify(wrappedModalify(App, ModalWrapper)), {
 function App(sources: AppSources): AppSinks {
     const routerSinks = Router(sources);
 
-    const filterListener$ = sources.filter.select('search').map(search => console.log("Suche: " + search));
+    const filterListener$ = sources.filter.select('search').map(search => console.log('Suche: ' + search));
 
     return {
         ...routerSinks,
-        HTTP: routerSinks.HTTP.debug("HTTP REQUEST"),
+        HTTP: routerSinks.HTTP.debug('HTTP REQUEST'),
         DOM: view(routerSinks.DOM),
         auth0: routerSinks.auth0.debug('AUTH APP'),
         filter: xs.merge(routerSinks.filter.debug('Filter'), filterListener$)
@@ -60,5 +60,5 @@ function view(vdom$: Stream<VNode>): Stream<VNode> {
                 div('.full.height', content)
             ])
         ])
-    )
+    );
 }

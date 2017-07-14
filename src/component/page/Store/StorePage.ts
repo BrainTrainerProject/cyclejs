@@ -1,17 +1,22 @@
-import xs, { Stream } from "xstream";
-import { Sources, State } from "../../../common/interfaces";
-import { Collection, StateSource } from "cycle-onionify";
-import { button, div, DOMSource, input, span } from "@cycle/dom";
-import List, { Sources as ListSources, State as ListState } from "../../lists/cards/CardList";
-import List, { Sources as ListSources, State as ListState } from "../../lists/cards/CardList";
-import { VNode } from "snabbdom/vnode";
-import isolate from "@cycle/isolate";
-import { CreateSetFormAction, SetForm } from "../../form/Set/SetForm";
-import { ModalAction } from "cyclejs-modal";
+import xs, {Stream} from 'xstream';
+import {Sources, State} from '../../../common/interfaces';
+import {StateSource} from 'cycle-onionify';
+import {DOMSource} from '@cycle/dom';
+import {State as ListState} from '../../lists/cards/CardList';
+import {VNode} from 'snabbdom/vnode';
+import isolate from '@cycle/isolate';
+import SetsComponent, {
+    OrderType,
+    ShowSearchedSets,
+    SortType,
+    State as SetComponentState
+} from '../../lists/sets/SetsComponent';
+import {ImportSetApi, ImportSetProps} from '../../../common/api/set/ImportSet';
 
 export type StorePageSources = Sources & { onion: StateSource<StorePageState>, filter: any };
 export interface StorePageState extends State {
     list: ListState;
+    setComponent: SetComponentState;
 }
 
 export type Reducer = (prev?: StorePageState) => StorePageState | undefined;
@@ -19,106 +24,117 @@ export type Reducer = (prev?: StorePageState) => StorePageState | undefined;
 export type Sources = {
     DOM: DOMSource;
     onion: StateSource<State>;
-}
+};
 
 export type Sinks = {
     DOM: Stream<VNode>;
     onion: Stream<Reducer>;
-}
+};
 
 export type Actions = {
-    add$: Stream<string>,
-    reorder$: Stream<any>
-}
+    filter$: Stream<string>,
+    resetFilter$: Stream<string>,
+    reorder$: Stream<string>
+};
 
-function intent(domSource: DOMSource): Actions {
+function intent({filter}: StorePageSources): Actions {
     return {
-        add$: domSource.select('.input').events('input')
-            .map(inputEv => domSource.select('.add').events('click').mapTo(inputEv))
-            .flatten()
-            .map(inputEv => (inputEv.target as HTMLInputElement).value),
-        reorder$: domSource.select('.reorder').events('click')
+        filter$: filter.select('search'),
+        resetFilter$: filter.select('reset'),
+        reorder$: xs.never()
     };
 }
 
 function model(actions: Actions): Stream<Reducer> {
-    const initReducer$ = xs.of(function initReducer(prev?: State): State {
-        return {
-            list: [],
-        };
+
+    const initReducer$ = xs.of(function initReducer(prev?: StorePageState): StorePageState {
+        if (prev) {
+            return prev;
+        } else {
+            return {
+                list: [],
+                setComponent: {
+                    show: {
+                        type: 'search',
+                        search: {
+                            param: '',
+                            orderBy: OrderType.DATE,
+                            sortBy: SortType.DESC
+                        }
+                    } as ShowSearchedSets,
+                    showRating: true,
+                    showImport: true
+                } as SetComponentState
+            };
+        }
     });
 
-    const addReducer$ = actions.add$
-        .map(content => function addReducer(prevState: StorePageState): State {
-            return {
-                list: prevState.list.concat({
-                    key: String(Date.now()),
-                    id: 'idEingefügtÜberParent',
-                    title: content,
-                    showImport: true,
-                    showRating: true
-                }),
-            };
-        });
+    const searchReducer$ = actions.filter$.map(searchObject => (prevState: StorePageState) => {
+        return ({
+            ...prevState,
+            setComponent: {
+                ...prevState.setComponent,
+                show: {
+                    type: 'search',
+                    search: {
+                        ...(prevState.setComponent.show as ShowSearchedSets).search,
+                        param: searchObject.value
+                    }
+                } as ShowSearchedSets
+            } as SetComponentState
+        } as StorePageState);
+    });
 
-    const reorderReducer$ = actions.reorder$
-        .map(content => function reOrder(prevState: StorePageState): State {
-            console.log("Reorder");
-            console.log(prevState.list);
-            return {
-                list: prevState.list.sort(function (a, b) {
-                    if (a.content.title < b.content.title) return -1;
-                    if (a.content.title > b.content.title) return 1;
-                    return 0;
-                })
-            }
-        })
+    const resetSearchReducer$ = actions.resetFilter$.map(filterObject => (prevState: StorePageState) => {
+        return ({
+            ...prevState,
+            setComponent: {
+                ...prevState.setComponent,
+                show: {
+                    type: 'search',
+                    search: {
+                        ...(prevState.setComponent.show as ShowSearchedSets).search,
+                        param: ''
+                    }
+                } as ShowSearchedSets
+            } as SetComponentState
+        } as StorePageState);
+    });
 
-    return xs.merge(initReducer$, addReducer$, reorderReducer$);
+    return xs.merge(initReducer$, searchReducer$, resetSearchReducer$);
 }
 
-function view(listVNode$: Stream<VNode>): Stream<VNode> {
-    return listVNode$.map(ulVNode =>
-        div([
-            span('New task:'),
-            input('.input', {attrs: {type: 'text'}}),
-            button('.add', 'Add'),
-            button('.reorder', 'Reorder'),
-            ulVNode
-        ])
-    );
-}
-
-export default function StorePage(sources: StorePageSources) {
+export default function StorePage(sources: StorePageSources): any {
 
     const state$ = sources.onion.state$.debug('STATE CHANGE!');
+    console.log(sources);
 
-    const listSinks = isolate(List, 'list')(sources as any as ListSources);
+    const setsComponentSinks = isolate(SetsComponent, 'setComponent')(sources);
 
-    const action$ = intent(sources.DOM);
+    function actionFilterFromSetsComponent$(type: string): Stream<any> {
+        return setsComponentSinks.action.filter(action => action.type === type)
+            .map(action => action.item);
+    }
+
+    const itemClick$ = actionFilterFromSetsComponent$('item');
+    const importClick$ = actionFilterFromSetsComponent$('import');
+
+    const action$ = intent(sources);
     const parentReducer$ = model(action$);
     const reducer$ = xs.merge(parentReducer$);
-    const vdom$ = view(listSinks.DOM);
+    const vdom$ = setsComponentSinks.DOM;
 
-    const itemClick$ = listSinks.action
-        .filter(action => action.type === 'click');
-
-    const openModal$ = itemClick$.mapTo({
-        type: 'open',
-        props: {
-            title: 'Set erstellen',
-            action: {
-                type: 'create',
-            } as CreateSetFormAction
-        },
-        component: SetForm
-    } as ModalAction);
+    const importRequest$ = importClick$
+        .map(item => ImportSetApi.buildRequest({
+            setId: item._id
+        } as ImportSetProps));
 
     return {
         DOM_LEFT: vdom$,
         DOM_RIGHT: xs.of([]),
-        onion: reducer$,
-        modal: openModal$
-    }
+        onion: xs.merge(reducer$, setsComponentSinks.onion),
+        HTTP: xs.merge(setsComponentSinks.HTTP, importRequest$),
+        router: itemClick$.map(item => '/set/' + item._id)
+    };
 
 }

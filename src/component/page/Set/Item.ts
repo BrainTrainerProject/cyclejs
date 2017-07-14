@@ -44,7 +44,7 @@ export default function Item(sources: Sources): Sinks {
         return e;
     })
         .mapTo(state$.map(state => state.id))
-        .flatten()
+        .flatten();
 
     return {
         DOM: vdom$,

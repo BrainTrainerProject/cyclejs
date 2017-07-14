@@ -74,6 +74,7 @@
     "string-to-dom": "^0.1.5",
     "switch-path": "^1.2.0",
     "symbol-observable": "^1.0.4",
+    "tslint": "^5.5.0",
     "typescript": "^2.4.0",
     "underscore": "^1.8.3",
     "xstream": "^10.7.0"
