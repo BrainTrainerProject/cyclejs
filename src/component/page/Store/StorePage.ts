@@ -116,7 +116,7 @@ export default function StorePage(sources: StorePageSources): any {
             .map(action => action.item);
     }
 
-    const itemClick$ = actionFilterFromSetsComponent$('item');
+    const itemClick$ = actionFilterFromSetsComponent$('click');
     const importClick$ = actionFilterFromSetsComponent$('import');
 
     const action$ = intent(sources);
