@@ -2,7 +2,7 @@ import {div, i} from '@cycle/dom';
 import xs from 'xstream';
 import {VNode} from 'snabbdom/vnode';
 import {Sources} from '../../common/interfaces';
-import {OrderAction} from '../../driver/FilterDriver/index';
+import {OrderAction, OrderTypes, SortTypes} from '../../driver/FilterDriver/index';
 
 const ID_TITLE = '.order-title';
 const ID_DATE_DESC = '.date-order-desc';
@@ -30,12 +30,33 @@ function intent({DOM, filter}: Sources): any {
     const changeOrder$ = xs.merge(orderDateDescClick$, orderDateAscClick$, orderRatingDescClick$, orderRatingAscClick$);
 
     return {
-        filter: changeOrder$.map(e => ({
-            action: 'order',
-            orderBy: e.target.data.orderBy,
-            sortDirection: e.target.dataset.sort
-        } as OrderAction))
+        filter: changeOrder$.map(e => {
+            const dataset = e.target.dataset;
+            return ({
+                action: 'order',
+                orderBy: getOrderType(dataset.orderBy),
+                sortBy: getSortType(dataset.sort)
+            } as OrderAction);
+        })
     };
+}
+
+function getOrderType(orderBy: string): OrderTypes {
+    switch (orderBy) {
+        case ID_ORDER_RATING:
+            return OrderTypes.RATING;
+        default:
+            return OrderTypes.DATE;
+    }
+}
+
+function getSortType(sortBy: string): SortTypes {
+    switch (sortBy) {
+        case ID_SORT_DESC:
+            return SortTypes.DESC;
+        default:
+            return SortTypes.ASC;
+    }
 }
 
 export default function MastheadFilter(sources: Sources): any {
@@ -55,10 +76,10 @@ export default function MastheadFilter(sources: Sources): any {
 
 function filterItem(id: string, orderBy: string, sort: string, icon: string, label: string): VNode {
     return div('.item' + id, {
-        attrs: {
-            'data-sort': sort,
-            'data-order-by': orderBy,
-            'data-label': label
+        dataset: {
+            sort: sort,
+            orderBy: orderBy,
+            label: label
         }
     }, [i(icon), label]);
 }

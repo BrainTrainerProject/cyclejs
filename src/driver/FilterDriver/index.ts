@@ -8,7 +8,7 @@ export interface SearchAction {
 export interface OrderAction {
     action: 'order';
     orderBy: OrderTypes;
-    sortDirection: SortTypes;
+    sortBy: SortTypes;
 }
 
 export interface ResetAction {
