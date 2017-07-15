@@ -1,17 +1,14 @@
 'use strict';
-import xs, { Stream } from 'xstream';
-import { DOMSource, VNode } from '@cycle/dom';
-import { StateSource } from 'cycle-onionify';
-import {default as SetsList, State as ListState } from '../ActionList';
+import xs, {Stream} from 'xstream';
+import {DOMSource, VNode} from '@cycle/dom';
+import {StateSource} from 'cycle-onionify';
+import ActionList, {State as ListState} from '../ActionList';
 import isolate from '@cycle/isolate';
-import dropRepeats from 'xstream/extra/dropRepeats';
-import { GetSetsApi } from '../../../common/api/set/GetSets';
-import { HTTPSource } from '@cycle/http';
+import {HTTPSource} from '@cycle/http';
 import flattenSequentially from 'xstream/extra/flattenSequentially';
-import { SearchSetsApi } from '../../../common/api/set/SearchSets';
-import { HttpRequest } from '../../../common/api/HttpRequest';
+import {HttpRequest} from '../../../common/api/HttpRequest';
 import SetsItem from './SetsItem';
-import ActionList from '../ActionList';
+import {SetService, SetServiceSinks} from './SetService';
 
 export type ShowOwnSets = {
     type: 'own'
@@ -84,12 +81,14 @@ export default function SetComponent(sources: Sources): Sinks {
     console.log('SetComponents');
     const state$ = sources.onion.state$;
 
+    const setService: SetServiceSinks = SetService(sources, state$);
+
     const listSinks = isolate(ActionList, 'list')(sources, SetsItem);
-    const reducer$ = reducer(sources);
+    const reducer$ = reducer(sources, setService);
 
     return {
         ...listSinks,
-        HTTP: httpRequests$(state$),
+        HTTP: setService.requests,
         onion: reducer$
     };
 }
@@ -113,7 +112,7 @@ function defaultState(state: State): State {
     };
 }
 
-function reducer({HTTP}: Sources): Stream<any> {
+function reducer({HTTP}: Sources, service: SetServiceSinks): Stream<any> {
 
     const initReducer$ = xs.of((state) => {
         if (state) {
@@ -122,14 +121,9 @@ function reducer({HTTP}: Sources): Stream<any> {
         return defaultState(state);
     });
 
-    function responseHelper(id: string): Stream<any> {
-        return HTTP.select(id)
-            .flatten()
-            .map(({text}) => JSON.parse(text));
-    }
-
-    const responseGetSetsApi$ = responseHelper(GetSetsApi.ID);
-    const responseSearchSetsApi$ = responseHelper(SearchSetsApi.ID);
+    const response = service.response;
+    const responseGetSetsApi$ = response.getSetsApi$;
+    const responseSearchSetsApi$ = response.searchSetsApi$;
 
     const clearSets$ = xs.merge(responseGetSetsApi$, responseSearchSetsApi$)
         .map(t => (state) => ({
@@ -151,42 +145,8 @@ function reducer({HTTP}: Sources): Stream<any> {
             }));
     }
 
-    const getSetRecuder$ = fillListByResponse$(responseGetSetsApi$);
+    const getSetReducer$ = fillListByResponse$(responseGetSetsApi$);
     const searchReducer$ = fillListByResponse$(responseSearchSetsApi$);
 
-    return xs.merge(initReducer$, clearSets$, getSetRecuder$, searchReducer$);
-}
-
-function httpRequests$(state$: Stream<any>): Stream<any> {
-
-    function filterActionFromState$(type: String, compareFn: (prev: ShowOptions, now: ShowOptions) => boolean): Stream<any> {
-        return state$
-            .map(state => state.show as ShowOptions)
-            .filter(show => show.type === type)
-            .compose(dropRepeats(<SearchSetAction>(prev, now) => compareFn(prev, now)));
-    }
-
-    const searchSetRequest$ = filterActionFromState$('search',
-        (prev: ShowSearchedSets, now: ShowSearchedSets) => prev.search === now.search)
-        .map(state => state.search)
-        .map(search => {
-            return SearchSetsApi.buildRequest({
-                param: encodeURIComponent(search.param),
-                orderBy: search.orderBy,
-                sort: search.sortBy
-            });
-        });
-
-    const ownSetRequest$ = filterActionFromState$('own',
-        (prev: ShowOwnSets, now: ShowOwnSets) => prev.type === now.type)
-        .map(state => GetSetsApi.buildRequest());
-
-    const specificSetRequest$ = filterActionFromState$('byId',
-        (prev: ShowSpecificSets, now: ShowSpecificSets) => prev.setId === now.setId)
-        .map(action => GetSetsApi.buildRequest({
-            setId: action.setId
-        }));
-
-    return xs.merge(ownSetRequest$, specificSetRequest$, searchSetRequest$);
-
+    return xs.merge(initReducer$, clearSets$, getSetReducer$, searchReducer$);
 }
