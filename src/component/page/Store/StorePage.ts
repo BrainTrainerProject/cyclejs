@@ -47,26 +47,24 @@ function intent({filter}: StorePageSources): Actions {
 
 function model(actions: Actions): Stream<Reducer> {
 
-    const initReducer$ = xs.of(function initReducer(prev?: StorePageState): StorePageState {
-        if (prev) {
-            return prev;
-        } else {
-            return {
-                list: [],
-                setComponent: {
-                    show: {
-                        type: 'search',
-                        search: {
-                            param: '',
-                            orderBy: OrderType.DATE,
-                            sortBy: SortType.DESC
-                        }
-                    } as ShowSearchedSets,
-                    showRating: true,
-                    showImport: true
-                } as SetComponentState
-            };
-        }
+    const initReducer$ = xs.of(function initReducer(): StorePageState {
+
+        return {
+            list: [],
+            setComponent: {
+                show: {
+                    type: 'search',
+                    search: {
+                        param: '',
+                        orderBy: OrderType.DATE,
+                        sortBy: SortType.DESC
+                    }
+                } as ShowSearchedSets,
+                showRating: true,
+                showImport: true
+            } as SetComponentState
+        };
+
     });
 
     const searchReducer$ = actions.filter$.map(searchObject => (prevState: StorePageState) => {
