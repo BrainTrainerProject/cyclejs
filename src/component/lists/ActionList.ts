@@ -16,7 +16,7 @@ export type Sources = {
 
 export type Sinks = {
     DOM: Stream<VNode>;
-    action: Stream<any>;
+    callback$: Stream<any>;
 };
 
 function view(itemVNodes: Array<VNode>): Stream<VNode> {
@@ -51,11 +51,11 @@ export default function ActionList(sources: Sources, itemComponent: Component): 
         .map(view)
         .flatten();
 
-    const action$ = items.pickMerge('action');
+    const callback$ = items.pickMerge('callback$');
 
     return {
         DOM: vdom$,
-        action: action$
+        callback$: callback$
     };
 
 }
