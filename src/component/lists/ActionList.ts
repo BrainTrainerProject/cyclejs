@@ -1,9 +1,8 @@
 import xs, {Stream} from 'xstream';
 import {div, DOMSource, p, VNode} from '@cycle/dom';
 import {StateSource} from 'cycle-onionify';
-import Item, {State as ItemState} from './sets/SetsItem';
+import {State as ItemState} from './sets/SetsItem';
 import {Component} from '../../common/interfaces';
-import delay from 'xstream/extra/delay';
 import debounce from 'xstream/extra/debounce';
 
 export type State = Array<{ key: string, item: ItemState }>;
@@ -21,8 +20,6 @@ export type Sinks = {
 };
 
 function view(itemVNodes: Array<VNode>): Stream<VNode> {
-
-    console.log("Call View");
 
     const items$ = xs.of(itemVNodes);
 
@@ -48,7 +45,12 @@ export default function ActionList(sources: Sources, itemComponent: Component): 
         .isolateEach(key => key)
         .build(sources);
 
-    const vdom$ = items.pickCombine('DOM').map(view).flatten();
+    const vdom$ = items.pickCombine('DOM')
+        .startWith([])
+        .compose(debounce(10))
+        .map(view)
+        .flatten();
+
     const action$ = items.pickMerge('action');
 
     return {
