@@ -1,13 +1,14 @@
-import { a, div, i, img } from "@cycle/dom";
-import xs from "xstream";
-import { ModalAction } from "cyclejs-modal";
-import SettingsForm from "../form/Settings/Settings";
-import { GetProfileApi } from "../../common/api/profile/GetProfile";
-import { Utils } from "../../common/Utils";
+import {a, div, i, img} from '@cycle/dom';
+import xs from 'xstream';
+import {ModalAction} from 'cyclejs-modal';
+import SettingsForm from '../form/Settings/Settings';
+import {GetProfileApi} from '../../common/api/profile/GetProfile';
+import {Utils} from '../../common/Utils';
+import {GetOwnRequest, ProfileRepository, RequestType} from '../../common/repository/ProfileRepository';
 
 export default function MastheadProfil(sources) {
 
-    const state$ = sources.onion.state$.debug("PROFILE STATE");
+    const state$ = sources.onion.state$.debug('PROFILE STATE');
 
     const feedClick$ = sources.DOM.select('.alarm-icon').events('click').mapTo('/feed');
     const profileClick$ = sources.DOM.select('.nav-profile').events('click').mapTo('/profile');
@@ -16,12 +17,11 @@ export default function MastheadProfil(sources) {
 
     const route$ = xs.merge(profileClick$, logoutClick$, feedClick$);
 
-    const requestUserProfile$ = xs.of(GetProfileApi.buildRequest({id: ''}));
-    const responseUserProfile$ = sources.HTTP.select(GetProfileApi.ID)
-        .flatten()
-        .map(({text}) => JSON.parse(text));
+    const profileRepository = ProfileRepository(sources, xs.of({
+        type: RequestType.GET_OWN
+    } as GetOwnRequest));
 
-    const profileReducer$ = responseUserProfile$
+    const profileReducer$ = profileRepository.response.getOwnProfile$
         .map(profile => (state) => ({
             image: profile.photourl
         }));
@@ -30,7 +30,7 @@ export default function MastheadProfil(sources) {
         .mapTo({
             type: 'open',
             props: {
-                title: 'Einstellungen',
+                title: 'Einstellungen'
             },
             component: SettingsForm
         } as ModalAction);
@@ -39,48 +39,48 @@ export default function MastheadProfil(sources) {
         DOM: view(state$),
         router: route$,
         modal: openSettingsModal$,
-        HTTP: requestUserProfile$,
+        HTTP: profileRepository.HTTP,
         onion: profileReducer$
-    }
+    };
 
 }
 
 function view(state$) {
-    return state$.map(state => div(".col-right.ui.dividing.right.rail", [
-            div(".ui.secondary.menu", [
-                div(".right.menu.text.no-space-right", [
-                    div(".item", [
-                        a(".alarm-icon.item.right.floated", [
-                            i(".alarm.outline.icon")
+    return state$.map(state => div('.col-right.ui.dividing.right.rail', [
+            div('.ui.secondary.menu', [
+                div('.right.menu.text.no-space-right', [
+                    div('.item', [
+                        a('.alarm-icon.item.right.floated', [
+                            i('.alarm.outline.icon')
                         ]),
 
-                        div("#user.ui.pointing.dropdown.link.top.right", {
+                        div('#user.ui.pointing.dropdown.link.top.right', {
                             hook: {
                                 insert: (vnode) => {
                                     $(vnode.elm).dropdown({});
                                 }
                             }
                         }, [
-                            div(".item", [
-                                img(".ui.avatar.image", {
-                                    "attrs": {
-                                        "src": Utils.imageOrPlaceHolder(state.image),
+                            div('.item', [
+                                img('.ui.avatar.image', {
+                                    'attrs': {
+                                        'src': Utils.imageOrPlaceHolder(state.image),
                                     }
                                 })
                             ]),
-                            div(".menu", {
+                            div('.menu', {
                                 props: {
                                     style: 'right: 16px !important;'
                                 }
                             }, [
-                                div(".nav-profile.item", [`Profile`]),
-                                div(".nav-settings.item", [`Einstellungen`]),
-                                div(".nav-logout.item", [`Logout`])
+                                div('.nav-profile.item', [`Profile`]),
+                                div('.nav-settings.item', [`Einstellungen`]),
+                                div('.nav-logout.item', [`Logout`])
                             ])
                         ])
                     ])
                 ])
             ])
         ])
-    )
+    );
 }

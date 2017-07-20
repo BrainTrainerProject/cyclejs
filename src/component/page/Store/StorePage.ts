@@ -5,17 +5,18 @@ import {DOMSource} from '@cycle/dom';
 import {State as ListState} from '../../lists/cards/CardList';
 import {VNode} from 'snabbdom/vnode';
 import isolate from '@cycle/isolate';
-import SetsComponent, {
-    OrderType,
-    ShowSearchedSets,
-    SortType,
-    State as SetComponentState
-} from '../../lists/sets/SetsComponent';
+import SetsComponent, {LoadSearchedSetsAction, State as SetComponentState} from '../../lists/sets/SetListComponent';
 import {ImportSetApi, ImportSetProps} from '../../../common/api/set/ImportSet';
+import {OrderType} from '../../../common/OrderType';
+import {SortType} from '../../../common/SortType';
+import {SearchParams} from '../../../common/repository/SetRepository';
 
-export type StorePageSources = Sources & { onion: StateSource<StorePageState>, filter: any };
+export type StorePageSources = Sources & {
+    onion: StateSource<StorePageState>,
+    filter: any
+};
+
 export interface StorePageState extends State {
-    list: ListState;
     setComponent: SetComponentState;
 }
 
@@ -45,84 +46,72 @@ function intent({filter}: StorePageSources): Actions {
     };
 }
 
-function model(actions: Actions): Stream<Reducer> {
+function model(): Stream<Reducer> {
 
-    const initReducer$ = xs.of(function initReducer(): StorePageState {
-
-        return {
+    const initReducer$ = xs.of(() => ({
+        setComponent: {
             list: [],
-            setComponent: {
-                show: {
-                    type: 'search',
-                    search: {
-                        param: '',
-                        orderBy: OrderType.DATE,
-                        sortBy: SortType.DESC
-                    }
-                } as ShowSearchedSets,
-                showRating: true,
-                showImport: true
-            } as SetComponentState
-        };
+            showRating: true,
+            showImport: true
+        } as SetComponentState
+    }));
 
+    return xs.merge(initReducer$);
+
+}
+
+function listActions(actions: Actions): any {
+
+    const initAction$ = xs.of(() => {
+        return {
+            type: 'search',
+            search: {
+                param: '',
+                orderBy: OrderType.DATE,
+                sortBy: SortType.DESC
+            } as SearchParams
+        } as LoadSearchedSetsAction;
     });
 
-    const searchReducer$ = actions.filter$.map(searchObject => (prevState: StorePageState) => {
-        return ({
+    const searchAction$ = actions.filter$
+        .map(searchObject => (searchObject as any).value)
+        .map(searchText => (prevState) => ({
             ...prevState,
-            setComponent: {
-                ...prevState.setComponent,
-                show: {
-                    type: 'search',
-                    search: {
-                        ...(prevState.setComponent.show as ShowSearchedSets).search,
-                        param: searchObject.value
-                    }
-                } as ShowSearchedSets
-            } as SetComponentState
-        } as StorePageState);
-    });
+            type: 'search',
+            search: {
+                ...prevState.search,
+                param: searchText
+            }
+        }));
 
-    const resetSearchReducer$ = actions.resetFilter$.map(filterObject => (prevState: StorePageState) => {
-        return ({
+    const resetAction$ = actions.resetFilter$
+        .map(searchText => (prevState) => ({
             ...prevState,
-            setComponent: {
-                ...prevState.setComponent,
-                show: {
-                    type: 'search',
-                    search: {
-                        ...(prevState.setComponent.show as ShowSearchedSets).search,
-                        param: ''
-                    }
-                } as ShowSearchedSets
-            } as SetComponentState
-        } as StorePageState);
-    });
+            type: 'search',
+            search: {
+                ...prevState.search,
+                param: ''
+            }
+        }));
 
-    return xs.merge(initReducer$, searchReducer$, resetSearchReducer$);
+    return xs.merge(initAction$, searchAction$, resetAction$)
+        .fold((listActionsRequests, reducer: any) => reducer(listActionsRequests as any), {});
 }
 
 export default function StorePage(sources: StorePageSources): any {
 
-    const state$ = sources.onion.state$.debug('STATE CHANGE!');
-    console.log(sources);
+    const state$ = sources.onion.state$.debug('Storepage State$');
 
-    const setsComponentSinks = isolate(SetsComponent, 'setComponent')(sources);
+    const intents = intent(sources);
+    const setsComponentSinks = isolate(SetsComponent, 'setComponent')(sources, listActions(intents));
 
-    function actionFilterFromSetsComponent$(type: string): Stream<any> {
-        return setsComponentSinks.action.filter(action => action.type === type)
-            .map(action => action.item);
-    }
-
-    const itemClick$ = actionFilterFromSetsComponent$('click');
-    const importClick$ = actionFilterFromSetsComponent$('import');
-
-    const action$ = intent(sources);
-    const parentReducer$ = model(action$);
-    const reducer$ = xs.merge(parentReducer$);
+    const reducer$ = model();
     const vdom$ = setsComponentSinks.DOM;
 
-    const importRequest$ = importClick$
+    const importSet$ = setsComponentSinks.importClick$;
+    const itemClick$ = setsComponentSinks.itemClick$;
+
+    const importRequest$ = importSet$
         .map(item => ImportSetApi.buildRequest({
             setId: item._id
         } as ImportSetProps));

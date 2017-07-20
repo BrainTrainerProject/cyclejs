@@ -1,21 +1,18 @@
-import { Utils } from "../../Utils";
-
-export interface GetSetProps {
-    id: string,
-    requestId?: string,
-}
+import {Utils} from '../../Utils';
+import {Sources} from '../../interfaces';
+import {Stream} from 'xstream';
+import {createGetRequest, flattenResponse} from '../ApiHelper';
 
 export class GetSetApi {
 
-    static readonly ID: string = 'get-set-by-id';
+    public static readonly ID: string = 'get-set-by-id';
 
-    static buildRequest(props: GetSetProps) {
-        return {
-            url: Utils.apiUrl('/set/' + props.id),
-            method: 'GET',
-            category: GetSetApi.ID.concat(props.requestId ? props.requestId : ''),
-            type: 'application/json'
-        };
+    public static request(setId: string, reqId?: string): object {
+        return createGetRequest(GetSetApi.ID, '/set/' + setId, reqId);
+    }
+
+    public static response(sources: Sources, reqId?: string): Stream<any> {
+        return flattenResponse(sources, GetSetApi.ID, reqId);
     }
 
 }

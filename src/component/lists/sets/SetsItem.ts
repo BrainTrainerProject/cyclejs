@@ -26,7 +26,7 @@ export type Sources = {
 
 export type Sinks = {
     DOM: Stream<VNode>;
-    action: Stream<any>;
+    callback$: Stream<any>;
 };
 
 function showExtraContent(state) {
@@ -120,7 +120,7 @@ export default function SetsItem(sources: Sources): Sinks {
 
     return {
         DOM: vdom$,
-        action: xs.merge(itemClick$, importClick$)
+        callback$: xs.merge(itemClick$, importClick$)
     };
 
 }

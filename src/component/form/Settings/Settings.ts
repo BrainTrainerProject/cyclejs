@@ -1,16 +1,17 @@
-import xs, { Stream } from "xstream";
-import { StateSource } from "cycle-onionify";
-import { Reducer, Sinks, Sources, State } from "../../../common/interfaces";
-import { select, option,  button, div, form, h4, input, label } from "@cycle/dom";
-import { VNode } from "snabbdom/vnode";
-import { errorMessage, ErrorMessageState, inputErrorState, inputStream } from "../../../common/GuiUtils";
-import sampleCombine from "xstream/extra/sampleCombine";
-import { Utils } from "../../../common/Utils";
-import { ModalAction } from "cyclejs-modal";
-import { Visibility } from "../../../common/Visibility";
-import { UpdateProfileApi, UpdateProfileProps } from "../../../common/api/profile/UpdateProfile";
-import { GetProfileApi } from "../../../common/api/profile/GetProfile";
-import { NotecardFormState } from "../Notecard/Notecard";
+import xs, {Stream} from 'xstream';
+import {StateSource} from 'cycle-onionify';
+import {Reducer, Sinks, Sources, State} from '../../../common/interfaces';
+import {select, option, button, div, form, h4, input, label} from '@cycle/dom';
+import {VNode} from 'snabbdom/vnode';
+import {errorMessage, ErrorMessageState, inputErrorState, inputStream} from '../../../common/GuiUtils';
+import sampleCombine from 'xstream/extra/sampleCombine';
+import {Utils} from '../../../common/Utils';
+import {ModalAction} from 'cyclejs-modal';
+import {Visibility} from '../../../common/Visibility';
+import {UpdateProfileApi, UpdateProfileProps} from '../../../common/api/profile/UpdateProfile';
+import {GetProfileApi} from '../../../common/api/profile/GetProfile';
+import {NotecardFormState} from '../Notecard/Notecard';
+import {GetOwnRequest, ProfileRepository, RequestType} from '../../../common/repository/ProfileRepository';
 
 const ID_VISIBILITY = '.settings-visibility';
 const ID_CARDS_PER_SESSION = '.settings-cards-per-session';
@@ -19,6 +20,7 @@ const ID_SUBMIT = '.settings-submit';
 
 export type SettingsFormSources = Sources & { onion: StateSource<SettingsFormState> };
 export type SettingsFromSinks = Sinks & { onion: Stream<Reducer> };
+
 export interface SettingsFormState extends State {
     visibility: boolean,
     cardsPerSession: number,
@@ -43,7 +45,6 @@ export default function SettingsForm(sources: SettingsFormSources): SettingsFrom
 
 }
 
-
 function intent(sources: SettingsFormSources): any {
 
     const {DOM} = sources;
@@ -57,7 +58,7 @@ function intent(sources: SettingsFormSources): any {
         inputInterval$,
         inputCardsPerSession$,
         selectVisibility$,
-        submit$,
+        submit$
     };
 }
 
@@ -65,12 +66,13 @@ function model(sources: any, actions: any, state$: any): any {
 
     const {HTTP} = sources;
 
-    const requestProfileData$ = xs.of(GetProfileApi.buildRequest({id: '', requestId: 'own'}));
+    //const requestProfileData$ = xs.of(GetProfileApi.buildRequest({id: '', requestId: 'own'}));
+    const profileRepository = ProfileRepository(sources, xs.of({
+        type: RequestType.GET_OWN
+    } as GetOwnRequest));
 
     // Reducer
-    const init$: Stream<Reducer> = HTTP.select(GetProfileApi.ID + 'own')
-        .flatten()
-        .map(({text}) => JSON.parse(text))
+    const init$: Stream<Reducer> = profileRepository.response.getOwnProfile$
         .map(profile => function initReducer(): any {
             return {
                 visibility: profile.visibility,
@@ -101,7 +103,7 @@ function model(sources: any, actions: any, state$: any): any {
             return {
                 ...prevState,
                 visibility: visibility
-            }
+            };
         });
 
     const submitValid$: Stream<Reducer> = actions.submit$
@@ -142,12 +144,12 @@ function model(sources: any, actions: any, state$: any): any {
     );
 
     // HTTP
+    // UPDATE RESQUEST
     const submitRequest$ = submitValid$
         .compose(sampleCombine(state$))
         .map(([submitEvent, state]) => state)
         .filter(state => !Utils.jsonHasChilds(state.errors))
         .map(state => buildSubmitRequest(state));
-
 
     // Modal
     const closeModal$ = xs.merge(submitRequest$)
@@ -155,7 +157,7 @@ function model(sources: any, actions: any, state$: any): any {
 
     return {
         onion: reducer$.debug('REDUCER'),
-        HTTP: xs.merge(requestProfileData$, submitRequest$),
+        HTTP: xs.merge(profileRepository.HTTP, submitRequest$),
         modal: closeModal$
     };
 }
@@ -176,39 +178,39 @@ function buildSubmitRequest(state) {
 export function view(state$: Stream<NotecardFormState>): Stream<VNode> {
     return state$
         .map(state => {
-            console.log("State", state)
-            return div(".ui.grid", [
-                div(".sixteen.wide.column", [
-                    form(".ui.form", [
-                        h4(".ui.dividing.header", [`Popup`]),
-                        div(".field", [
+            console.log('State', state);
+            return div('.ui.grid', [
+                div('.sixteen.wide.column', [
+                    form('.ui.form', [
+                        h4('.ui.dividing.header', [`Popup`]),
+                        div('.field', [
                             label([`Häufigkeit (in Minuten)`]),
-                            div(".field", [
+                            div('.field', [
                                 input(ID_INTERVAL, {
-                                    "attrs": {
-                                        "type": "text",
-                                        "placeholder": "Häufigkeit",
-                                        "value": state.interval
+                                    'attrs': {
+                                        'type': 'text',
+                                        'placeholder': 'Häufigkeit',
+                                        'value': state.interval
                                     }
                                 })
                             ])
                         ]),
-                        div(".field", [
+                        div('.field', [
                             label([`Menge`]),
-                            div(".field", [
-                                input(ID_CARDS_PER_SESSION,{
-                                    "attrs": {
-                                        "type": "text",
-                                        "placeholder": "Karteikarten pro Session",
-                                        "value": state.cardsPerSession
+                            div('.field', [
+                                input(ID_CARDS_PER_SESSION, {
+                                    'attrs': {
+                                        'type': 'text',
+                                        'placeholder': 'Karteikarten pro Session',
+                                        'value': state.cardsPerSession
                                     }
                                 })
                             ])
                         ]),
-                        h4(".ui.dividing.header", [`Profil`]),
-                        div(".field", [
+                        h4('.ui.dividing.header', [`Profil`]),
+                        div('.field', [
                             label([`Sichtbarkeit`]),
-                            div(".field", [
+                            div('.field', [
                                 select(ID_VISIBILITY + '.ui.right.floated.dropdown', [
                                     option({
                                             'attrs': {
@@ -227,13 +229,13 @@ export function view(state$: Stream<NotecardFormState>): Stream<VNode> {
                                 ])
                             ])
                         ]),
-                        div(".fields", [
-                            div(".eight.wide.field"),
-                            div(".four.wide.field.right.floated", []),
-                            div(".four.wide.field.", [
-                                button(ID_SUBMIT+".ui.button.right.fluid.floated.", {
-                                    "attrs": {
-                                        "type": "submit",
+                        div('.fields', [
+                            div('.eight.wide.field'),
+                            div('.four.wide.field.right.floated', []),
+                            div('.four.wide.field.', [
+                                button(ID_SUBMIT + '.ui.button.right.fluid.floated.', {
+                                    'attrs': {
+                                        'type': 'submit',
                                     }
                                 }, [`speichern`])
                             ])
@@ -241,7 +243,7 @@ export function view(state$: Stream<NotecardFormState>): Stream<VNode> {
                     ]),
                     errorMessage(state)
                 ])
-            ])
+            ]);
         });
 
 }

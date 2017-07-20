@@ -4,26 +4,29 @@ import {GetSetsApi} from '../api/set/GetSets';
 import dropRepeats from 'xstream/extra/dropRepeats';
 import {SearchSetsApi} from '../api/set/SearchSets';
 import {HttpRequest} from '../api/HttpRequest';
-import {GetOwnSetsApi} from '../api/set/GetOwnSets';
+import {OrderType} from '../OrderType';
+import {SortType} from '../SortType';
+import {createGetRequest2} from '../api/ApiHelper';
+import {defaultResponseHelper} from './RepositoryInterfaces';
 
 interface ResponseSinks {
     [name: string]: Stream<any>;
 }
 
-interface RepositorySinks {
+export interface Sinks {
     HTTP: Stream<HttpRequest>;
     response: ResponseSinks;
 }
 
-export enum Type{
-    OWN_SETS    = 'get-own-set',
-    SET         = 'get-set',
-    SEARCH      = 'search-set',
-    ADD         = 'add-set',
-    EDIT        = 'edit-set',
-    UPDATE      = 'update-set',
-    IMPORT      = 'import-set',
-    DELETE      = 'delete-set'
+export enum Type {
+    OWN_SETS = 'get-own-set',
+    SET = 'get-set',
+    SEARCH = 'search-set',
+    ADD = 'add-set',
+    EDIT = 'edit-set',
+    UPDATE = 'update-set',
+    IMPORT = 'import-set',
+    DELETE = 'delete-set'
 }
 
 export type Action = GetOwnSets | GetSet | Search | Add | Import | Edit | Delete;
@@ -37,13 +40,15 @@ export type GetSet = {
     setId: string
 };
 
+export type SearchParams = {
+    param: string,
+    orderBy: OrderType,
+    sortBy: SortType
+};
+
 export type Search = {
     type: Type.SEARCH,
-    search: {
-        param: string,
-        orderBy: OrderType,
-        sortBy: SortType
-    }
+    search: SearchParams
 };
 
 export type Add = {
@@ -66,17 +71,9 @@ export type Delete = {
     setId: string
 };
 
-export enum OrderType {
-    DATE = 'date',
-    RATING = 'rating'
-}
+const API_URL = '/set';
 
-export enum SortType{
-    ASC = 'asc',
-    DESC = 'desc'
-}
-
-export function SetRepository(sources: Sources, action$: Stream<Action>): RepositorySinks {
+export function SetRepository(sources: Sources, action$: Stream<Action>): Sinks {
     return {
         HTTP: requests(action$),
         response: responses(sources)
@@ -85,33 +82,45 @@ export function SetRepository(sources: Sources, action$: Stream<Action>): Reposi
 
 function requests(action$: Stream<Action>): Stream<any> {
 
-    function filterActionFromState$(type: string, compareFn: (prev: Action, now: Action) => boolean): Stream<any> {
+    console.log("Request Call");
+    // TODO condition können auch weg, da die State sich nicht ständig ändert!!!
+    interface RequestProps {
+        type: string;
+        condition: (prev: any, now: any) => boolean;
+    }
+
+    function filterActionFromState$(props: RequestProps): Stream<any> {
         return action$
-            .filter(action => action.type === type)
-            .compose(dropRepeats(<SearchSetAction>(prev, now) => !compareFn(prev, now)));
+            .filter(action => action.type === props.type)
+            .compose(dropRepeats((prev, now) => !props.condition(prev, now)));
     }
 
     // Search sets
-    const searchSetRequest$ = filterActionFromState$(Type.SEARCH,
-        (prev: Search, now: Search) => prev.search !== now.search)
-        .map(state => state.search)
+    const searchSetRequest$ = filterActionFromState$({
+        type: Type.SEARCH,
+        condition: (prev: Search, now: Search) => true
+    }).map(state => state.search)
         .map(search => {
+            console.log("Search xxx")
+            console.log(search)
             return SearchSetsApi.buildRequest({
                 param: encodeURIComponent(search.param),
                 orderBy: search.orderBy,
                 sort: search.sortBy
             });
-        });
+        }).debug("Search Reducer§");
 
     // Get own sets
-    const ownSetRequest$ = filterActionFromState$(Type.OWN_SETS,
-        (prev: GetOwnSets, now: GetOwnSets) => prev.type !== now.type)
-        .map(state => GetOwnSetsApi.request());
+    const ownSetRequest$ = filterActionFromState$({
+        type: Type.OWN_SETS,
+        condition: (prev: GetOwnSets, now: GetOwnSets) => prev.type !== now.type
+    }).map(state => createGetRequest2(API_URL, 'get-own-sets'));
 
     // Get set by id
-    const specificSetRequest$ = filterActionFromState$(Type.SET,
-        (prev: GetSet, now: GetSet) => prev.setId !== now.setId)
-        .map(action => GetSetsApi.request(action.setId));
+    const specificSetRequest$ = filterActionFromState$({
+        type: Type.SET,
+        condition: (prev: GetSet, now: GetSet) => prev.setId !== now.setId
+    }).map(action => createGetRequest2(API_URL + '/' + action.setId, 'get-specific-set'));
 
     // Add set
     // Edit set
@@ -125,14 +134,16 @@ function requests(action$: Stream<Action>): Stream<any> {
 
 function responses(sources: Sources): ResponseSinks {
 
-    function responseHelper(id: string): Stream<any> {
-        return sources.HTTP.select(id)
-            .flatten()
-            .map(({text}) => JSON.parse(text));
-    }
+    const defaultResponse = (id: string) => {
+        return defaultResponseHelper(sources, id);
+    };
 
     const getSetsApi$ = GetSetsApi.response(sources);
-    const searchSetsApi$ = responseHelper(SearchSetsApi.ID);
+    const searchSetsApi$ = defaultResponse(SearchSetsApi.ID);
+
+    const set$ = xs.never();
+    const search$ = xs.never();
+    const ownSets$ = xs.never();
 
     return {
         getSetsApi$,

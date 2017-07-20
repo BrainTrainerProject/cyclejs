@@ -2,13 +2,14 @@ import xs, {Stream} from 'xstream';
 import {Reducer, Sinks, Sources, State} from '../../../common/interfaces';
 import {AppState} from '../../../app';
 import {StateSource} from 'cycle-onionify';
-import {a, div, img, p} from '@cycle/dom';
+import {div} from '@cycle/dom';
 import {GetFeedsApi, GetFeedsApiProps} from '../../../common/api/GetFeeds';
 import FeedItemList from './FeedList';
-
+import {VNode} from 'snabbdom/vnode';
 
 export type FeedPageSources = Sources & { onion: StateSource<AppState>, filter: any };
 export type FeedPageSinks = Sinks & { onion: Stream<Reducer>, modal: Stream<any>, filter: Stream<any> };
+
 export interface FeedPageState extends State {
 }
 
@@ -22,11 +23,11 @@ export default function FeedPage(sources) {
     return {
         DOM_LEFT: xs.combine(xs.of(div(['DUMP'])), feedListSinks.DOM),
         DOM_RIGHT: xs.of([]),
-        HTTP: xs.merge(feedRequest$, feedListSinks.HTTP);
+        HTTP: xs.merge(feedRequest$, feedListSinks.HTTP)
     };
 }
 
-function leftView([dump, list]) {
+function leftView([dump, list]): VNode[] {
 
     return [
         div([dump]),
