@@ -1,3 +1,4 @@
 export enum Visibility{
-    PRIVATE, PUBLIC
+    PRIVATE = 'false',
+    PUBLIC = 'true'
 }

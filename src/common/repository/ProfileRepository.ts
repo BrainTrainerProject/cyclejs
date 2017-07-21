@@ -1,11 +1,11 @@
 import {Sources} from '../interfaces';
 import xs, {Stream} from 'xstream';
-import {defaultResponseHelper, RepositorySinks, ResponseSinks} from './RepositoryInterfaces';
-import {createGetRequest2, createPostRequest} from '../api/ApiHelper';
+import {defaultResponseHelper, RootRepositorySinks, ResponseSinks} from './Repository';
+import {createGetRequest, createPutRequest} from '../api/ApiHelper';
 
 const API_URL = '/profile';
 
-export enum RequestType {
+export enum RequestMethod {
     GET_OWN = 'get-profile',
     GET_BY_ID = 'get-profile-by-id',
     UPDATE = 'update-profile'
@@ -14,16 +14,16 @@ export enum RequestType {
 export type Request = GetOwnRequest | UpdateRequest;
 
 export type GetOwnRequest = {
-    type: RequestType.GET_OWN
+    type: RequestMethod.GET_OWN
 };
 
 export type GetByIdRequest = {
-    type: RequestType.GET_BY_ID,
+    type: RequestMethod.GET_BY_ID,
     userId: string
 };
 
 export type UpdateRequest = {
-    type: RequestType.UPDATE,
+    type: RequestMethod.UPDATE,
     payload: {
         visibility: boolean,
         cardsPerSession: number,
@@ -31,7 +31,7 @@ export type UpdateRequest = {
     }
 };
 
-export function ProfileRepository(sources: Sources, request$: Stream<Request>): RepositorySinks {
+export function ProfileRepository(sources: Sources, request$: Stream<Request>): RootRepositorySinks {
     return {
         HTTP: requests(request$),
         response: responses(sources)
@@ -46,16 +46,16 @@ function requests(request$: Stream<Request>): Stream<any> {
     }
 
     // Own profile
-    const getOwnProfile$ = filterActionFromRequest$(RequestType.GET_OWN)
-        .map(request => createGetRequest2(API_URL, RequestType.GET_OWN));
+    const getOwnProfile$ = filterActionFromRequest$(RequestMethod.GET_OWN)
+        .map(request => createGetRequest(API_URL, RequestMethod.GET_OWN));
 
     // Get by id
-    const getProfileById$ = filterActionFromRequest$(RequestType.GET_BY_ID)
-        .map(request => createGetRequest2(API_URL + '/' + (request as GetByIdRequest).userId, RequestType.GET_BY_ID));
+    const getProfileById$ = filterActionFromRequest$(RequestMethod.GET_BY_ID)
+        .map(request => createGetRequest(API_URL + '/' + (request as GetByIdRequest).userId, RequestMethod.GET_BY_ID));
 
     // Update profile
-    const updateProfile$ = filterActionFromRequest$(RequestType.UPDATE)
-        .map(request => createPostRequest(RequestType.UPDATE, API_URL, (request as UpdateRequest).payload));
+    const updateProfile$ = filterActionFromRequest$(RequestMethod.UPDATE)
+        .map(request => createPutRequest(API_URL, (request as UpdateRequest).payload));
 
     return xs.merge(getOwnProfile$, getProfileById$, updateProfile$);
 }
@@ -67,9 +67,9 @@ function responses(sources: Sources): ResponseSinks {
     };
 
     return {
-        getOwnProfile$: defaultResponse(RequestType.GET_OWN),
-        getProfileById$: defaultResponse(RequestType.GET_BY_ID),
-        updateProfile$: defaultResponse(RequestType.UPDATE)
+        getOwnProfile$: defaultResponse(RequestMethod.GET_OWN),
+        getProfileById$: defaultResponse(RequestMethod.GET_BY_ID),
+        updateProfile$: defaultResponse(RequestMethod.UPDATE)
     };
 
 }

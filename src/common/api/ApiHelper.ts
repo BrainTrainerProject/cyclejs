@@ -2,49 +2,78 @@ import {Utils} from '../Utils';
 import {Sources} from '../interfaces';
 import {Stream} from 'xstream';
 
-function defaultRequest(id: string, url: string, reqId?: string): object {
+function defaultRequestOld(id: string, url: string, reqId?: string): object {
     return {
         url: Utils.apiUrl(url),
         category: (reqId) ? reqId : id
     };
 }
 
-export function createGetRequest(id: string, url: string, reqId?: string): object {
+function defaultRequest(url: string, reqId?: string): object {
+
+    const request = {
+        url: Utils.apiUrl(url)
+    };
+
+    if (reqId) {
+        request['category'] = reqId;
+    }
+
+    console.log('RETURNNNSDAD: ', request);
+    return request;
+}
+
+export function createGetRequestOld(id: string, url: string, reqId?: string): object {
     return {
-        ...defaultRequest(id, url, reqId),
+        ...defaultRequestOld(id, url, reqId),
         method: 'GET',
         type: 'application/json'
     };
 }
 
-export function createGetRequest2(url: string, reqId?: string): object {
+export function createGetRequest(url: string, reqId?: string): object {
     return {
-        url: Utils.apiUrl(url),
-        category: reqId,
+        ...defaultRequest(url, reqId),
         method: 'GET',
         type: 'application/json'
     };
 }
 
-export function createPostRequest(id: string, url: string, sendJson: object, reqId?: string): object {
+export function createPostRequestOld(id: string, url: string, sendJson: object, reqId?: string): object {
     return {
-        ...defaultRequest(id, url, reqId),
+        ...defaultRequestOld(id, url, reqId),
         method: 'POST',
         send: sendJson
     };
 }
 
-export function createPutRequest(id: string, url: string, sendJson: object, reqId?: string): object {
+export function createPostRequest(url: string, sendJson: object, reqId?: string): object {
     return {
-        ...defaultRequest(id, url, reqId),
+        ...defaultRequest(url, reqId),
+        method: 'POST',
+        send: sendJson
+    };
+}
+
+export function createPutRequest(url: string, sendJson: object, reqId?: string): object {
+    return {
+        ...defaultRequest(url, reqId),
         method: 'PUT',
         send: sendJson
     };
 }
 
-export function createDeleteRequest(id: string, url: string, reqId?: string): object {
+export function createDeleteRequest(url: string, reqId?: string): object {
     return {
-        ...defaultRequest(id, url, reqId),
+        ...defaultRequest(url, reqId),
+        method: 'DELETE',
+        type: 'application/json'
+    };
+}
+
+export function createDeleteRequestOld(id: string, url: string, reqId?: string): object {
+    return {
+        ...defaultRequestOld(id, url, reqId),
         method: 'DELETE',
         type: 'application/json'
     };

@@ -4,7 +4,7 @@ import {ModalAction} from 'cyclejs-modal';
 import SettingsForm from '../form/Settings/Settings';
 import {GetProfileApi} from '../../common/api/profile/GetProfile';
 import {Utils} from '../../common/Utils';
-import {GetOwnRequest, ProfileRepository, RequestType} from '../../common/repository/ProfileRepository';
+import {GetOwnRequest, ProfileRepository, RequestMethod} from '../../common/repository/ProfileRepository';
 
 export default function MastheadProfil(sources) {
 
@@ -18,7 +18,7 @@ export default function MastheadProfil(sources) {
     const route$ = xs.merge(profileClick$, logoutClick$, feedClick$);
 
     const profileRepository = ProfileRepository(sources, xs.of({
-        type: RequestType.GET_OWN
+        type: RequestMethod.GET_OWN
     } as GetOwnRequest));
 
     const profileReducer$ = profileRepository.response.getOwnProfile$

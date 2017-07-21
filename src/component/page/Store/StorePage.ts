@@ -2,11 +2,9 @@ import xs, {Stream} from 'xstream';
 import {Sources, State} from '../../../common/interfaces';
 import {StateSource} from 'cycle-onionify';
 import {DOMSource} from '@cycle/dom';
-import {State as ListState} from '../../lists/cards/CardList';
 import {VNode} from 'snabbdom/vnode';
 import isolate from '@cycle/isolate';
-import SetsComponent, {LoadSearchedSetsAction, State as SetComponentState} from '../../lists/sets/SetListComponent';
-import {ImportSetApi, ImportSetProps} from '../../../common/api/set/ImportSet';
+import SetListComponent, {LoadSearchedSetsAction, State as SetComponentState} from '../../lists/sets/SetListComponent';
 import {OrderType} from '../../../common/OrderType';
 import {SortType} from '../../../common/SortType';
 import {SearchParams} from '../../../common/repository/SetRepository';
@@ -100,27 +98,19 @@ function listActions(actions: Actions): any {
 
 export default function StorePage(sources: StorePageSources): any {
 
-    const state$ = sources.onion.state$.debug('Storepage State$');
-
     const intents = intent(sources);
-    const setsComponentSinks = isolate(SetsComponent, 'setComponent')(sources, listActions(intents));
+    const setsComponentSinks = isolate(SetListComponent, 'setComponent')(sources, listActions(intents));
 
     const reducer$ = model();
     const vdom$ = setsComponentSinks.DOM;
 
-    const importSet$ = setsComponentSinks.importClick$;
     const itemClick$ = setsComponentSinks.itemClick$;
-
-    const importRequest$ = importSet$
-        .map(item => ImportSetApi.buildRequest({
-            setId: item._id
-        } as ImportSetProps));
 
     return {
         DOM_LEFT: vdom$,
         DOM_RIGHT: xs.of([]),
         onion: xs.merge(reducer$, setsComponentSinks.onion),
-        HTTP: xs.merge(setsComponentSinks.HTTP, importRequest$),
+        HTTP: xs.merge(setsComponentSinks.HTTP),
         router: itemClick$.map(item => '/set/' + item._id)
     };
 

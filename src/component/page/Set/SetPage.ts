@@ -5,18 +5,19 @@ import {StateSource} from 'cycle-onionify';
 import {viewRight} from './viewRight';
 import {viewLeft} from './viewLeft';
 import Comments from '../../comments/Comments';
-import CardList, {State as ListState} from '../../lists/cards/CardList';
+import {State as ListState} from '../../lists/cards/CardList';
 import isolate from '@cycle/isolate';
-import flattenConcurrently from 'xstream/extra/flattenConcurrently';
-import {GetNotecardApi} from '../../../common/api/notecard/GetNotecard';
 import {div} from '@cycle/dom';
 import {VNode} from 'snabbdom/vnode';
-import {GetSetApi} from '../../../common/api/set/GetSet';
 import {EditSetFormAction, SetForm} from '../../form/Set/SetForm';
 import {ModalAction} from 'cyclejs-modal';
 import NotecardForm, {CreateNotecardFormAction, EditNotecardFormAction} from '../../form/Notecard/Notecard';
-import {PostNotecardApi} from '../../../common/api/notecard/PostNotecard';
-import {UpdateNotecardApi} from '../../../common/api/notecard/UpdateNotecard';
+import {RequestMethod as SetRequestMethod, SetRepository} from '../../../common/repository/SetRepository';
+import {
+    ActionType as NotecardsActionType,
+    NotecardListComponent,
+    State as NotecardListState
+} from '../../lists/notecard/NotecardListComponent';
 
 const Route = require('route-parser');
 
@@ -30,6 +31,7 @@ export type Reducer = (prev?: SetPageState) => SetPageState | undefined;
 
 export type SetPageSources = Sources & { onion: StateSource<AppState>, filter: any };
 export type SetPageSinks = Sinks & { onion: Stream<Reducer>, modal: Stream<any>, filter: Stream<any> };
+
 export interface SetPageState extends State {
     set: {
         id: string,
@@ -37,13 +39,13 @@ export interface SetPageState extends State {
         description: string,
         image: string,
         notecards: string[]
-    },
+    };
     rating: {
         comment: string,
         rating: number
-    },
-    list: ListState,
-    loading: boolean
+    };
+    notecardsComponent: NotecardListState;
+    loading: boolean;
 }
 
 export type Actions = {
@@ -59,9 +61,9 @@ export type Actions = {
     editSetClicked$,
 }
 
+function intent(sources, state$): any {
 
-function intent({HTTP, router, DOM}, state$): Actions {
-
+    const {router, DOM} = sources;
     const route$ = router.history$;
 
     const createNotecardClicked$ = DOM.select(ID_NEW_NOTECARD_BTN).events('click');
@@ -73,81 +75,62 @@ function intent({HTTP, router, DOM}, state$): Actions {
         .map(path => {
             const route = new Route('/set/:id');
             return route.match(path);
-        });
-
-    const httpPostResponse$ = getSetId$
-        .map(route => HTTP.select(PostNotecardApi.ID + route.id).flatten())
-        .flatten()
-        .map(({text}) => JSON.parse(text));
-
-    const httpUpdateResponse$ = getSetId$
-        .map(route => HTTP.select(UpdateNotecardApi.ID + route.id).flatten())
-        .flatten()
-        .map(({text}) => JSON.parse(text));
-
-    const httpRequestSet$ = getSetId$.map(route => {
-        return GetSetApi.buildRequest({
-            id: route.id
-        });
-    });
-
-    const httpResponseSet$ = HTTP.select(GetSetApi.ID)
-        .flatten()
-        .map(({text}) => JSON.parse(text));
-
-    const httpRequestNotecards$ = httpResponseSet$
-        .map(obj => obj.notecard)
-        .map(notecards => xs.fromArray(notecards)
-            .map(id => GetNotecardApi.buildRequest({
-                id: id,
-                requestId: id
-            }))
-        ).flatten();
-
-    const httpResponseNotecards$ = HTTP.select()
-        .compose(flattenConcurrently)
-        .filter(res => res.request.category.substr(0, GetNotecardApi.ID.length) === GetNotecardApi.ID)
-        .map(({text}) => JSON.parse(text));
-
-
-    const httpChangesResponse$ = xs.merge(httpPostResponse$, httpPostResponse$, httpUpdateResponse$);
-    const httpRequests$ = xs.merge(httpRequestSet$, httpRequestNotecards$);
+        })
+        .map(route => route.id)
+        .remember();
 
     return {
         getSetId$,
-
-        httpResponseNotecards$,
-        httpResponseSet$,
-
-        httpChangesResponse$,
-
         createNotecardClicked$,
         showRandomNotecardClicked$,
-        editSetClicked$,
-
-        httpRequests$
+        editSetClicked$
     };
 
 }
 
 function model(actions: Actions): Stream<Reducer> {
 
-    const initReducer$ = xs.of(function initReducer(prev?: State): State {
-        return {
-            ...prev,
-            list: [],
-        };
+    const initReducer$ = xs.of((prev?: SetPageState) => {
+        if (prev) {
+            return prev;
+        } else {
+            return {
+                ...prev,
+                notecardsComponent: {
+                    list: []
+                }
+            } as SetPageState;
+        }
     });
 
-    const setReducer$ = actions.httpResponseSet$
+    return xs.merge(initReducer$);
+
+}
+
+function httpResponseModel(actions: any): Stream<Reducer> {
+
+    console.log('ReponseModel');
+    console.log(actions);
+
+    const setReducer$ = actions.getSetById$
         .map(set => (state) => {
+            console.log('GetById: ', state);
+            console.log('Set', set);
             return {
                 ...state,
-                set: set,
+                set: set
             };
         });
 
-    const changeReducer$ = actions.httpChangesResponse$
+    /*const notecardsReducer$ = actions.getNotecardsFromSet$
+        .map(notecard => (state) => {
+            return {
+                ...state,
+                list: addListState(state, notecard)
+            };
+        });*/
+
+    /*const changeReducer$ = actions.httpChangesResponse$
         .map(change => (state) => {
             return {
                 ...state,
@@ -159,16 +142,15 @@ function model(actions: Actions): Stream<Reducer> {
         .map(notecard => (state) => {
             return {
                 ...state,
-                list: addListState(state, notecard),
+                list: addListState(state, notecard)
             };
-        });
+        });*/
 
-    return xs.merge(initReducer$, setReducer$, addReducer$, changeReducer$);
-
+    return xs.merge(setReducer$).debug('LEL');
 }
 
 function addListState(state, notecard): ListState {
-    // Add
+    // AddToSet
     return state.list.concat({
         key: String(Date.now()),
         id: notecard._id,
@@ -201,8 +183,29 @@ function view(listVNode$: Stream<VNode>): Stream<VNode> {
     );
 }
 
+function setRepositoryIntents(action: any): Stream<any> {
 
-export default function SetPage(sources) {
+    const loadSet$ = action.getSetId$
+        .map(id => ({
+            type: SetRequestMethod.BY_ID,
+            setId: id
+        }));
+
+    return xs.merge(loadSet$).debug('SetRepositoryIntents');
+}
+
+function notecardRepositoryIntents(action: any): Stream<any> {
+
+    const loadNotecards$ = action.getSetId$
+        .map(id => ({
+            type: NotecardsActionType.GET_BY_SET_ID,
+            setId: id
+        }));
+
+    return xs.merge(loadNotecards$).debug('NotecardRepositoryIntents');
+}
+
+export default function SetPage(sources: any): any {
 
     console.log('Set page');
 
@@ -210,22 +213,37 @@ export default function SetPage(sources) {
 
     const state$ = sources.onion.state$.debug('STATE');
     const action = intent(sources, state$);
-    const parentReducer$ = model(action);
-    const reducer$ = xs.merge(parentReducer$);
 
-    const notecardSinks = isolate(CardList, 'list')(sources);
+    const setRepository = SetRepository(sources, setRepositoryIntents(action).remember());
+    //const notecardRepository = NotecardRepository(sources, notecardRepositoryIntents(action).remember());
+
+    const mainReducer$ = model(action);
+    const responseReducer$ = httpResponseModel((Object as any).assign(setRepository.response));
+    const reducer$ = xs.merge(mainReducer$, responseReducer$);
+
+    //const notecardSinks = isolate(CardList, 'list')(sources);
+
+    const notecardsComponent = isolate(NotecardListComponent, 'notecardsComponent')(sources,
+        notecardRepositoryIntents(action).remember().debug("NotecadRepo Intentsss")
+        /*xs.of({
+            type: NotecardsActionType.GET_BY_SET_ID,
+            setId: '5968ba492d53ee7c0fc88f39'
+        })*/
+    );
+    //const notecardList = NotecardListComponent(sources, notecardRepositoryIntents(action).remember()).debug("REQUEST"));
+
     const commentSinks = Comments(sources, {
         setId: '59404bd79eccad225fdd9b8b'
     });
 
-    const leftDOM$ = xs.combine(state$, notecardSinks.DOM, commentSinks.DOM).map(viewLeft);
+    const leftDOM$ = xs.combine(state$, notecardsComponent.DOM, commentSinks.DOM).map(viewLeft);
     const rightDOM$ = viewRight(state$);
 
-    const click$ = notecardSinks.action.filter(action => action.type === 'click')
-        .map(action => action.item);
+    /*const click$ = notecardSinks.action.filter(action => action.type === 'click')
+        .map(action => action.item);*/
 
     const editSet$ = openEditSetModal(action, state$);
-    const editNotecard$ = openEditNotecardModal(click$, state$);
+    //const editNotecard$ = openEditNotecardModal(click$, state$);
 //    const showNotecard$ = showNotecardModal(show, state$)
 
 
@@ -248,9 +266,9 @@ export default function SetPage(sources) {
     return {
         DOM_LEFT: leftDOM$,
         DOM_RIGHT: rightDOM$,
-        HTTP: action.httpRequests$,
-        onion: xs.merge(reducer$),
-        modal: xs.merge(openCreateNotecardModal$, editNotecard$, editSet$)
+        HTTP: xs.merge(notecardsComponent.HTTP, setRepository.HTTP),
+        onion: xs.merge(reducer$, notecardsComponent.onion),
+        modal: xs.merge(openCreateNotecardModal$, editSet$)
     };
 }
 
@@ -275,7 +293,6 @@ function openEditNotecardModal(click$, state$) {
             component: SetForm
         } as ModalAction));
 }
-
 
 function openEditSetModal(action, state$) {
     return action.editSetClicked$.mapTo(state$.map(state => state.set._id).take(1))

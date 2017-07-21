@@ -1,17 +1,15 @@
 import xs, {Stream} from 'xstream';
 import {StateSource} from 'cycle-onionify';
 import {Reducer, Sinks, Sources, State} from '../../../common/interfaces';
-import {select, option, button, div, form, h4, input, label} from '@cycle/dom';
+import {button, div, form, h4, input, label, option, select} from '@cycle/dom';
 import {VNode} from 'snabbdom/vnode';
 import {errorMessage, ErrorMessageState, inputErrorState, inputStream} from '../../../common/GuiUtils';
 import sampleCombine from 'xstream/extra/sampleCombine';
 import {Utils} from '../../../common/Utils';
 import {ModalAction} from 'cyclejs-modal';
 import {Visibility} from '../../../common/Visibility';
-import {UpdateProfileApi, UpdateProfileProps} from '../../../common/api/profile/UpdateProfile';
-import {GetProfileApi} from '../../../common/api/profile/GetProfile';
 import {NotecardFormState} from '../Notecard/Notecard';
-import {GetOwnRequest, ProfileRepository, RequestType} from '../../../common/repository/ProfileRepository';
+import {GetOwnRequest, ProfileRepository, RequestMethod} from '../../../common/repository/ProfileRepository';
 
 const ID_VISIBILITY = '.settings-visibility';
 const ID_CARDS_PER_SESSION = '.settings-cards-per-session';
@@ -22,9 +20,9 @@ export type SettingsFormSources = Sources & { onion: StateSource<SettingsFormSta
 export type SettingsFromSinks = Sinks & { onion: Stream<Reducer> };
 
 export interface SettingsFormState extends State {
-    visibility: boolean,
-    cardsPerSession: number,
-    interval: number
+    visibility: boolean;
+    cardsPerSession: number;
+    interval: number;
     errors: ErrorMessageState;
 }
 
@@ -62,18 +60,42 @@ function intent(sources: SettingsFormSources): any {
     };
 }
 
+function intentProfileRepository$(actions: any, state$: any): Stream<any> {
+
+    const init$ = xs.of({
+        type: RequestMethod.GET_OWN
+    } as GetOwnRequest);
+
+    const submit$ = actions.submit$
+        .compose(sampleCombine(state$))
+        .map(([submitEvent, state]) => state)
+        .filter(state => !Utils.jsonHasChilds(state.errors))
+        .map(state => {
+            console.log('Update profile submit ', state);
+            return {
+                type: RequestMethod.UPDATE,
+                payload: {
+                    visibility: state.visibility === Visibility.PUBLIC,
+                    interval: state.interval,
+                    cardsPerSession: state.cardsPerSession
+                }
+            };
+        });
+
+    return xs.merge(init$, submit$);
+
+}
+
 function model(sources: any, actions: any, state$: any): any {
 
     const {HTTP} = sources;
 
-    //const requestProfileData$ = xs.of(GetProfileApi.buildRequest({id: '', requestId: 'own'}));
-    const profileRepository = ProfileRepository(sources, xs.of({
-        type: RequestType.GET_OWN
-    } as GetOwnRequest));
+    const profileRepository = ProfileRepository(sources, intentProfileRepository$(actions, state$));
 
     // Reducer
     const init$: Stream<Reducer> = profileRepository.response.getOwnProfile$
         .map(profile => function initReducer(): any {
+            console.log('LOADEDED:', profile);
             return {
                 visibility: profile.visibility,
                 cardsPerSession: (profile.cardsPerSession) ? profile.cardsPerSession : 5,
@@ -145,35 +167,21 @@ function model(sources: any, actions: any, state$: any): any {
 
     // HTTP
     // UPDATE RESQUEST
-    const submitRequest$ = submitValid$
+    const validSubmit$ = submitValid$
         .compose(sampleCombine(state$))
         .map(([submitEvent, state]) => state)
-        .filter(state => !Utils.jsonHasChilds(state.errors))
-        .map(state => buildSubmitRequest(state));
+        .filter(state => !Utils.jsonHasChilds((state as any).errors));
 
     // Modal
-    const closeModal$ = xs.merge(submitRequest$)
+    const closeModal$ = xs.merge(validSubmit$)
         .mapTo({type: 'close'} as ModalAction);
 
     return {
         onion: reducer$.debug('REDUCER'),
-        HTTP: xs.merge(profileRepository.HTTP, submitRequest$),
+        HTTP: xs.merge(profileRepository.HTTP),
         modal: closeModal$
     };
 }
-
-function buildSubmitRequest(state) {
-
-    return UpdateProfileApi.buildRequest({
-        send: {
-            visibility: state.visibility === Visibility.PUBLIC,
-            interval: state.interval,
-            cardsPerSession: state.cardsPerSession
-        }
-    } as UpdateProfileProps);
-
-}
-
 
 export function view(state$: Stream<NotecardFormState>): Stream<VNode> {
     return state$
@@ -215,7 +223,7 @@ export function view(state$: Stream<NotecardFormState>): Stream<VNode> {
                                     option({
                                             'attrs': {
                                                 'value': 'private',
-                                                'selected': (state.visibility === Visibility.PRIVATE) ? 'selected' : ''
+                                                'selected': (!state.visibility) ? 'selected' : ''
                                             }
                                         },
                                         [`Privat`]
@@ -223,7 +231,7 @@ export function view(state$: Stream<NotecardFormState>): Stream<VNode> {
                                     option({
                                         'attrs': {
                                             'value': 'public',
-                                            'selected': (state.visibility === Visibility.PUBLIC) ? 'selected' : ''
+                                            'selected': (state.visibility) ? 'selected' : ''
                                         }
                                     }, [`Öffentlich`])
                                 ])
@@ -235,7 +243,7 @@ export function view(state$: Stream<NotecardFormState>): Stream<VNode> {
                             div('.four.wide.field.', [
                                 button(ID_SUBMIT + '.ui.button.right.fluid.floated.', {
                                     'attrs': {
-                                        'type': 'submit',
+                                        'type': 'submit'
                                     }
                                 }, [`speichern`])
                             ])

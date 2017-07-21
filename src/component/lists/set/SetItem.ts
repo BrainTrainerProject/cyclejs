@@ -28,7 +28,7 @@ export function SetItem(sources) {
 
     return {
         DOM: props$.map(set => {
-            console.log("SET", set);
+            console.log("BY_ID", set);
             return view({
                 title: set.title,
                 imageUrl: Utils.imageOrPlaceHolder(set.photourl),

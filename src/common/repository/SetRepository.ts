@@ -1,26 +1,14 @@
 import {Sources} from '../interfaces';
 import xs, {Stream} from 'xstream';
-import {GetSetsApi} from '../api/set/GetSets';
-import dropRepeats from 'xstream/extra/dropRepeats';
-import {SearchSetsApi} from '../api/set/SearchSets';
-import {HttpRequest} from '../api/HttpRequest';
 import {OrderType} from '../OrderType';
 import {SortType} from '../SortType';
-import {createGetRequest2} from '../api/ApiHelper';
-import {defaultResponseHelper} from './RepositoryInterfaces';
+import {createDeleteRequest, createGetRequest, createPostRequest, createPutRequest} from '../api/ApiHelper';
+import {defaultResponseHelper, filterActionFromRequest$, RootRepositorySinks, RootResponseSinks} from './Repository';
+import debounce from 'xstream/extra/debounce';
 
-interface ResponseSinks {
-    [name: string]: Stream<any>;
-}
-
-export interface Sinks {
-    HTTP: Stream<HttpRequest>;
-    response: ResponseSinks;
-}
-
-export enum Type {
+export enum RequestMethod {
     OWN_SETS = 'get-own-set',
-    SET = 'get-set',
+    BY_ID = 'get-set-by-id',
     SEARCH = 'search-set',
     ADD = 'add-set',
     EDIT = 'edit-set',
@@ -31,12 +19,16 @@ export enum Type {
 
 export type Action = GetOwnSets | GetSet | Search | Add | Import | Edit | Delete;
 
+interface AddSetModel {
+
+}
+
 export type GetOwnSets = {
-    type: Type.OWN_SETS
+    type: RequestMethod.OWN_SETS
 };
 
 export type GetSet = {
-    type: Type.SET,
+    type: RequestMethod.BY_ID,
     setId: string
 };
 
@@ -47,107 +39,125 @@ export type SearchParams = {
 };
 
 export type Search = {
-    type: Type.SEARCH,
+    type: RequestMethod.SEARCH,
     search: SearchParams
 };
 
 export type Add = {
-    type: Type.ADD,
-    set: object
+    type: RequestMethod.ADD,
+    set: AddSetModel
 };
 
 export type Edit = {
-    type: Type.EDIT,
+    type: RequestMethod.EDIT,
     set: object
 };
 
 export type Import = {
-    type: Type.IMPORT,
+    type: RequestMethod.IMPORT,
     setId: string
 };
 
 export type Delete = {
-    type: Type.DELETE,
+    type: RequestMethod.DELETE,
     setId: string
 };
 
+export interface SetRepositorySinks extends RootRepositorySinks {
+    response: SetRepositoryResponse;
+}
+
+export interface SetRepositoryResponse extends RootResponseSinks {
+    getSetById$: Stream<any>;
+    getOwnSets$: Stream<any>;
+    search$: Stream<any>;
+}
+
 const API_URL = '/set';
 
-export function SetRepository(sources: Sources, action$: Stream<Action>): Sinks {
+export function SetRepository(sources: Sources, action$: Stream<Action>): SetRepositorySinks {
     return {
         HTTP: requests(action$),
         response: responses(sources)
     };
 }
 
+function buildSearchUrl(props: SearchParams): string {
+    let url = '/set/search?';
+    if (props.param) {
+        url += 'param=';
+        url += props.param;
+    }
+    if (props.orderBy) {
+        url.concat((props.param) ? '&orderBy=' : 'orderBy=');
+        url.concat(props.orderBy);
+    }
+    if (props.sortBy) {
+        url.concat((props.param) ? '&sort=' : 'sort=');
+        url.concat(props.sortBy);
+    }
+    return url;
+}
+
 function requests(action$: Stream<Action>): Stream<any> {
 
-    console.log("Request Call");
-    // TODO condition können auch weg, da die State sich nicht ständig ändert!!!
-    interface RequestProps {
-        type: string;
-        condition: (prev: any, now: any) => boolean;
-    }
-
-    function filterActionFromState$(props: RequestProps): Stream<any> {
-        return action$
-            .filter(action => action.type === props.type)
-            .compose(dropRepeats((prev, now) => !props.condition(prev, now)));
-    }
-
     // Search sets
-    const searchSetRequest$ = filterActionFromState$({
-        type: Type.SEARCH,
-        condition: (prev: Search, now: Search) => true
-    }).map(state => state.search)
-        .map(search => {
-            console.log("Search xxx")
-            console.log(search)
-            return SearchSetsApi.buildRequest({
-                param: encodeURIComponent(search.param),
-                orderBy: search.orderBy,
-                sort: search.sortBy
-            });
-        }).debug("Search Reducer§");
+    const searchSetRequest$ = filterActionFromRequest$(action$, RequestMethod.SEARCH)
+        .map(state => state.search)
+        .compose(debounce(10))
+        .map(search => createGetRequest(buildSearchUrl(search), RequestMethod.SEARCH));
 
     // Get own sets
-    const ownSetRequest$ = filterActionFromState$({
-        type: Type.OWN_SETS,
-        condition: (prev: GetOwnSets, now: GetOwnSets) => prev.type !== now.type
-    }).map(state => createGetRequest2(API_URL, 'get-own-sets'));
+    const ownSetRequest$ = filterActionFromRequest$(action$, RequestMethod.OWN_SETS)
+        .map(state => createGetRequest(API_URL, RequestMethod.OWN_SETS));
 
     // Get set by id
-    const specificSetRequest$ = filterActionFromState$({
-        type: Type.SET,
-        condition: (prev: GetSet, now: GetSet) => prev.setId !== now.setId
-    }).map(action => createGetRequest2(API_URL + '/' + action.setId, 'get-specific-set'));
+    const specificSetRequest$ = filterActionFromRequest$(action$, RequestMethod.BY_ID)
+        .map(action => createGetRequest(API_URL + '/' + action.setId, RequestMethod.BY_ID));
 
     // Add set
-    // Edit set
-    // Update set
-    // Delete set
-    // Import set
+    const add$ = filterActionFromRequest$(action$, RequestMethod.ADD)
+        .map(action => action.set as AddSetModel)
+        .map(set => createPostRequest(API_URL, set, RequestMethod.ADD));
 
-    return xs.merge(ownSetRequest$, specificSetRequest$, searchSetRequest$);
+    // Edit set
+    const edit$ = filterActionFromRequest$(action$, RequestMethod.EDIT)
+        .map(action => action.set)
+        .map(set => createPutRequest(API_URL, set, RequestMethod.EDIT));
+
+    // Delete set
+    const delete$ = filterActionFromRequest$(action$, RequestMethod.DELETE)
+        .map(action => action.setId)
+        .map(setId => createDeleteRequest(API_URL + '/' + setId, RequestMethod.DELETE));
+
+    // Import set
+    const import$ = filterActionFromRequest$(action$, RequestMethod.IMPORT)
+        .map(request => createGetRequest(API_URL + '/' + request.setId + '/import', RequestMethod.IMPORT));
+
+    return xs.merge(
+        ownSetRequest$,
+        specificSetRequest$,
+        searchSetRequest$,
+        add$, edit$, delete$,
+        import$
+    ).debug('SetRepository Requests');
 
 }
 
-function responses(sources: Sources): ResponseSinks {
+function responses(sources: Sources): SetRepositoryResponse {
 
     const defaultResponse = (id: string) => {
         return defaultResponseHelper(sources, id);
     };
 
-    const getSetsApi$ = GetSetsApi.response(sources);
-    const searchSetsApi$ = defaultResponse(SearchSetsApi.ID);
-
-    const set$ = xs.never();
-    const search$ = xs.never();
-    const ownSets$ = xs.never();
+    const getSetById$ = defaultResponse(RequestMethod.BY_ID);
+    const getOwnSets$ = defaultResponse(RequestMethod.OWN_SETS);
+    const search$ = defaultResponse(RequestMethod.SEARCH);
 
     return {
-        getSetsApi$,
-        searchSetsApi$
+        getSetById$,
+        getOwnSets$,
+        search$
     };
 
 }

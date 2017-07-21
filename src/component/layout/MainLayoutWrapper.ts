@@ -6,18 +6,20 @@ import {div} from '@cycle/dom';
 import {VNode} from 'snabbdom/vnode';
 import {mergeSinks} from 'cyclejs-utils';
 import {Utils} from '../../common/Utils';
-import isolate  from '@cycle/isolate';
-import {ModalAction} from 'cyclejs-modal';
-import {CreateSetFormAction, SetForm} from '../form/Set/SetForm';
-import {isolateSink} from '@cycle/http/lib/isolate';
-import {GetProfileApi} from '../../common/api/profile/GetProfile';
+import isolate from '@cycle/isolate';
+import {
+    ProfileRepository,
+    Request as ProfileRequest,
+    RequestMethod as ProfileRequestMethod
+} from '../../common/repository/ProfileRepository';
+
 const R = require('ramda');
 
 export type MainLayoutSources = Sources & {};
 export type MainLayoutSinks = Sinks & { DOM_LEFT: Stream<VNode>, DOM_RIGHT: Stream<VNode> };
 export type MainLayoutComponent = (s: MainLayoutSources) => MainLayoutSinks;
 
-export function MainLayoutWrapper(component: MainLayoutComponent) {
+export function MainLayoutWrapper(component: MainLayoutComponent): any {
 
     return function(sources: MainLayoutSources) {
 
@@ -48,22 +50,20 @@ export function MainLayoutWrapper(component: MainLayoutComponent) {
     };
 }
 
-function reducer({HTTP}) {
+function reducer(sources: any): any {
 
     // request User profile
-    const httpRequestUserInfo$ = xs.of(GetProfileApi.buildRequest({id: '', requestId: 'userprofile'}));
-    const httpResponseUserInfo$ = HTTP.select(GetProfileApi.ID + 'userprofile')
-        .flatten()
-        .map(({text}) => JSON.parse(text)).debug('Profile response!');
+    const profileRepository = ProfileRepository(sources, xs.of({type: ProfileRequestMethod.GET_OWN} as ProfileRequest));
+    const responseGetOwnProfile$ = profileRepository.response.getOwnProfile$;
 
     //
-    const initProfileReducer$ = xs.of(function initReducer(prev) {
+    const initProfileReducer$ = xs.of(function initReducer(prev: any): any {
         return {
             ...prev,
             user: null
         };
     });
-    const profileReducer$ = httpResponseUserInfo$
+    const profileReducer$ = responseGetOwnProfile$
         .map(profile => (prevState) => {
             return {
                 ...prevState,
@@ -72,7 +72,7 @@ function reducer({HTTP}) {
         });
 
     return {
-        HTTP: httpRequestUserInfo$,
+        HTTP: xs.merge(profileRepository.HTTP),
         onion: xs.merge(initProfileReducer$, profileReducer$)
     };
 

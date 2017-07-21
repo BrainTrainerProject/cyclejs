@@ -6,16 +6,17 @@ import isolate from '@cycle/isolate';
 import {HTTPSource} from '@cycle/http';
 import flattenSequentially from 'xstream/extra/flattenSequentially';
 import {HttpRequest} from '../../../common/api/HttpRequest';
-import SetsItem from './SetsItem';
 import {
     Action as SetRepositoryAction,
+    RequestMethod,
+    RequestMethod as SetRepositoryActionType,
     SearchParams,
     SetRepository,
-    Sinks as SetRepositorySinks,
-    Type as SetRepositoryActionType
+    SetRepositorySinks
 } from '../../../common/repository/SetRepository';
 import concat from 'xstream/extra/concat';
 import {Utils} from '../../../common/Utils';
+import {CardItem} from '../CardItem';
 
 export enum ActionType {
     OWN = 'own',
@@ -63,11 +64,11 @@ export type Sinks = {
 
 export default function SetListComponent(sources: Sources, action$: Stream<Action>): Sinks {
 
-    const state$ = sources.onion.state$.debug('SetList Component State$');
+    const importProxy$: Stream<Action> = xs.create();
+    const listActions$ = xs.merge(listIntent(action$), importProxy$).remember();
+    const setRepository: SetRepositorySinks = SetRepository(sources as any, listActions$ as any);
 
-    const setRepository: SetRepositorySinks = SetRepository(sources as any, listIntent(action$));
-
-    const listSinks = isolate(ActionList, 'list')(sources, SetsItem);
+    const listSinks = isolate(ActionList, 'list')(sources, CardItem);
     const reducer$ = reducer(intent(setRepository));
 
     const itemClick$ = listSinks.callback$.filter(callback => callback.type === 'click')
@@ -76,9 +77,16 @@ export default function SetListComponent(sources: Sources, action$: Stream<Actio
     const importClick$ = listSinks.callback$.filter(callback => callback.type === 'import')
         .map(callback => callback.item);
 
+    const importAction$ = importClick$
+        .map(item => ({
+            type: RequestMethod.IMPORT,
+            setId: item._id
+        }));
+    importProxy$.imitate(importAction$);
+
     return {
         DOM: listSinks.DOM,
-        HTTP: xs.merge(setRepository.HTTP),
+        HTTP: setRepository.HTTP,
         onion: reducer$,
         itemClick$: itemClick$,
         importClick$: importClick$
@@ -88,8 +96,9 @@ export default function SetListComponent(sources: Sources, action$: Stream<Actio
 function intent(setRepository: SetRepositorySinks): any {
     const response = setRepository.response;
     return {
-        showOwnSets$: response.getSetsApi$,
-        showSearchSets$: response.searchSetsApi$
+        showOwnSets$: response.getOwnSets$,
+        showSetById$: response.getSetById$,
+        showSearchSets$: response.search$
     };
 }
 
@@ -107,7 +116,7 @@ function listIntent(action$: Stream<Action>): Stream<SetRepositoryAction> {
 
     const getSetAction$ = filterType(ActionType.BY_ID)
         .map(action => ({
-            type: SetRepositoryActionType.SET,
+            type: SetRepositoryActionType.BY_ID,
             setId: (action as LoadSetsByIdAction).setId
         } as SetRepositoryAction));
 
@@ -117,7 +126,7 @@ function listIntent(action$: Stream<Action>): Stream<SetRepositoryAction> {
             search: (action as LoadSearchedSetsAction).search
         } as SetRepositoryAction));
 
-    return xs.merge(ownSetsAction$, getSetAction$, searchAction$).remember();
+    return xs.merge(ownSetsAction$, getSetAction$, searchAction$);
 
 }
 

@@ -1,14 +1,14 @@
 import {Utils} from '../../Utils';
 import {Sources} from '../../interfaces';
 import {Stream} from 'xstream';
-import {createGetRequest, flattenResponse} from '../ApiHelper';
+import {createGetRequestOld, flattenResponse} from '../ApiHelper';
 
 export class GetSetApi {
 
     public static readonly ID: string = 'get-set-by-id';
 
     public static request(setId: string, reqId?: string): object {
-        return createGetRequest(GetSetApi.ID, '/set/' + setId, reqId);
+        return createGetRequestOld(GetSetApi.ID, '/set/' + setId, reqId);
     }
 
     public static response(sources: Sources, reqId?: string): Stream<any> {
