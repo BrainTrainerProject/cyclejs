@@ -1,31 +1,35 @@
-import xs, {Stream} from 'xstream';
-import {DOMSource, VNode} from '@cycle/dom';
-import {StateSource} from 'cycle-onionify';
-import ActionList, {State as ListState} from '../ActionList';
+import xs, { Stream } from 'xstream';
+import { DOMSource, VNode } from '@cycle/dom';
+import { StateSource } from 'cycle-onionify';
+import ActionList, { ListState as ListState } from '../ActionList';
 import isolate from '@cycle/isolate';
-import {HTTPSource} from '@cycle/http';
+import { HTTPSource } from '@cycle/http';
 import flattenSequentially from 'xstream/extra/flattenSequentially';
-import {HttpRequest} from '../../../common/api/HttpRequest';
 import concat from 'xstream/extra/concat';
-import {Utils} from '../../../common/Utils';
 import {
     NotecardRepository,
     RequestMethod as NotecardRequestMethod,
     ResponseSinks
 } from '../../../common/repository/NotecardRepository';
-import {CardItem} from '../CardItem';
-import {RootRepositorySinks} from '../../../common/repository/Repository';
+import { RootRepositorySinks } from '../../../common/repository/Repository';
+import { CommentItem } from "../../comments/list/CommentItem";
+import { CommentRepository } from "../../../common/repository/CommentRepository";
+import { HttpRequest } from "../../../common/api/HttpRequest";
+import { Utils } from "../../../common/Utils";
+
 
 export enum ActionType {
-    GET_BY_SET_ID = 'load-by-set'
+    GET_BY_SET_ID = 'load-comments-by-set'
 }
 
-export type LoadNotecardsBySetIdAction = {
-    type: ActionType.GET_BY_SET_ID;
-    setId: string;
-};
+export const CommentListAction = {
 
-export type Action = LoadNotecardsBySetIdAction;
+    GetBySetId: (setId: string) => ({
+        type: ActionType.GET_BY_SET_ID,
+        setId: setId
+    })
+
+};
 
 export type State = {
     list: ListState
@@ -43,28 +47,29 @@ export type Sinks = {
     DOM: Stream<VNode>;
     HTTP: Stream<HttpRequest>;
     onion: Stream<Reducer>;
-    itemClick$: Stream<object>;
+    profileClick$: Stream<object>;
 };
 
-export function NotecardListComponent(sources: Sources, action$: Stream<Action>): Sinks {
+export function CommentsList(sources: Sources, action$: Stream<any>): Sinks {
 
-    const notecardRepository = NotecardRepository(sources as any, listIntents(action$));
+    const commentsRepository = CommentRepository(sources as any, listIntents(action$));
 
-    const listSinks = isolate(ActionList, 'list')(sources, CardItem);
-    const reducer$ = reducer(intent(notecardRepository));
+    const listSinks = isolate(ActionList, 'list')(sources, CommentItem);
+    const reducer$ = reducer(intent(commentsRepository));
 
-    const itemClick$ = listSinks.callback$.filter(callback => callback.type === 'click')
+    const profileClick$ = listSinks.callback$
+        .filter(callback => callback.type === 'profile-click')
         .map(callback => callback.item);
 
     return {
         DOM: listSinks.DOM,
-        HTTP: xs.merge(notecardRepository.HTTP),
-        onion: reducer$.debug("ONION NoteListComponent"),
-        itemClick$: itemClick$
+        HTTP: xs.merge(commentsRepository.HTTP),
+        onion: reducer$,
+        profileClick$: profileClick$
     };
 }
 
-function listIntents(action$: Stream<Action>): Stream<any> {
+function listIntents(action$: Stream<any>): Stream<any> {
 
     const showList$ = action$
         .map(action => {
@@ -76,7 +81,7 @@ function listIntents(action$: Stream<Action>): Stream<any> {
         .map(action => ({
             type: NotecardRequestMethod.GET_NOTECARDS_FROM_SET,
             setId: action.setId
-        })).debug("SHOW LIST")
+        })).debug('SHOW LIST');
 
     return xs.merge(showList$).remember();
 
@@ -90,7 +95,7 @@ function intent(notecardRepository: RootRepositorySinks): IntentSinks {
 
     const response = notecardRepository.response as ResponseSinks;
     return {
-        showNotecardsFromSet$: response.getNotecardsFromSet$.debug("GET NOTES")
+        showNotecardsFromSet$: response.getNotecardsFromSet$.debug('GET NOTES')
     };
 
 }
@@ -105,7 +110,7 @@ function defaultState(state: State): State {
 function reducer(intent: IntentSinks): Stream<any> {
 
     const initReducer$ = xs.of((state) => {
-        console.log("INIT NOTECARD")
+        console.log('INIT NOTECARD');
         if (state) {
             return state;
         }
@@ -136,8 +141,8 @@ function reducer(intent: IntentSinks): Stream<any> {
             });
     }
 
-    const fillListReducer$ = xs.merge(intent.showNotecardsFromSet$.debug("ITEMMMSSMSMSMS"))
-        .map(s => concat(clearSets$, fillListByResponse$(xs.of(s)).debug("FILLLLLLLLLLLLLLLLLL"))).flatten();
+    const fillListReducer$ = xs.merge(intent.showNotecardsFromSet$.debug('ITEMMMSSMSMSMS'))
+        .map(s => concat(clearSets$, fillListByResponse$(xs.of(s)).debug('FILLLLLLLLLLLLLLLLLL'))).flatten();
 
     return xs.merge(initReducer$, fillListReducer$);
 }

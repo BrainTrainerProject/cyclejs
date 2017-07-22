@@ -12,7 +12,7 @@ import { VNode } from 'snabbdom/vnode';
 import { EditSetFormAction, SetForm } from '../../form/Set/SetForm';
 import { ModalAction } from 'cyclejs-modal';
 import NotecardForm, { CreateNotecardFormAction, EditNotecardFormAction } from '../../form/Notecard/Notecard';
-import { RequestMethod as SetRequestMethod, SetRepository } from '../../../common/repository/SetRepository';
+import { SetRepository, SetRepositoryAction } from '../../../common/repository/SetRepository';
 import {
     ActionType as NotecardsActionType,
     NotecardListComponent,
@@ -192,10 +192,7 @@ function view(listVNode$: Stream<VNode>): Stream<VNode> {
 function setRepositoryIntents(action: any): Stream<any> {
 
     const loadSet$ = action.getSetId$
-        .map(id => ({
-            type: SetRequestMethod.BY_ID,
-            setId: id
-        }));
+        .map(id => SetRepositoryAction.GetSet(id));
 
     return xs.merge(loadSet$);
 }

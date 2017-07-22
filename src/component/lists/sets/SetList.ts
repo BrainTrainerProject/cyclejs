@@ -1,22 +1,20 @@
-import xs, {Stream} from 'xstream';
-import {DOMSource, VNode} from '@cycle/dom';
-import {StateSource} from 'cycle-onionify';
-import ActionList, {State as ListState} from '../ActionList';
+import xs, { Stream } from 'xstream';
+import { DOMSource, VNode } from '@cycle/dom';
+import { StateSource } from 'cycle-onionify';
+import { ListState, StateList } from '../StateList';
 import isolate from '@cycle/isolate';
-import {HTTPSource} from '@cycle/http';
+import { HTTPSource } from '@cycle/http';
 import flattenSequentially from 'xstream/extra/flattenSequentially';
-import {HttpRequest} from '../../../common/api/HttpRequest';
+import { HttpRequest } from '../../../common/api/HttpRequest';
 import {
-    Action as SetRepositoryAction,
-    RequestMethod,
-    RequestMethod as SetRepositoryActionType,
     SearchParams,
     SetRepository,
+    SetRepositoryAction,
     SetRepositorySinks
 } from '../../../common/repository/SetRepository';
 import concat from 'xstream/extra/concat';
-import {Utils} from '../../../common/Utils';
-import {CardItem} from '../CardItem';
+import { Utils } from '../../../common/Utils';
+import { CardItem } from '../CardItem';
 
 export enum ActionType {
     OWN = 'own',
@@ -24,21 +22,27 @@ export enum ActionType {
     SEARCH = 'search'
 }
 
-export type LoadOwnSetsAction = {
-    type: ActionType.OWN
-};
+interface Action {
+    type: ActionType
+}
 
-export type LoadSetsByIdAction = {
-    type: ActionType.BY_ID,
-    setId: string
-};
+export const SetListAction = {
 
-export type LoadSearchedSetsAction = {
-    type: ActionType.SEARCH,
-    search: SearchParams
-};
+    GetOwnSets: (): Action => ({
+        type: ActionType.OWN
+    }),
 
-export type Action = LoadOwnSetsAction | LoadSetsByIdAction | LoadSearchedSetsAction;
+    GetSetsById: (setId: string): Action & { setId: string } => ({
+        type: ActionType.BY_ID,
+        setId: setId
+    }),
+
+    Search: (search: SearchParams): Action & { search: SearchParams } => ({
+        type: ActionType.SEARCH,
+        search: search
+    })
+
+};
 
 export type State = {
     list: ListState,
@@ -68,20 +72,19 @@ export default function SetListComponent(sources: Sources, action$: Stream<Actio
     const listActions$ = xs.merge(listIntent(action$), importProxy$).remember();
     const setRepository: SetRepositorySinks = SetRepository(sources as any, listActions$ as any);
 
-    const listSinks = isolate(ActionList, 'list')(sources, CardItem);
+    const listSinks = isolate(StateList, 'list')(sources, CardItem);
     const reducer$ = reducer(intent(setRepository));
 
-    const itemClick$ = listSinks.callback$.filter(callback => callback.type === 'click')
+    const itemClick$ = listSinks.callback$
+        .filter(callback => callback.type === 'click')
         .map(callback => callback.item);
 
-    const importClick$ = listSinks.callback$.filter(callback => callback.type === 'import')
+    const importClick$ = listSinks.callback$
+        .filter(callback => callback.type === 'import')
         .map(callback => callback.item);
 
     const importAction$ = importClick$
-        .map(item => ({
-            type: RequestMethod.IMPORT,
-            setId: item._id
-        }));
+        .map(item => SetRepositoryAction.Import(item._id));
     importProxy$.imitate(importAction$);
 
     return {
@@ -102,29 +105,21 @@ function intent(setRepository: SetRepositorySinks): any {
     };
 }
 
-function listIntent(action$: Stream<Action>): Stream<SetRepositoryAction> {
+function listIntent(action$: Stream<Action>): Stream<any> {
 
-    function filterType(type: ActionType): Stream<Action> {
+    function filterType(type: ActionType): Stream<any> {
         return action$
             .filter(action => action.type === type);
     }
 
     const ownSetsAction$ = filterType(ActionType.OWN)
-        .map(action => ({
-            type: SetRepositoryActionType.OWN_SETS
-        } as SetRepositoryAction));
+        .map(action => SetRepositoryAction.GetOwnSets);
 
     const getSetAction$ = filterType(ActionType.BY_ID)
-        .map(action => ({
-            type: SetRepositoryActionType.BY_ID,
-            setId: (action as LoadSetsByIdAction).setId
-        } as SetRepositoryAction));
+        .map(action => SetRepositoryAction.GetSet(action.setId));
 
     const searchAction$ = filterType(ActionType.SEARCH)
-        .map(action => ({
-            type: SetRepositoryActionType.SEARCH,
-            search: (action as LoadSearchedSetsAction).search
-        } as SetRepositoryAction));
+        .map(action => SetRepositoryAction.Search(action.search));
 
     return xs.merge(ownSetsAction$, getSetAction$, searchAction$);
 

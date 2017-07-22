@@ -1,17 +1,15 @@
-import xs, {Stream} from 'xstream';
-import {div, DOMSource, p, VNode} from '@cycle/dom';
-import {StateSource} from 'cycle-onionify';
-import {State as ItemState} from './sets/SetsItem';
-import {Component} from '../../common/interfaces';
+import xs, { Stream } from 'xstream';
+import { div, DOMSource, p, VNode } from '@cycle/dom';
+import { StateSource } from 'cycle-onionify';
+import { Component } from '../../common/interfaces';
 import debounce from 'xstream/extra/debounce';
 
-export type State = Array<{ key: string, item: ItemState }>;
-
-export type Reducer = (prev?: State) => State | undefined;
+export type ListState = Array<{ key: string, item: any }>
+export type Reducer = (prev?: ListState) => ListState | undefined;
 
 export type Sources = {
     DOM: DOMSource;
-    onion: StateSource<State>;
+    onion: StateSource<ListState>;
 };
 
 export type Sinks = {
@@ -38,7 +36,7 @@ function view(itemVNodes: Array<VNode>): Stream<VNode> {
     return xs.merge(emptyList$, list$);
 }
 
-export default function ActionList(sources: Sources, itemComponent: Component): Sinks {
+export function StateList(sources: Sources, itemComponent: Component): Sinks {
 
     const items = sources.onion.toCollection(itemComponent)
         .uniqueBy(s => s.key)

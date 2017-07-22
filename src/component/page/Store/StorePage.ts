@@ -1,13 +1,16 @@
-import xs, {Stream} from 'xstream';
-import {Sources, State} from '../../../common/interfaces';
-import {StateSource} from 'cycle-onionify';
-import {DOMSource} from '@cycle/dom';
-import {VNode} from 'snabbdom/vnode';
+import xs, { Stream } from 'xstream';
+import { Sources, State } from '../../../common/interfaces';
+import { StateSource } from 'cycle-onionify';
+import { DOMSource } from '@cycle/dom';
+import { VNode } from 'snabbdom/vnode';
 import isolate from '@cycle/isolate';
-import SetListComponent, {LoadSearchedSetsAction, State as SetComponentState} from '../../lists/sets/SetListComponent';
-import {OrderType} from '../../../common/OrderType';
-import {SortType} from '../../../common/SortType';
-import {SearchParams} from '../../../common/repository/SetRepository';
+import SetListComponent, {
+    SetListAction,
+    State as SetComponentState
+} from '../../lists/sets/SetListComponent';
+import { OrderType } from '../../../common/OrderType';
+import { SortType } from '../../../common/SortType';
+import { SearchParams } from '../../../common/repository/SetRepository';
 
 export type StorePageSources = Sources & {
     onion: StateSource<StorePageState>,
@@ -60,37 +63,28 @@ function model(): Stream<Reducer> {
 
 function listActions(actions: Actions): any {
 
-    const initAction$ = xs.of(() => {
-        return {
-            type: 'search',
-            search: {
-                param: '',
-                orderBy: OrderType.DATE,
-                sortBy: SortType.DESC
-            } as SearchParams
-        } as LoadSearchedSetsAction;
-    });
+    const initAction$ = xs.of(() => SetListAction.Search({
+            param: '',
+            orderBy: OrderType.DATE,
+            sortBy: SortType.DESC
+        } as SearchParams)
+    );
 
     const searchAction$ = actions.filter$
         .map(searchObject => (searchObject as any).value)
-        .map(searchText => (prevState) => ({
-            ...prevState,
-            type: 'search',
-            search: {
+        .map(searchText => (prevState) =>
+            SetListAction.Search({
                 ...prevState.search,
                 param: searchText
-            }
-        }));
+            } as SearchParams)
+        );
 
     const resetAction$ = actions.resetFilter$
-        .map(searchText => (prevState) => ({
-            ...prevState,
-            type: 'search',
-            search: {
+        .map(searchText => (prevState) =>
+            SetListAction.Search({
                 ...prevState.search,
                 param: ''
-            }
-        }));
+            } as SearchParams));
 
     return xs.merge(initAction$, searchAction$, resetAction$)
         .fold((listActionsRequests, reducer: any) => reducer(listActionsRequests as any), {});
