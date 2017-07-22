@@ -77,7 +77,7 @@ const API_URL = '/set';
 
 export function SetRepository(sources: Sources, action$: Stream<Action>): SetRepositorySinks {
     return {
-        HTTP: requests(action$),
+        HTTP: requests(action$.remember()),
         response: responses(sources)
     };
 }

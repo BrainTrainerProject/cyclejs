@@ -17,7 +17,6 @@ export function defaultResponseHelper(sources: Sources, id: string): Stream<any>
 
 export function filterActionFromRequest$(action$: Stream<any>, type: RootRequestMethod): Stream<any> {
     return action$
-        .debug("ACTION")
-        .filter(action => !!action)
+        //.filter(action => !!action)
         .filter(action => action.type === type);
 }

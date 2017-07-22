@@ -1,18 +1,18 @@
-import xs, {Stream} from 'xstream';
-import {Sinks, Sources, State} from '../../../common/interfaces';
-import {AppState} from '../../../app';
-import {StateSource} from 'cycle-onionify';
-import {viewRight} from './viewRight';
-import {viewLeft} from './viewLeft';
-import Comments from '../../comments/Comments';
-import {State as ListState} from '../../lists/cards/CardList';
+import xs, { Stream } from 'xstream';
+import { Sinks, Sources, State } from '../../../common/interfaces';
+import { AppState } from '../../../app';
+import { StateSource } from 'cycle-onionify';
+import { viewRight } from './viewRight';
+import { viewLeft } from './viewLeft';
+import Comments, { CommentsState } from '../../comments/Comments';
+import { State as ListState } from '../../lists/cards/CardList';
 import isolate from '@cycle/isolate';
-import {div} from '@cycle/dom';
-import {VNode} from 'snabbdom/vnode';
-import {EditSetFormAction, SetForm} from '../../form/Set/SetForm';
-import {ModalAction} from 'cyclejs-modal';
-import NotecardForm, {CreateNotecardFormAction, EditNotecardFormAction} from '../../form/Notecard/Notecard';
-import {RequestMethod as SetRequestMethod, SetRepository} from '../../../common/repository/SetRepository';
+import { div } from '@cycle/dom';
+import { VNode } from 'snabbdom/vnode';
+import { EditSetFormAction, SetForm } from '../../form/Set/SetForm';
+import { ModalAction } from 'cyclejs-modal';
+import NotecardForm, { CreateNotecardFormAction, EditNotecardFormAction } from '../../form/Notecard/Notecard';
+import { RequestMethod as SetRequestMethod, SetRepository } from '../../../common/repository/SetRepository';
 import {
     ActionType as NotecardsActionType,
     NotecardListComponent,
@@ -44,6 +44,7 @@ export interface SetPageState extends State {
         comment: string,
         rating: number
     };
+    comments: CommentsState,
     notecardsComponent: NotecardListState;
     loading: boolean;
 }
@@ -109,16 +110,21 @@ function model(actions: Actions): Stream<Reducer> {
 
 function httpResponseModel(actions: any): Stream<Reducer> {
 
-    console.log('ReponseModel');
-    console.log(actions);
-
     const setReducer$ = actions.getSetById$
         .map(set => (state) => {
-            console.log('GetById: ', state);
-            console.log('Set', set);
+
+            // If comments is empty, init first comments object
+            if (!state.comments) {
+                state['comments'] = {}
+            }
+
             return {
                 ...state,
-                set: set
+                set: set,
+                comments: {
+                    ...state.comments,
+                    setId: set._id
+                }
             };
         });
 
@@ -146,7 +152,7 @@ function httpResponseModel(actions: any): Stream<Reducer> {
             };
         });*/
 
-    return xs.merge(setReducer$).debug('LEL');
+    return xs.merge(setReducer$);
 }
 
 function addListState(state, notecard): ListState {
@@ -191,7 +197,7 @@ function setRepositoryIntents(action: any): Stream<any> {
             setId: id
         }));
 
-    return xs.merge(loadSet$).debug('SetRepositoryIntents');
+    return xs.merge(loadSet$);
 }
 
 function notecardRepositoryIntents(action: any): Stream<any> {
@@ -202,7 +208,7 @@ function notecardRepositoryIntents(action: any): Stream<any> {
             setId: id
         }));
 
-    return xs.merge(loadNotecards$).debug('NotecardRepositoryIntents');
+    return xs.merge(loadNotecards$);
 }
 
 export default function SetPage(sources: any): any {
@@ -211,30 +217,17 @@ export default function SetPage(sources: any): any {
 
     const {router} = sources;
 
-    const state$ = sources.onion.state$.debug('STATE');
+    const state$ = sources.onion.state$.debug('SETPAGE STATE');
     const action = intent(sources, state$);
 
-    const setRepository = SetRepository(sources, setRepositoryIntents(action).remember());
-    //const notecardRepository = NotecardRepository(sources, notecardRepositoryIntents(action).remember());
+    const setRepository = SetRepository(sources, setRepositoryIntents(action));
 
     const mainReducer$ = model(action);
     const responseReducer$ = httpResponseModel((Object as any).assign(setRepository.response));
     const reducer$ = xs.merge(mainReducer$, responseReducer$);
 
-    //const notecardSinks = isolate(CardList, 'list')(sources);
-
-    const notecardsComponent = isolate(NotecardListComponent, 'notecardsComponent')(sources,
-        notecardRepositoryIntents(action).remember().debug("NotecadRepo Intentsss")
-        /*xs.of({
-            type: NotecardsActionType.GET_BY_SET_ID,
-            setId: '5968ba492d53ee7c0fc88f39'
-        })*/
-    );
-    //const notecardList = NotecardListComponent(sources, notecardRepositoryIntents(action).remember()).debug("REQUEST"));
-
-    const commentSinks = Comments(sources, {
-        setId: '59404bd79eccad225fdd9b8b'
-    });
+    const notecardsComponent = isolate(NotecardListComponent, 'notecardsComponent')(sources, notecardRepositoryIntents(action));
+    const commentSinks = isolate(Comments, 'comments')(sources);
 
     const leftDOM$ = xs.combine(state$, notecardsComponent.DOM, commentSinks.DOM).map(viewLeft);
     const rightDOM$ = viewRight(state$);
@@ -266,8 +259,8 @@ export default function SetPage(sources: any): any {
     return {
         DOM_LEFT: leftDOM$,
         DOM_RIGHT: rightDOM$,
-        HTTP: xs.merge(notecardsComponent.HTTP, setRepository.HTTP),
-        onion: xs.merge(reducer$, notecardsComponent.onion),
+        HTTP: xs.merge(notecardsComponent.HTTP, setRepository.HTTP, commentSinks.HTTP),
+        onion: xs.merge(reducer$, notecardsComponent.onion, commentSinks.onion),
         modal: xs.merge(openCreateNotecardModal$, editSet$)
     };
 }

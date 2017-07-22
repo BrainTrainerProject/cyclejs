@@ -1,100 +1,122 @@
-import { Utils } from "../../../common/Utils";
-import { a, div, i, img, span } from "@cycle/dom";
-import xs from "xstream";
+import xs, { Stream } from 'xstream';
+import { div, DOMSource, i, img, p, VNode } from '@cycle/dom';
+import { StateSource } from 'cycle-onionify';
+import { ProfileEntity } from "../../../common/model/Profile";
+import { prettyTimeStamp } from "../../../common/GuiUtils";
+import { Rating } from "../../../common/ui/Rating";
 
-export interface CardItemProps {
-    title: string
-    imageUrl: string
-    url: string
-    rating: number
-    ratingCount: number,
-    showRating: boolean,
-    showImport: boolean
+const ID_PROFILE = '.profile-clicked';
+
+export interface State {
+    id: string;
+    profile: ProfileEntity;
+    rating: number;
+    comment: string;
+    createDate: Date;
 }
 
-export function CardItem(sources) {
+export type Reducer = (prev?: State) => State | undefined;
 
-    const {DOM, props$} = sources;
+export type Sources = {
+    DOM: DOMSource;
+    onion: StateSource<State>;
+};
 
-    // intent
-    const cardClick$ = DOM.select('.card-cover').events('click').map(e => e.preventDefault());
-    const titleClick$ = DOM.select('.card-title').events('click').map(e => e.preventDefault());
+export type Sinks = {
+    DOM: Stream<VNode>;
+    callback$: Stream<any>;
+};
 
-    const clickStreams$ = xs.merge(cardClick$, titleClick$)
-        .map(s => props$.map(set => set._id))
-        .flatten()
-        .map(setId => '/set/' + setId)
+export function CommentItem(sources: Sources): Sinks {
+
+    const state$ = sources.onion.state$;
+
+    const actions = intent(sources);
+    const reducer = model(actions, state$);
+
+    const vdom$ = cardView(state$);
 
     return {
-        DOM: props$.map(set => {
-            return view({
-                title: set.title,
-                imageUrl: Utils.imageOrPlaceHolder(set.photourl),
-                url: "/set/" + set._id,
-                rating: 3,
-                ratingCount: 42,
-                showRating: set.showRating,
-                showImport: set.showImport
-            } as CardItemProps)
-        }),
-        router: clickStreams$
+        DOM: vdom$,
+        callback$: reducer.callback$
     };
+
 }
 
-function view(props: CardItemProps) {
-    return div(".column", [
-        div(".ui.card.fluid", [
-            a(".card-cover.image", {
-                "attrs": {
-                    "href": props.url
-                }
-            }, [
-                img({
-                    "attrs": {
-                        "src": props.imageUrl
-                    }
-                })
-            ]),
-            div(".card-title.content", [
-                a(".header", {
-                    "attrs": {
-                        "href": props.url
-                    }
-                }, [props.title])
-            ]),
-            showExtraContent(props)
-        ])
-    ])
+function intent(sources: any): any {
+
+    const profileClick$ = sources.DOM.select(ID_PROFILE).events('click')
+        .map(e => e.preventDefault());
+
+    return {profileClick$};
 }
 
-function showExtraContent(props: CardItemProps) {
-    return (props.showImport || props.showRating) ? div(".extra.content", [
+function model(actions: any, state$: Stream<any>): any {
 
-        (props.showImport) ? span(".right.floated", [
-            a({
-                "attrs": {
-                    "href": "",
-                    "stype": ""
-                }
-            }, [
-                i(".download.icon")
-            ])
-        ]) : null,
-
-        (props.showRating) ? div('ui', [div(".ui.rating", {
-            "attrs": {
-                "data-rating": props.rating,
-                "data-max-rating": "5"
-            },
-            hook: {
-                insert: (vnode) => {
-                    $(vnode.elm).rating('disable')
-                }
+    const profileClick$ = actions.profileClick$
+        .mapTo(state$)
+        .flatten()
+        .map(state => {
+                return ({
+                    type: 'click-profile',
+                    item: state.item
+                });
             }
-        }),
-            span('.rating-count', ['(' + props.ratingCount + ')'])
-        ]) : null
+        );
 
-    ]) : null
+    return {
+        callback$: xs.merge(profileClick$)
+    };
+
 }
 
+function cardView(state$: Stream<any>): any {
+    return state$.map(state => {
+
+        const item = state.item as State;
+        const profile = item.profile as ProfileEntity;
+
+        return div('.sixteen.wide.column', [
+            div('.ui.middle.aligned.divided.list', [
+                div('.item', [
+                    div('.ui.divider'),
+                    div('.right.floated.content', [
+                        div('.ui', {
+                            'style': {
+                                'name': 'style',
+                                'value': 'padding: .75em 0 .25em .5em;'
+                            }
+                        }, [prettyTimeStamp(item.createDate)])
+                    ]),
+                    div('.ui.horizontal.list', [
+                        div('.item', [
+                            img('.ui.mini.circular.image', {
+                                'attrs': {
+                                    'src': profile.photourl,
+                                }
+                            }),
+                            div('.content', [
+                                div('.ui.sub.header', [profile.email])
+                            ])
+                        ]),
+                        div('.item', [
+                            i('.right.angle.icon.divider')
+                        ]),
+                        div('.item', [
+                            Rating(item.rating)
+                        ])
+                    ]),
+                    div('.ui.justified.container', {
+                        'style': {
+                            'name': 'style',
+                            'value': 'font-size: 14px !important; padding-top: 15px; !important'
+                        }
+                    }, [
+                        p([item.comment])
+                    ])
+                ])
+            ])
+        ])
+
+    });
+}

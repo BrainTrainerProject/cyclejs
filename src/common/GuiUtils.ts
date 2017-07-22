@@ -5,6 +5,7 @@ import {isNullOrUndefined} from 'util';
 import {Utils} from './Utils';
 import {div, li, ul} from '@cycle/dom';
 import {VNode} from 'snabbdom/vnode';
+import dropRepeats from "xstream/extra/dropRepeats";
 const R = require('ramda');
 
 
@@ -13,7 +14,9 @@ export function inputErrorState(selectorKey, msg, prevState) {
 }
 
 export function inputStream(selectorKey, valueKey, input$): Stream<Reducer> {
-    return input$.map(value => function reducer(state) {
+    return input$
+        .compose(dropRepeats())
+        .map(value => function reducer(state) {
         state = dissocPath(['errors', selectorKey], state);
         state = assoc(valueKey, value, state);
         return state;
@@ -35,3 +38,6 @@ export function errorMessage(state: ErrorMessageState): VNode {
     }
 }
 
+export function prettyTimeStamp(time: string | Date){
+    return 'vor 666 min.'
+}

@@ -1,7 +1,8 @@
-import xs, {Stream} from 'xstream';
-import {a, div, DOMSource, i, img, span, VNode} from '@cycle/dom';
-import {StateSource} from 'cycle-onionify';
-import {Utils} from '../../common/Utils';
+import xs, { Stream } from 'xstream';
+import { a, div, DOMSource, i, img, span, VNode } from '@cycle/dom';
+import { StateSource } from 'cycle-onionify';
+import { Utils } from '../../common/Utils';
+import { Rating } from "../../common/ui/Rating";
 
 const ID_ITEM = '.card-clicked';
 const ID_IMPORT = '.card-import';
@@ -122,19 +123,7 @@ function showExtraContent(state: any): VNode {
             ])
         ]) : null,
 
-        (state.showRating) ? div('ui', [div('.ui.rating', {
-            attrs: {
-                'data-rating': item.rating,
-                'data-max-rating': '5'
-            },
-            hook: {
-                insert: (vnode) => {
-                    ($(vnode.elm) as any).rating('disable');
-                }
-            }
-        }),
-            span('.rating-count', ['(' + item.valuations.length + ')'])
-        ]) : null
+        (state.showRating) ? Rating(item.rating, item.valuations.length) : null
 
     ]) : null;
 }

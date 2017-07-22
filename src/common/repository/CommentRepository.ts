@@ -1,7 +1,7 @@
 import {Sources} from '../interfaces';
 import xs, {Stream} from 'xstream';
 import {createGetRequest, createPostRequest} from '../api/ApiHelper';
-import {RootRepositorySinks, RootResponseSinks as RootResponseSinks} from './Repository';
+import { filterActionFromRequest$, RootRepositorySinks, RootResponseSinks as RootResponseSinks } from './Repository';
 
 export enum RequestMethod {
     GET_BY_SET_ID = 'get-comments-by-set-id',
@@ -13,7 +13,7 @@ export interface AddCommentModel {
     comment: string;
 }
 
-export type Action = GetCommentsBySetId;
+export type Action = GetCommentsBySetId | AddCommentToSet
 
 export type GetCommentsBySetId = {
     type: RequestMethod.GET_BY_SET_ID,
@@ -22,6 +22,7 @@ export type GetCommentsBySetId = {
 
 export type AddCommentToSet = {
     type: RequestMethod.ADD_COMMENT_TO_SET,
+    setId: string,
     comment: AddCommentModel
 };
 
@@ -40,16 +41,15 @@ export function CommentRepository(sources: Sources, action$: Stream<Action>): Ro
 
 function requests(sources: Sources, action$: Stream<Action>): Stream<any> {
 
+    const getCommentsBySetId$ = filterActionFromRequest$(action$, RequestMethod.GET_BY_SET_ID)
+        .map(request => createGetRequest(API_URL + '/' + request.setId + '/evaluate'))
+        .debug('GetCommentsBySetId$');
 
-
-    const getCommentsBySetId$ = filterActionFromState$(RequestMethod.GET_BY_SET_ID)
-        .map(request => createGetRequest(API_URL + '/' + request.setId + '/evaluate'));
-
-    const addCommentToSet$ = filterActionFromState$(RequestMethod.ADD_COMMENT_TO_SET)
+    const addCommentToSet$ = filterActionFromRequest$(action$, RequestMethod.ADD_COMMENT_TO_SET)
         .map(request => createPostRequest(API_URL + '/' + request.setId + '/evaluate',
             request.comment as AddCommentModel,
             RequestMethod.ADD_COMMENT_TO_SET)
-        );
+        ).debug('AddCommentToSet$');
 
     return xs.merge(getCommentsBySetId$, addCommentToSet$);
 
@@ -60,7 +60,7 @@ function responses(sources: Sources): ResponseSinks {
     const {HTTP} = sources;
 
     return {
-        nix: xs.never()
+        getCommentBySetIdResponse$: xs.never()
     };
 
 }
