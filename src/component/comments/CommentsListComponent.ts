@@ -15,17 +15,18 @@ import {
 } from '../../../common/repository/NotecardRepository';
 import {CardItem} from '../CardItem';
 import {RepositorySinks} from '../../../common/repository/RepositoryInterfaces';
+import { CommentItem } from "./list/CommentItem";
 
 export enum ActionType {
-    GET_BY_SET_ID = 'load-by-set'
+    GET_BY_SET_ID = 'load-comments-by-set'
 }
 
-export type LoadNotecardsBySetIdAction = {
+export type LoadCommentsBySetIdAction = {
     type: ActionType.GET_BY_SET_ID;
     setId: string;
 };
 
-export type Action = LoadNotecardsBySetIdAction;
+export type Action = LoadCommentsBySetIdAction;
 
 export type State = {
     list: ListState
@@ -43,24 +44,25 @@ export type Sinks = {
     DOM: Stream<VNode>;
     HTTP: Stream<HttpRequest>;
     onion: Stream<Reducer>;
-    itemClick$: Stream<object>;
+    profileClick$: Stream<object>;
 };
 
 export function CommentsList(sources: Sources, action$: Stream<Action>): Sinks {
 
-    const notecardRepository = NotecardRepository(sources as any, listIntents(action$));
+    const commentsRepository = CommentsRepository(sources as any, listIntents(actions$));
 
-    const listSinks = isolate(ActionList, 'list')(sources, CardItem);
-    const reducer$ = reducer(intent(notecardRepository));
+    const listSinks = isolate(ActionList, 'list')(sources, CommentItem);
+    const reducer$ = reducer(intent(commentsRepository));
 
-    const itemClick$ = listSinks.callback$.filter(callback => callback.type === 'click')
+    const profileClick$ = listSinks.callback$
+        .filter(callback => callback.type === 'profile-click')
         .map(callback => callback.item);
 
     return {
         DOM: listSinks.DOM,
-        HTTP: xs.merge(notecardRepository.HTTP),
-        onion: reducer$.debug('ONION NoteListComponent'),
-        itemClick$: itemClick$
+        HTTP: xs.merge(commentsRepository.HTTP),
+        onion: reducer$,
+        profileClick$: profileClick$
     };
 }
 
