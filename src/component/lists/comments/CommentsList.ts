@@ -1,19 +1,15 @@
 import xs, { Stream } from 'xstream';
-import { DOMSource, VNode } from '@cycle/dom';
+import { div, DOMSource, VNode } from '@cycle/dom';
 import { StateSource } from 'cycle-onionify';
-import ActionList, { ListState as ListState } from '../ActionList';
+import { ListState, StateList } from '../StateList';
 import isolate from '@cycle/isolate';
 import { HTTPSource } from '@cycle/http';
 import flattenSequentially from 'xstream/extra/flattenSequentially';
 import concat from 'xstream/extra/concat';
-import {
-    NotecardRepository,
-    RequestMethod as NotecardRequestMethod,
-    ResponseSinks
-} from '../../../common/repository/NotecardRepository';
+import { RequestMethod as NotecardRequestMethod, ResponseSinks } from '../../../common/repository/NotecardRepository';
 import { RootRepositorySinks } from '../../../common/repository/Repository';
 import { CommentItem } from "../../comments/list/CommentItem";
-import { CommentRepository } from "../../../common/repository/CommentRepository";
+import { CommentRepository, CommentRepositorySinks } from "../../../common/repository/CommentRepository";
 import { HttpRequest } from "../../../common/api/HttpRequest";
 import { Utils } from "../../../common/Utils";
 
@@ -50,52 +46,26 @@ export type Sinks = {
     profileClick$: Stream<object>;
 };
 
-export function CommentsList(sources: Sources, action$: Stream<any>): Sinks {
 
-    const commentsRepository = CommentRepository(sources as any, listIntents(action$));
-
-    const listSinks = isolate(ActionList, 'list')(sources, CommentItem);
-    const reducer$ = reducer(intent(commentsRepository));
-
-    const profileClick$ = listSinks.callback$
-        .filter(callback => callback.type === 'profile-click')
-        .map(callback => callback.item);
-
-    return {
-        DOM: listSinks.DOM,
-        HTTP: xs.merge(commentsRepository.HTTP),
-        onion: reducer$,
-        profileClick$: profileClick$
-    };
-}
 
 function listIntents(action$: Stream<any>): Stream<any> {
 
-    const showList$ = action$
-        .map(action => {
-            console.log('ACTION');
-            console.log(action);
-            return action;
-        })
-        .filter(action => action.type === ActionType.GET_BY_SET_ID)
-        .map(action => ({
-            type: NotecardRequestMethod.GET_NOTECARDS_FROM_SET,
-            setId: action.setId
-        })).debug('SHOW LIST');
+    const showList$ = xs.never();
 
     return xs.merge(showList$).remember();
 
 }
 
 interface IntentSinks {
-    showNotecardsFromSet$: Stream<any>;
+    commentsLoaded$: Stream<any>;
 }
 
-function intent(notecardRepository: RootRepositorySinks): IntentSinks {
+function intent(commentRepository: CommentRepositorySinks): IntentSinks {
 
-    const response = notecardRepository.response as ResponseSinks;
+    const response = commentRepository.response;
+
     return {
-        showNotecardsFromSet$: response.getNotecardsFromSet$.debug('GET NOTES')
+        commentsLoaded$: response.getCommentBySetIdResponse$.debug('GET COMMENT')
     };
 
 }
@@ -110,7 +80,6 @@ function defaultState(state: State): State {
 function reducer(intent: IntentSinks): Stream<any> {
 
     const initReducer$ = xs.of((state) => {
-        console.log('INIT NOTECARD');
         if (state) {
             return state;
         }
@@ -141,8 +110,27 @@ function reducer(intent: IntentSinks): Stream<any> {
             });
     }
 
-    const fillListReducer$ = xs.merge(intent.showNotecardsFromSet$.debug('ITEMMMSSMSMSMS'))
+    const fillListReducer$ = xs.merge(intent.commentsLoaded$.debug('ITEMMMSSMSMSMS'))
         .map(s => concat(clearSets$, fillListByResponse$(xs.of(s)).debug('FILLLLLLLLLLLLLLLLLL'))).flatten();
 
     return xs.merge(initReducer$, fillListReducer$);
+}
+
+export function CommentsList(sources: Sources, action$: Stream<any>): Sinks {
+
+    const commentsRepository = CommentRepository(sources as any, xs.never());
+
+    const listSinks = isolate(StateList, 'list')(sources, CommentItem);
+    const reducer$ = reducer(intent(commentsRepository));
+
+    const profileClick$ = listSinks.callback$
+        .filter(callback => callback.type === 'profile-click')
+        .map(callback => callback.item);
+
+    return {
+        DOM: xs.of(div(['{{CommentsList}}'])),
+        HTTP: xs.merge(commentsRepository.HTTP),
+        onion: reducer$,
+        profileClick$: profileClick$
+    };
 }

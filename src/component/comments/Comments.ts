@@ -6,6 +6,8 @@ import { VNode } from "snabbdom/vnode";
 import { Utils } from "../../common/Utils";
 import sampleCombine from "xstream/extra/sampleCombine";
 import { AddCommentToSet, CommentRepository, RequestMethod } from "../../common/repository/CommentRepository";
+import { CommentsList } from "../lists/comments/CommentsList";
+import isolate from "@cycle/isolate";
 
 export type CommentsSources = Sources & {};
 export type CommentsSinks = Sinks & { onion: Stream<Reducer> };
@@ -71,9 +73,9 @@ function model(action, state$) {
     const validSubmit$ = submit$
         .compose(sampleCombine(state$))
         .map(([event, state]) => {
-       console.log("VAI")
-       console.log(state)
-        return state
+            console.log("VAI")
+            console.log(state)
+            return state
         })
         .filter(state => !Utils.jsonHasChilds(state.errors)).debug('validSubmit$');
 
@@ -125,16 +127,20 @@ export default function Comments(sources: CommentsSources, props: CommentsProps)
 
     const commentRepository = CommentRepository(sources, addCommentAction$ as Stream<any>);
 
+    const commentsList = isolate(CommentsList, 'commentsList')(sources, xs.never());
+
     return {
-        DOM: view(state$, ratingProxy$),
+        DOM: view(state$, ratingProxy$, commentsList.DOM),
         onion: models.reducer$,
         HTTP: commentRepository.HTTP
     };
 }
 
-function view(state$, ratingProxy$): Stream<VNode> {
+function view(state$, ratingProxy$, comments): Stream<VNode> {
 
-    return state$.map(state => {
+    return state$
+        .compose(sampleCombine(comments))
+        .map(([state, comments]) => {
 
         return div([
 
@@ -186,6 +192,7 @@ function view(state$, ratingProxy$): Stream<VNode> {
                 ]),
             ]),
             errorMessage(state),
+            comments,
 
             // COMMENTS LIST
             div('.ui.grid', [

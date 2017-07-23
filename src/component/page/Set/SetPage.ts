@@ -17,7 +17,7 @@ import {
     ActionType as NotecardsActionType,
     NotecardListComponent,
     State as NotecardListState
-} from '../../lists/notecard/NotecardListComponent';
+} from '../../lists/notecard/NotecardList';
 
 const Route = require('route-parser');
 

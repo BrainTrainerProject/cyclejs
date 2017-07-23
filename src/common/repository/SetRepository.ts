@@ -21,38 +21,50 @@ type Action = {
     type: ActionType;
 }
 
+type Search = Action & {
+    search: SearchParams
+}
+
+type SetAction = Action & {
+    set: object
+}
+
+type SetIdAction = Action & {
+    setId: string
+}
+
 export const SetRepositoryAction = {
 
-    GetSet: (setId: string) => ({
+    GetSet: (setId: string): SetIdAction => ({
         type: ActionType.BY_ID,
         setId: setId
     }),
 
-    GetOwnSets: () => ({
+    GetOwnSets: (): Action => ({
         type: ActionType.OWN_SETS
     }),
 
-    Search: (params: SearchParams) => ({
+    Search: (params: SearchParams): Search => ({
         type: ActionType.SEARCH,
         search: params
     }),
 
-    Add: (set: object) => ({
+    Add: (set: object): SetAction => ({
         type: ActionType.ADD,
         set: set
     }),
 
-    Edit: (set: object) => ({
+    Edit: (set: object): SetAction => ({
         type: ActionType.EDIT,
         set: set
     }),
 
-    Delete: (setId: string) => ({
+    Delete: (setId: string): SetIdAction => ({
         type: ActionType.DELETE,
         setId: setId
     }),
 
-    Import: (setId: string) => ({
+    Import: (setId: string): SetIdAction => ({
         type: ActionType.IMPORT,
         setId: setId
     })

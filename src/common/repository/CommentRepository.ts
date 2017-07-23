@@ -26,13 +26,17 @@ export type AddCommentToSet = {
     comment: AddCommentModel
 };
 
+const API_URL = '/set';
+
 export interface ResponseSinks extends RootResponseSinks {
     getCommentBySetIdResponse$: Stream<any>;
 }
 
-const API_URL = '/set';
+export interface CommentRepositorySinks extends RootRepositorySinks{
+    response: ResponseSinks
+}
 
-export function CommentRepository(sources: Sources, action$: Stream<Action>): RootRepositorySinks {
+export function CommentRepository(sources: Sources, action$: Stream<Action>): CommentRepositorySinks {
     return {
         HTTP: requests(sources, action$),
         response: responses(sources)
