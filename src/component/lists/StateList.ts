@@ -19,16 +19,16 @@ export function StateList(sources: Sources, itemComponent: Component): Sinks {
 
     const items = sources.onion.toCollection(itemComponent)
         .uniqueBy(s => s.key)
-        .isolateEach(key => 'item')
+        .isolateEach(key => key)
         .build(sources);
 
     const vdom$ = items.pickCombine('DOM')
         .startWith([])
         .compose(debounce(10));
 
-    const callback$ = items.pickMerge('callback$');
+    const callback$ = items.pickMerge('callback$').debug('CALLBACK$');
     const http$ = items.pickMerge('HTTP');
-    const reducer$ = items.pickMerge('reducer').debug('statelist reducer');
+    const reducer$ = items.pickMerge('reducer');
 
     return {
         DOM: vdom$,

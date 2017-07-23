@@ -258,7 +258,8 @@ export default function SetPage(sources: any): any {
         DOM_RIGHT: rightDOM$,
         HTTP: xs.merge(notecardsComponent.HTTP, setRepository.HTTP, commentSinks.HTTP),
         onion: xs.merge(reducer$, notecardsComponent.onion, commentSinks.onion),
-        modal: xs.merge(openCreateNotecardModal$, editSet$)
+        modal: xs.merge(openCreateNotecardModal$, editSet$),
+        router: commentSinks.router
     };
 }
 

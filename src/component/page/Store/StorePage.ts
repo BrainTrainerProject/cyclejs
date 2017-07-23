@@ -7,7 +7,7 @@ import isolate from '@cycle/isolate';
 import SetListComponent, {
     SetListAction,
     State as SetComponentState
-} from '../../lists/sets/SetListComponent';
+} from '../../lists/sets/SetList';
 import { OrderType } from '../../../common/OrderType';
 import { SortType } from '../../../common/SortType';
 import { SearchParams } from '../../../common/repository/SetRepository';

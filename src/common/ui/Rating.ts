@@ -6,7 +6,7 @@ const MAX_SCORE = 5;
 export function Rating(score: number, sum?: number): VNode {
     return div('ui', [
         div('.ui.rating', stars(score)),
-        (sum) ? span('.rating-count', ['(' + sum + ')']) : '(0)'
+        (sum) ? span('.rating-count', ['(' + sum + ')']) : ''
     ]);
 
 }

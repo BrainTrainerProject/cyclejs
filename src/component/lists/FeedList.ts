@@ -1,30 +1,32 @@
 import xs, { Stream } from 'xstream';
 import { div, DOMSource, p, VNode } from '@cycle/dom';
 import { StateSource } from 'cycle-onionify';
-import { ListState, StateList } from '../StateList';
+import { ListState, StateList } from './StateList';
 import isolate from '@cycle/isolate';
 import { HTTPSource } from '@cycle/http';
 import flattenSequentially from 'xstream/extra/flattenSequentially';
 import concat from 'xstream/extra/concat';
-import { CommentItem } from "../../comments/list/CommentItem";
-import {
-    CommentRepository,
-    CommentRepositoryAction,
-    CommentRepositorySinks
-} from "../../../common/repository/CommentRepository";
-import { HttpRequest } from "../../../common/api/HttpRequest";
-import { Utils } from "../../../common/Utils";
+import { CommentItem } from "../comments/list/CommentItem";
+import { HttpRequest } from "../../common/api/HttpRequest";
+import { Utils } from "../../common/Utils";
+import { FeedRepository, FeedRepositoryAction, FeedRepositorySinks } from "../../common/repository/FeedRepository";
+import { FeedItem } from "./FeedItem";
 
 
 export enum ActionType {
-    GET_BY_SET_ID = 'load-comments-by-set'
+    GET_OWN = 'load-own-feed',
+    GET_BY_ID = 'load-feed-by-id'
 }
 
-export const CommentListAction = {
+export const FeedListAction = {
 
-    GetBySetId: (setId: string) => ({
-        type: ActionType.GET_BY_SET_ID,
-        setId: setId
+    GetByOwn: () => ({
+        type: ActionType.GET_OWN
+    }),
+
+    GetById: (id: string) => ({
+        type: ActionType.GET_BY_ID,
+        id: id
     })
 
 };
@@ -48,25 +50,18 @@ export type Sinks = {
     profileClick$: Stream<object>;
 };
 
-
-function listIntents(action$: Stream<any>): Stream<any> {
-
-    const showList$ = xs.never();
-
-    return xs.merge(showList$).remember();
-
-}
-
 interface IntentSinks {
-    commentsLoaded$: Stream<any>;
+    ownFeedLoaded$: Stream<any>;
+    byIdFeedLoaded$: Stream<any>;
 }
 
-function intent(commentRepository: CommentRepositorySinks): IntentSinks {
+function intent(commentRepository: FeedRepositorySinks): IntentSinks {
 
     const response = commentRepository.response;
 
     return {
-        commentsLoaded$: response.getCommentBySetIdResponse$.debug('Request CRA')
+        ownFeedLoaded$: response.getOwnFeedResponse$.debug('FEED RESPONSE'),
+        byIdFeedLoaded$: response.getByIdFeedResponse$
     };
 
 }
@@ -117,8 +112,8 @@ function reducer(intent: IntentSinks): Stream<any> {
             });
     }
 
-    const fillListReducer$ = xs.merge(intent.commentsLoaded$.debug('ITEMMMSSMSMSMS'))
-        .map(s => concat(clearSets$, fillListByResponse$(xs.of(s)).debug('FILLLLLLLLLLLLLLLLLL'))).flatten();
+    const fillListReducer$ = xs.merge(xs.merge(intent.ownFeedLoaded$, intent.byIdFeedLoaded$))
+        .map(s => concat(clearSets$, fillListByResponse$(xs.of(s)))).flatten();
 
     return xs.merge(initReducer$, fillListReducer$);
 
@@ -136,18 +131,33 @@ function commentsListView(items$): Stream<VNode> {
         .filter(items => (items && items.length > 0))
         .map(items => div('.ui.grid', items));
 
-    return xs.merge(loading$, emptyList$, list$);
+    return xs.merge(loading$, emptyList$, list$) as Stream<VNode>;
 
 }
 
-export function CommentsList(sources: Sources, action$: Stream<any>): Sinks {
+function listActions(action$: Stream<any>) {
 
-    const commentsRepository = CommentRepository(sources as any,
-        action$.map(action => CommentRepositoryAction.GetBySetId(action.setId) as any).debug('Request CRA')
-    );
+    const actionFilter = (type: ActionType) => {
+        return action$
+            .filter(action => !!action.type)
+            .filter(action => action.type === type)
+    };
 
-    const listSinks = isolate(StateList, 'list')(sources, CommentItem);
-    const reducer$ = reducer(intent(commentsRepository));
+    const loadOwnFeeds$ = actionFilter(ActionType.GET_OWN)
+        .map(action => FeedRepositoryAction.GetOwn());
+
+    const loadFeedById$ = actionFilter(ActionType.GET_BY_ID)
+        .map(action => FeedRepositoryAction.GetById(action.id));
+
+    return xs.merge(loadOwnFeeds$, loadFeedById$);
+}
+
+export function FeedList(sources: Sources, action$: Stream<any>): Sinks {
+
+    const feedRepository = FeedRepository(sources as any, listActions(action$));
+
+    const listSinks = isolate(StateList, 'list')(sources, FeedItem);
+    const reducer$ = reducer(intent(feedRepository));
 
     const profileClick$ = listSinks.callback$
         .filter(callback => callback.type === 'profile-click')
@@ -155,7 +165,7 @@ export function CommentsList(sources: Sources, action$: Stream<any>): Sinks {
 
     return {
         DOM: commentsListView(listSinks.DOM),
-        HTTP: xs.merge(commentsRepository.HTTP),
+        HTTP: xs.merge(feedRepository.HTTP),
         onion: xs.merge(reducer$, listSinks.reducer),
         profileClick$: profileClick$
     };

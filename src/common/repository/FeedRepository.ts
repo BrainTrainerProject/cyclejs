@@ -1,43 +1,47 @@
-import {Sources} from '../interfaces';
-import xs, {Stream} from 'xstream';
-import {createGetRequest} from '../api/ApiHelper';
-import {RootRepositorySinks, RootResponseSinks as RootResponseSinks} from './Repository';
+import { Sources } from '../interfaces';
+import xs, { Stream } from 'xstream';
+import { createGetRequest } from '../api/ApiHelper';
+import { filterActionFromRequest$, RootRepositorySinks, RootResponseSinks as RootResponseSinks } from './Repository';
 
 export enum RequestMethod {
-    GET_FEED = 'get-feed'
+    GET_OWN = 'get-own-feed',
+    GET_BY_ID = 'get-feed-by-id'
 }
 
-export type Action = GetFeed;
+export const FeedRepositoryAction = {
 
-export type GetFeed = {
-    type: RequestMethod.GET_FEED,
-    setId: string
+    GetOwn: () => ({
+        type: RequestMethod.GET_OWN
+    }),
+
+    GetById: (id: String) => ({
+        type: RequestMethod.GET_BY_ID,
+        id: id
+    })
+
 };
 
+export interface FeedRepositorySinks extends RootRepositorySinks {
+    response: ResponseSinks
+}
+
 export interface ResponseSinks extends RootResponseSinks {
-    getFeedResponse$: Stream<any>;
+    getOwnFeedResponse$: Stream<any>;
+    getByIdFeedResponse$: Stream<any>;
 }
 
-const API_URL = '/set';
+const API_URL = '/activity';
 
-export function FeedRepository(sources: Sources, action$: Stream<Action>): RootRepositorySinks {
-    return {
-        HTTP: requests(sources, action$),
-        response: responses(sources)
-    };
-}
 
-function requests(sources: Sources, action$: Stream<Action>): Stream<any> {
+function requests(sources: Sources, action$: Stream<any>): Stream<any> {
 
-    function filterActionFromState$(type: RequestMethod): Stream<any> {
-        return action$
-            .filter(action => action.type === type);
-    }
+    const getOwnFeed$ = filterActionFromRequest$(action$, RequestMethod.GET_OWN)
+        .map(request => createGetRequest(API_URL+ '/1', RequestMethod.GET_OWN));
 
-    const getFeed$ = filterActionFromState$(RequestMethod.GET_FEED)
-        .map(request => createGetRequest(API_URL, RequestMethod.GET_FEED));
+    const getById$ = filterActionFromRequest$(action$, RequestMethod.GET_BY_ID)
+        .map(request => createGetRequest(API_URL, RequestMethod.GET_OWN));
 
-    return xs.merge(getFeed$);
+    return xs.merge(getOwnFeed$, getById$);
 
 }
 
@@ -45,8 +49,23 @@ function responses(sources: Sources): ResponseSinks {
 
     const {HTTP} = sources;
 
+    const getOwnFeedResponse$ = HTTP.select(RequestMethod.GET_OWN)
+        .flatten()
+        .map(({text}) => JSON.parse(text));
+
+    const getByIdFeedResponse$ = HTTP.select(RequestMethod.GET_BY_ID)
+        .flatten();
+
     return {
-        getFeedResponse$: xs.never()
+        getOwnFeedResponse$: getOwnFeedResponse$,
+        getByIdFeedResponse$: getByIdFeedResponse$
     };
 
+}
+
+export function FeedRepository(sources: Sources, action$: Stream<any>): FeedRepositorySinks {
+    return {
+        HTTP: requests(sources, action$),
+        response: responses(sources)
+    };
 }

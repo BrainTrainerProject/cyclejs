@@ -140,7 +140,11 @@ export default function Comments(sources: CommentsSources, props: CommentsProps)
     return {
         DOM: view(state$, ratingProxy$, commentsList.DOM.debug('COMMENTS LIST VIEW')),
         onion: xs.merge(models.reducer$, commentsList.onion),
-        HTTP: xs.merge(commentRepository.HTTP, commentsList.HTTP)
+        HTTP: xs.merge(commentRepository.HTTP, commentsList.HTTP),
+        router: commentsList.profileClick$.map(id => {
+            console.log("Profile Click")
+            return '/profile/' + id
+        })
     };
 }
 
@@ -202,103 +206,6 @@ function view(state$, ratingProxy$, comments$): Stream<VNode> {
                 ]),
                 errorMessage(state),
                 comments,
-
-                // COMMENTS LIST
-                div('.ui.grid', [
-                    /* Left */,
-                    div('.sixteen.wide.column', [
-                        div('.ui.middle.aligned.divided.list', [
-                            div('.item', [
-                                div('.ui.divider'),
-                                div('.right.floated.content', [
-                                    div('.ui', {
-                                        'attrs': {
-                                            'className': 'ui'
-                                        },
-                                        'style': {
-                                            'name': 'style',
-                                            'value': 'padding: .75em 0 .25em .5em;'
-                                        }
-                                    }, [`49min`])
-                                ]),
-                                div('.ui.horizontal.list', [
-                                    div('.item', [
-                                        img('.ui.mini.circular.image', {
-                                            'attrs': {
-                                                'src': 'https://semantic-ui.com/images/avatar2/small/molly.png',
-                                                'className': 'ui mini circular image'
-                                            }
-                                        }),
-                                        div('.content', [
-                                            div('.ui.sub.header', [`Molly`])
-                                        ])
-                                    ]),
-                                    div('.item', [
-                                        i('.right.angle.icon.divider')
-                                    ]),
-                                    div('.item', [`Rating`])
-                                ]),
-                                div('.ui.justified.container', {
-                                    'attrs': {
-                                        'className': 'ui justified container'
-                                    },
-                                    'style': {
-                                        'name': 'style',
-                                        'value': 'font-size: 14px !important; padding-top: 15px; !important'
-                                    }
-                                }, [
-                                    p([`Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa strong. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede link mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi.`])
-                                ])
-                            ])
-                        ])
-                    ]),
-                    div('.sixteen.wide.column', [
-                        div('.ui.middle.aligned.divided.list', [
-                            div('.item', [
-                                div('.ui.divider'),
-                                div('.right.floated.content', [
-                                    div('.ui', {
-                                        'attrs': {
-                                            'className': 'ui'
-                                        },
-                                        'style': {
-                                            'name': 'style',
-                                            'value': 'padding: .75em 0 .25em .5em;'
-                                        }
-                                    }, [`49min`])
-                                ]),
-                                div('.ui.horizontal.list', [
-                                    div('.item', [
-                                        img('.ui.mini.circular.image', {
-                                            'attrs': {
-                                                'src': 'https://semantic-ui.com/images/avatar2/small/molly.png',
-                                                'className': 'ui mini circular image'
-                                            }
-                                        }),
-                                        div('.content', [
-                                            div('.ui.sub.header', [`Molly`])
-                                        ])
-                                    ]),
-                                    div('.item', [
-                                        i('.right.angle.icon.divider')
-                                    ]),
-                                    div('.item', [`Rating`])
-                                ]),
-                                div('.ui.justified.container', {
-                                    'attrs': {
-                                        'className': 'ui justified container'
-                                    },
-                                    'style': {
-                                        'name': 'style',
-                                        'value': 'font-size: 14px !important; padding-top: 15px;'
-                                    }
-                                }, [
-                                    p([`Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa strong. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede link mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi.`])
-                                ])
-                            ])
-                        ])
-                    ])
-                ])
             ])
         });
 }
