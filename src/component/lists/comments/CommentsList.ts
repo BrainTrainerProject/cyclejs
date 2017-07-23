@@ -1,17 +1,20 @@
 import xs, { Stream } from 'xstream';
-import { div, DOMSource, VNode } from '@cycle/dom';
+import { div, DOMSource, p, VNode } from '@cycle/dom';
 import { StateSource } from 'cycle-onionify';
 import { ListState, StateList } from '../StateList';
 import isolate from '@cycle/isolate';
 import { HTTPSource } from '@cycle/http';
 import flattenSequentially from 'xstream/extra/flattenSequentially';
 import concat from 'xstream/extra/concat';
-import { RequestMethod as NotecardRequestMethod, ResponseSinks } from '../../../common/repository/NotecardRepository';
-import { RootRepositorySinks } from '../../../common/repository/Repository';
 import { CommentItem } from "../../comments/list/CommentItem";
-import { CommentRepository, CommentRepositorySinks } from "../../../common/repository/CommentRepository";
+import {
+    CommentRepository,
+    CommentRepositoryAction,
+    CommentRepositorySinks
+} from "../../../common/repository/CommentRepository";
 import { HttpRequest } from "../../../common/api/HttpRequest";
 import { Utils } from "../../../common/Utils";
+import { SetRepository, SetRepositoryAction, SetRepositorySinks } from "../../../common/repository/SetRepository";
 
 
 export enum ActionType {
@@ -47,7 +50,6 @@ export type Sinks = {
 };
 
 
-
 function listIntents(action$: Stream<any>): Stream<any> {
 
     const showList$ = xs.never();
@@ -57,15 +59,15 @@ function listIntents(action$: Stream<any>): Stream<any> {
 }
 
 interface IntentSinks {
-    commentsLoaded$: Stream<any>;
+    setLoaded$: Stream<any>;
 }
 
-function intent(commentRepository: CommentRepositorySinks): IntentSinks {
+function intent(commentRepository: SetRepositorySinks): IntentSinks {
 
     const response = commentRepository.response;
 
     return {
-        commentsLoaded$: response.getCommentBySetIdResponse$.debug('GET COMMENT')
+        setLoaded$: response.getSetById$
     };
 
 }
@@ -91,46 +93,68 @@ function reducer(intent: IntentSinks): Stream<any> {
         list: []
     }));
 
-    function fillListByResponse$(stream$: Stream<any>): Stream<any> {
-        return stream$.map(array => xs.fromArray(array))
-            .compose(flattenSequentially)
-            .map(item => (state) => {
-                console.log('ITEM');
-                console.log(item);
-                // Verzögerung notwendig, sonst kommt es zu 'race condition' mit dem vdom$
-                Utils.syncDelay(1);
-
-                return ({
-                    ...state,
-                    list: state.list.concat({
+    const setLoaded$ = intent.setLoaded$
+        .map(set => (state) => {
+            console.log("LOAD SET");
+            console.log(state);
+            console.log(set);
+            function generateList(valuations: string[]) {
+                let list = [];
+                valuations.forEach(value =>
+                    list.push({
                         key: Date.now(),
-                        item: {...item}
+                        item: {
+                            id: value
+                        }
                     })
-                });
-            });
-    }
+                );
+                return list;
+            }
 
-    const fillListReducer$ = xs.merge(intent.commentsLoaded$.debug('ITEMMMSSMSMSMS'))
-        .map(s => concat(clearSets$, fillListByResponse$(xs.of(s)).debug('FILLLLLLLLLLLLLLLLLL'))).flatten();
+            return {
+               ...state,
+               list: generateList(set.valuations)
+           }
+        });
 
-    return xs.merge(initReducer$, fillListReducer$);
+    return xs.merge(initReducer$, setLoaded$).debug('COMMENTS LIST');
+}
+
+function commentsListView(items$: Stream<VNode[]>): Stream<VNode> {
+
+    const loading$ = xs.of(div('.ui.column', p(['Loading...'])));
+
+    const emptyList$ = items$
+        .filter(items => !items || (items && items.length === 0))
+        .mapTo(div('.ui.column', p([''])));
+
+    const list$ = items$
+        .filter(items => (items && items.length > 0))
+        .map(items => div('.ui.grid', items));
+
+    return xs.merge(loading$, emptyList$, list$);
+
 }
 
 export function CommentsList(sources: Sources, action$: Stream<any>): Sinks {
 
-    const commentsRepository = CommentRepository(sources as any, xs.never());
+    const setRepository = SetRepository(sources as any, action$.map(action => SetRepositoryAction.GetSet(action.setId)));
+
+    const commentsRepository = CommentRepository(sources as any,
+        action$.map(action => CommentRepositoryAction.GetBySetId(action.setId) as any).debug('XXXXXXXXXXXXXX')
+    );
 
     const listSinks = isolate(StateList, 'list')(sources, CommentItem);
-    const reducer$ = reducer(intent(commentsRepository));
+    const reducer$ = reducer(intent(setRepository));
 
     const profileClick$ = listSinks.callback$
         .filter(callback => callback.type === 'profile-click')
         .map(callback => callback.item);
 
     return {
-        DOM: xs.of(div(['{{CommentsList}}'])),
-        HTTP: xs.merge(commentsRepository.HTTP),
-        onion: reducer$,
+        DOM: commentsListView(listSinks.DOM),
+        HTTP: xs.merge(commentsRepository.HTTP, setRepository.HTTP),
+        onion: xs.merge(reducer$, listSinks.reducer),
         profileClick$: profileClick$
     };
 }

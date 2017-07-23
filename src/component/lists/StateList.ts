@@ -1,8 +1,9 @@
-import xs, { Stream } from 'xstream';
-import { div, DOMSource, p, VNode } from '@cycle/dom';
+import { DOMSource } from '@cycle/dom';
 import { StateSource } from 'cycle-onionify';
 import { Component } from '../../common/interfaces';
 import debounce from 'xstream/extra/debounce';
+import { StateListItemSinks } from "./StateListItem";
+import isolate from "@cycle/isolate";
 
 export type ListState = Array<{ key: string, item: any }>
 export type Reducer = (prev?: ListState) => ListState | undefined;
@@ -12,47 +13,27 @@ export type Sources = {
     onion: StateSource<ListState>;
 };
 
-export type Sinks = {
-    DOM: Stream<VNode>;
-    callback$: Stream<any>;
-};
-
-function view(itemVNodes: Array<VNode>): Stream<VNode> {
-
-    const items$ = xs.of(itemVNodes);
-
-    const emptyList$ = items$
-        .filter(items => !items || (items && items.length === 0))
-        .mapTo(div('.ui.column', p(['Keine Einträge vorhanden'])));
-
-    const list$ = items$
-        .filter(items => (items && items.length > 0))
-        .map(items => {
-            return div('.ui.three.column.doubling.stackable.grid',
-                items
-            );
-        });
-
-    return xs.merge(emptyList$, list$);
-}
+export type Sinks = StateListItemSinks
 
 export function StateList(sources: Sources, itemComponent: Component): Sinks {
 
     const items = sources.onion.toCollection(itemComponent)
         .uniqueBy(s => s.key)
-        .isolateEach(key => key)
+        .isolateEach(key => 'item')
         .build(sources);
 
     const vdom$ = items.pickCombine('DOM')
         .startWith([])
-        .compose(debounce(10))
-        .map(view)
-        .flatten();
+        .compose(debounce(10));
 
     const callback$ = items.pickMerge('callback$');
+    const http$ = items.pickMerge('HTTP');
+    const reducer$ = items.pickMerge('reducer').debug('statelist reducer');
 
     return {
         DOM: vdom$,
+        HTTP: http$,
+        reducer: reducer$,
         callback$: callback$
     };
 

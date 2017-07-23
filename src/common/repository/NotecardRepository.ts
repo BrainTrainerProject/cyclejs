@@ -1,7 +1,7 @@
-import {Sources} from '../interfaces';
-import xs, {Stream} from 'xstream';
-import {createDeleteRequest, createGetRequest, createPostRequest, createPutRequest} from '../api/ApiHelper';
-import {defaultResponseHelper, RootRepositorySinks, RootResponseSinks as RootResponseSinks} from './Repository';
+import { Sources } from '../interfaces';
+import xs, { Stream } from 'xstream';
+import { createDeleteRequest, createGetRequest, createPostRequest, createPutRequest } from '../api/ApiHelper';
+import { defaultResponseHelper, RootRepositorySinks, RootResponseSinks as RootResponseSinks } from './Repository';
 import flattenConcurrently from 'xstream/extra/flattenConcurrently';
 import debounce from 'xstream/extra/debounce';
 
@@ -65,10 +65,6 @@ function requests(sources: Sources, action$: Stream<Action>): Stream<any> {
     // TODO überrüfen was für eine Action hier ankommt
     function filterActionFromState$(type: RequestMethod): Stream<any> {
         return action$
-            .map(action => {
-                console.log('NR - Action Recevied: ', action);
-                return action;
-            })
             .filter(action => action.type === type);
     }
 
@@ -84,15 +80,14 @@ function requests(sources: Sources, action$: Stream<Action>): Stream<any> {
         })
         .map(request => createGetRequest('/set/' + (request as GetNotecardsFromSet).setId,
             RequestMethod.GET_NOTECARDS_FROM_SET)
-        ).debug('NR - GET NOTECARDS FROM SET');
+        );
 
     // Get from sets array
     const getNotecardsFromSetArray$ = defaultResponseHelper(sources, RequestMethod.GET_NOTECARDS_FROM_SET)
         .map(response => response.notecard)
         .map(notecards => xs.fromArray(notecards)
             .map(id => createGetRequest(API_URL + '/' + id, RequestMethod.BY_ID + id))
-        ).flatten()
-        .debug('NR - GET NOTECAARD FROM ARRAY');
+        ).flatten();
 
     // Add to set
     const addToSet$ = filterActionFromState$(RequestMethod.ADD_TO_SET)
@@ -121,10 +116,6 @@ function responses(sources: Sources): ResponseSinks {
         .compose(flattenConcurrently)
         .filter(res => !!res.request.category)
         .filter(res => {
-
-            console.log('RES');
-            console.log(res.request.category);
-
             const category = res.request.category;
             const idLength = RequestMethod.BY_ID.length;
             return category.substr(0, idLength) === RequestMethod.BY_ID && category.length > idLength;
@@ -132,7 +123,7 @@ function responses(sources: Sources): ResponseSinks {
         .map(({text}) => JSON.parse(text))
         .fold((list, x) => list.concat(x), [])
         .compose(debounce(100))
-        .debug('NR - Response Get NOTECARDS FROM SET');
+        .debug("NotecardsSet response");
 
     return {
         getNotecardsFromSet$

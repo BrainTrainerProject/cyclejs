@@ -1,5 +1,5 @@
 import xs, { Stream } from 'xstream';
-import { DOMSource, VNode } from '@cycle/dom';
+import { div, DOMSource, p, VNode } from '@cycle/dom';
 import { StateSource } from 'cycle-onionify';
 import { ListState, StateList } from '../StateList';
 import isolate from '@cycle/isolate';
@@ -46,6 +46,24 @@ export type Sinks = {
     itemClick$: Stream<object>;
 };
 
+function listView(items$): Stream<VNode> {
+
+    const loading$ = xs.of(div('.ui.column', p(['Loading...'])));
+
+    const emptyList$ = items$
+        .filter(items => !items || (items && items.length === 0))
+        .mapTo(div('.ui.column', p(['Keine Einträge vorhanden'])));
+
+    const list$ = items$
+        .filter(items => (items && items.length > 0))
+        .map(items => div('.ui.three.column.doubling.stackable.grid',
+                items
+            )
+        );
+
+    return xs.merge(loading$, emptyList$, list$)
+}
+
 export function NotecardListComponent(sources: Sources, action$: Stream<Action>): Sinks {
 
     const notecardRepository = NotecardRepository(sources as any, listIntents(action$));
@@ -57,7 +75,7 @@ export function NotecardListComponent(sources: Sources, action$: Stream<Action>)
         .map(callback => callback.item);
 
     return {
-        DOM: listSinks.DOM,
+        DOM: listView(listSinks.DOM),
         HTTP: xs.merge(notecardRepository.HTTP),
         onion: reducer$.debug("ONION NoteListComponent"),
         itemClick$: itemClick$

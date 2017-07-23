@@ -3,6 +3,7 @@ import { a, div, DOMSource, i, img, span, VNode } from '@cycle/dom';
 import { StateSource } from 'cycle-onionify';
 import { Utils } from '../../common/Utils';
 import { Rating } from "../../common/ui/Rating";
+import { StateListItemSinks } from "./StateListItem";
 
 const ID_ITEM = '.card-clicked';
 const ID_IMPORT = '.card-import';
@@ -30,7 +31,7 @@ export type Sinks = {
     callback$: Stream<any>;
 };
 
-export function CardItem(sources: Sources): Sinks {
+export function CardItem(sources: Sources): StateListItemSinks {
 
     const state$ = sources.onion.state$;
 
@@ -41,6 +42,8 @@ export function CardItem(sources: Sources): Sinks {
 
     return {
         DOM: vdom$,
+        HTTP: xs.never(),
+        reducer: xs.never(),
         callback$: reducer.callback$
     };
 
@@ -86,9 +89,12 @@ function model(actions: any, state$: Stream<any>): any {
 }
 
 function cardView(state$: Stream<any>): any {
+
+
     return state$.map(state => {
 
         const item = state.item;
+        console.log("CardItem CC", state)
 
         return div('.column', [
             div('.ui.card.fluid', [
