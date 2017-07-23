@@ -9,15 +9,14 @@ import { State as ListState } from '../../lists/cards/CardList';
 import isolate from '@cycle/isolate';
 import { div } from '@cycle/dom';
 import { VNode } from 'snabbdom/vnode';
-import { EditSetFormAction, SetForm } from '../../form/Set/SetForm';
-import { ModalAction } from 'cyclejs-modal';
-import NotecardForm, { CreateNotecardFormAction, EditNotecardFormAction } from '../../form/Notecard/Notecard';
 import { SetRepository, SetRepositoryAction } from '../../../common/repository/SetRepository';
 import {
     ActionType as NotecardsActionType,
     NotecardListComponent,
     State as NotecardListState
 } from '../../lists/notecard/NotecardList';
+import { NotecardFormModal, SetFormModal } from "../../../common/Modals";
+import sampleCombine from "xstream/extra/sampleCombine";
 
 const Route = require('route-parser');
 
@@ -229,74 +228,43 @@ export default function SetPage(sources: any): any {
     const leftDOM$ = xs.combine(state$, notecardsComponent.DOM, commentSinks.DOM).map(viewLeft);
     const rightDOM$ = viewRight(state$);
 
-    /*const click$ = notecardSinks.action.filter(action => action.type === 'click')
-        .map(action => action.item);*/
-
     const editSet$ = openEditSetModal(action, state$);
-    //const editNotecard$ = openEditNotecardModal(click$, state$);
+    const editNotecard$ = openEditNotecardModal(notecardsComponent.itemClick$, state$);
 //    const showNotecard$ = showNotecardModal(show, state$)
-
-
-    const openCreateNotecardModal$ = action.createNotecardClicked$
-        .mapTo(state$.map(state => state.set._id))
-        .flatten()
-        .take(1)
-        .map(id => ({
-            type: 'open',
-            props: {
-                title: 'Notecard erstellen',
-                action: {
-                    type: 'create',
-                    setId: id
-                } as CreateNotecardFormAction
-            },
-            component: NotecardForm
-        } as ModalAction));
+    const openCreateNotecardModal$ = openCreateNoteCardModal(action, state$);
 
     return {
         DOM_LEFT: leftDOM$,
         DOM_RIGHT: rightDOM$,
         HTTP: xs.merge(notecardsComponent.HTTP, setRepository.HTTP, commentSinks.HTTP),
         onion: xs.merge(reducer$, notecardsComponent.onion, commentSinks.onion),
-        modal: xs.merge(openCreateNotecardModal$, editSet$),
+        modal: xs.merge(openCreateNotecardModal$, editSet$, editNotecard$),
         router: commentSinks.router
     };
 }
 
+function openCreateNoteCardModal(action, state$) {
+
+    return action.createNotecardClicked$
+        .compose(sampleCombine(state$))
+        .map(([event, state]) => NotecardFormModal.Create(state.setId));
+
+}
+
 function openEditNotecardModal(click$, state$) {
+
     return click$
-        .map(item => state$.map(state => ({
-            item,
-            user: state.user
-        })).take(1))
-        .flatten()
-        .filter(obj => obj.item.owner === obj.user._id)
-        .map(obj => obj.item)
-        .map(item => ({
-            type: 'open',
-            props: {
-                title: 'Notecard bearbeiten',
-                action: {
-                    type: 'edit',
-                    notecardId: item.id
-                } as EditNotecardFormAction
-            },
-            component: SetForm
-        } as ModalAction));
+        .compose(sampleCombine(state$))
+        .filter(([item, state]) => item.owner === state.user._id)
+        .map(([item, state]) => item._id)
+        .map(notecardId => NotecardFormModal.Edit(notecardId));
+
 }
 
 function openEditSetModal(action, state$) {
-    return action.editSetClicked$.mapTo(state$.map(state => state.set._id).take(1))
-        .flatten()
-        .map(id => ({
-            type: 'open',
-            props: {
-                title: 'Set bearbeiten',
-                action: {
-                    type: 'edit',
-                    setId: id
-                } as EditSetFormAction
-            },
-            component: SetForm
-        } as ModalAction));
+
+    return action.editSetClicked$
+        .compose(sampleCombine(state$))
+        .map(([event, state]) => SetFormModal.Edit(state.setId))
+
 }

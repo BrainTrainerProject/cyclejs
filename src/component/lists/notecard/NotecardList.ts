@@ -72,7 +72,7 @@ export function NotecardListComponent(sources: Sources, action$: Stream<Action>)
     const reducer$ = reducer(intent(notecardRepository));
 
     const itemClick$ = listSinks.callback$.filter(callback => callback.type === 'click')
-        .map(callback => callback.item);
+        .map(callback => callback.item).debug('ItemClick$');
 
     return {
         DOM: listView(listSinks.DOM),

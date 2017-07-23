@@ -127,11 +127,13 @@ function listIntent(action$: Stream<Action>): Stream<any> {
 
     function filterType(type: ActionType): Stream<any> {
         return action$
+            .debug('SetListAction')
+            .filter(action => !!action.type)
             .filter(action => action.type === type);
     }
 
     const ownSetsAction$ = filterType(ActionType.OWN)
-        .map(action => SetRepositoryAction.GetOwnSets);
+        .map(action => SetRepositoryAction.GetOwnSets());
 
     const getSetAction$ = filterType(ActionType.BY_ID)
         .map(action => SetRepositoryAction.GetSet(action.setId));

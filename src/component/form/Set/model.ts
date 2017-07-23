@@ -14,17 +14,18 @@ import { SetFormAction } from "./SetForm";
 import { GetSetApi, GetSetProps } from "../../../common/api/set/GetSet";
 import { DeleteSetApi, DeleteSetProps } from "../../../common/api/set/DeleteSet";
 import { UpdateSetApi } from "../../../common/api/set/UpdateSet";
+import { SetRepository, SetRepositoryAction, SetRepositorySinks } from "../../../common/repository/SetRepository";
 
 export function model(sources: any, state$: any, intent: any, formAction: SetFormAction) {
 
     const {HTTP} = sources;
 
+    const setRepository: SetRepositorySinks = SetRepository(sources, xs.never());
+
     const loadSetData$ = xs.of(formAction)
         .filter(action => action.type == 'edit')
         .map(action => action.setId)
-        .map(id => GetSetApi.buildRequest({
-            id: id
-        } as GetSetProps));
+        .map(setId => SetRepositoryAction.GetSet(setId));
 
     const setDataResponse$ = HTTP.select(GetSetApi.ID)
         .flatten()
@@ -108,7 +109,6 @@ export function model(sources: any, state$: any, intent: any, formAction: SetFor
     );
 
     // http
-
     const submitRequest$ = submitValid$
         .compose(sampleCombine(state$))
         .map(([submitEvent, state]) => state)
@@ -119,17 +119,13 @@ export function model(sources: any, state$: any, intent: any, formAction: SetFor
         .mapTo(state$.map(state => state.id))
         .flatten()
         .take(1)
-        .map(id => DeleteSetApi.buildRequest({
-            id: id
-        } as DeleteSetProps));
+        .map(id => SetRepositoryAction.Delete(id));
 
     // modal
-
     const closeModal$ = xs.merge(submitRequest$, intent.delete$)
         .mapTo({type: 'close'} as ModalAction);
 
     // router
-
     const goToSetsIfDelete$ = intent.delete$
         .mapTo('/start');
 
@@ -146,17 +142,10 @@ export function model(sources: any, state$: any, intent: any, formAction: SetFor
 function generateRequest(state): HttpRequest {
     switch (state.action.type) {
         case 'edit':
-
-            return UpdateSetApi.buildRequest({
-                id: state.id,
-                send: getSendValuesFromState(state)
-            });
+            return SetRepositoryAction.Edit(state.id, getSendValuesFromState(state));
 
         case 'create':
-
-            return PostSetApi.buildRequest(
-                getSendValuesFromState(state)
-            );
+            return SetRepositoryAction.Add(getSendValuesFromState(state));
 
     }
 }

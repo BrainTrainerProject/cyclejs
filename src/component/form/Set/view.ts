@@ -20,6 +20,7 @@ export const ERR_TITLE = 'err_title';
 export function view(state$: Stream<SetFormState>): Stream<VNode> {
     return state$
         .map(state => {
+            console.log('VIEW STATE', state);
             return getCreateForm(state);
         });
 }

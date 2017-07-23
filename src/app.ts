@@ -16,6 +16,7 @@ import { makeRouterDriver, RouterSource } from 'cyclic-router';
 import { Router } from './component/Router';
 import  xs from 'xstream';
 import { makeFilterDriver } from './driver/FilterDriver/index';
+import dropRepeats from "xstream/extra/dropRepeats";
 
 const config = require('./config.json');
 
@@ -46,7 +47,7 @@ function App(sources: AppSources): AppSinks {
 
     return {
         ...routerSinks,
-        HTTP: routerSinks.HTTP.debug('HTTP REQUEST'),
+        HTTP: routerSinks.HTTP.compose(dropRepeats()).debug('HTTP REQUEST'),
         DOM: view(routerSinks.DOM),
         auth0: routerSinks.auth0.debug('AUTH APP'),
         filter: xs.merge(routerSinks.filter.debug('Filter'), filterListener$)

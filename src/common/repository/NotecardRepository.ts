@@ -4,6 +4,8 @@ import { createDeleteRequest, createGetRequest, createPostRequest, createPutRequ
 import { defaultResponseHelper, RootRepositorySinks, RootResponseSinks as RootResponseSinks } from './Repository';
 import flattenConcurrently from 'xstream/extra/flattenConcurrently';
 import debounce from 'xstream/extra/debounce';
+import { isNullOrUndefined } from "util";
+import dropRepeats from "xstream/extra/dropRepeats";
 
 export enum RequestMethod {
     BY_ID = 'get-notecard-by-id',
@@ -13,7 +15,38 @@ export enum RequestMethod {
     DELETE = 'delete-notecard'
 }
 
-export type Action = GetById | GetNotecardsFromSet | AddToSet | Edit | Delete;
+export const NotecardRepositoryActions = {
+
+    GetById: (notecardId: string): GetById => ({
+        type: RequestMethod.BY_ID,
+        notecardId: notecardId
+    }),
+
+    GetNotecardsFromSet: (setId: string): GetNotecardsFromSet => ({
+        type: RequestMethod.GET_NOTECARDS_FROM_SET,
+        setId: setId
+    }),
+
+    AddToSet: (setId: string, notecard: NotecardEntity): AddToSet => ({
+        type: RequestMethod.ADD_TO_SET,
+        setId: setId,
+        notecard: notecard
+    }),
+
+    Edit: (notecardId: string, notecard: NotecardEntity): Edit => ({
+        type: RequestMethod.EDIT,
+        notecardId: notecardId,
+        notecard: notecard
+    }),
+
+    Delete: (notecardId: string) => ({
+        type: RequestMethod.DELETE,
+        notecardId: notecardId
+    })
+
+};
+
+export type NotecardRepositoryAction = GetById | GetNotecardsFromSet | AddToSet | Edit | Delete;
 
 export type GetById = {
     type: RequestMethod.BY_ID,
@@ -44,11 +77,16 @@ export type Delete = {
 
 export interface ResponseSinks extends RootResponseSinks {
     getNotecardsFromSet$: Stream<any>;
+    getNotecardByIdResponse$: Stream<any>;
+}
+
+export interface NotecardRepositorySinks extends RootRepositorySinks{
+    response: ResponseSinks
 }
 
 const API_URL = '/notecard';
 
-export function NotecardRepository(sources: Sources, action$: Stream<Action>): RootRepositorySinks {
+export function NotecardRepository(sources: Sources, action$: Stream<NotecardRepositoryAction>): NotecardRepositorySinks {
     return {
         HTTP: requests(sources, action$),
         response: responses(sources)
@@ -61,10 +99,12 @@ interface NotecardEntity {
     answer: string;
 }
 
-function requests(sources: Sources, action$: Stream<Action>): Stream<any> {
-    // TODO überrüfen was für eine Action hier ankommt
+function requests(sources: Sources, action$: Stream<NotecardRepositoryAction>): Stream<any> {
+    // TODO überrüfen was für eine NotecardRepositoryAction hier ankommt
     function filterActionFromState$(type: RequestMethod): Stream<any> {
         return action$
+            .debug('NotecardRepositoryAction')
+            .filter(action => !!action.type)
             .filter(action => action.type === type);
     }
 
@@ -74,10 +114,6 @@ function requests(sources: Sources, action$: Stream<Action>): Stream<any> {
 
     // Get notecards from set
     const getNotecardsFromSet$ = filterActionFromState$(RequestMethod.GET_NOTECARDS_FROM_SET)
-        .map(request => {
-            console.log(request);
-            return request;
-        })
         .map(request => createGetRequest('/set/' + (request as GetNotecardsFromSet).setId,
             RequestMethod.GET_NOTECARDS_FROM_SET)
         );
@@ -120,13 +156,20 @@ function responses(sources: Sources): ResponseSinks {
             const idLength = RequestMethod.BY_ID.length;
             return category.substr(0, idLength) === RequestMethod.BY_ID && category.length > idLength;
         })
+        .filter(({text}) => !!text)
         .map(({text}) => JSON.parse(text))
         .fold((list, x) => list.concat(x), [])
         .compose(debounce(100))
         .debug("NotecardsSet response");
 
+    const getNotecardByIdResponse$ = HTTP.select(RequestMethod.BY_ID)
+        .flatten()
+        .filter(({text}) => !!text)
+        .map(({text}) => JSON.parse(text));
+
     return {
-        getNotecardsFromSet$
+        getNotecardsFromSet$,
+        getNotecardByIdResponse$
     };
 
 }

@@ -2,7 +2,7 @@ import xs, { Stream } from "xstream";
 import { AppSinks, AppSources } from "../app";
 import { SwitchPathReturn } from "switch-path/lib/commonjs/types";
 import { makeAuth0Driver, protect } from "cyclejs-auth0";
-import StartPage from "./page/Start/StartPage";
+import StartPage from "./page/Start/start-page";
 import LoginPage from "./page/Login/LoginPage";
 import NotFoundPage from "./page/NotFound/NotFoundPage";
 import { ProtectedPage } from "./page/ProtectedPage";
