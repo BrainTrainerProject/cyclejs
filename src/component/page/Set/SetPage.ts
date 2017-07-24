@@ -36,7 +36,7 @@ export interface SetPageState extends State {
         id: string,
         title: string,
         description: string,
-        image: string,
+        photourl: string,
         notecards: string[]
     };
     rating: {
@@ -247,7 +247,7 @@ function openCreateNoteCardModal(action, state$) {
 
     return action.createNotecardClicked$
         .compose(sampleCombine(state$))
-        .map(([event, state]) => NotecardFormModal.Create(state.setId));
+        .map(([event, state]) => NotecardFormModal.Create(state.set._id));
 
 }
 
@@ -257,7 +257,8 @@ function openEditNotecardModal(click$, state$) {
         .compose(sampleCombine(state$))
         .filter(([item, state]) => item.owner === state.user._id)
         .map(([item, state]) => item._id)
-        .map(notecardId => NotecardFormModal.Edit(notecardId));
+        .map(notecardId => NotecardFormModal.Edit(notecardId))
+        .debug('SetsModal§§');
 
 }
 

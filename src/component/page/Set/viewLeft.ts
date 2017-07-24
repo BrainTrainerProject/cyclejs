@@ -4,6 +4,7 @@ import {Utils} from '../../../common/Utils';
 export function viewLeft([state, notecards, comments]) {
 
     const set = (state as SetPageState).set;
+    console.log('SetPage$', set);
 
     if (!set) {
         return ['Loading ...'];
@@ -21,7 +22,7 @@ export function viewLeft([state, notecards, comments]) {
                                 div('.image', [
                                     img({
                                         'attrs': {
-                                            'src': Utils.imageOrPlaceHolder(set.image)
+                                            'src': Utils.imageOrPlaceHolder(set.photourl)
                                         }
                                     })
                                 ])

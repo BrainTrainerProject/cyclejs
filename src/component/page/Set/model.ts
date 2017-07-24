@@ -2,9 +2,9 @@ import xs from "xstream";
 import { SetPageState } from "./SetPage";
 import { Utils } from "../../../common/Utils";
 import { ModalAction } from "cyclejs-modal";
-import NotecardForm, { CreateNotecardFormAction } from "../../form/Notecard/Notecard";
 import { GetPracticeApi, GetPracticeProps } from "../../../common/api/GetPractice";
-import { EditSetFormAction, SetForm } from "../../form/Set/set-form";
+import { SetForm } from "../../form/Set/set-form";
+import { EditSetFormAction } from "../../form/Set/set-form.actions";
 
 export function model(action: any, state$) {
 
@@ -74,7 +74,7 @@ function reducer(action: any) {
                 id: '',
                 title: '',
                 description: '',
-                image: Utils.imageOrPlaceHolder(null),
+                photourl: Utils.imageOrPlaceHolder(null),
                 notecards: []
             },
             rating: {
