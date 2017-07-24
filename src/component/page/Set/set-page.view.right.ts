@@ -1,5 +1,5 @@
-import {br, button, div} from '@cycle/dom';
-import {ID_NEW_NOTECARD_BTN, ID_RANDOM_NOTECARD_BTN} from './SetPage';
+import { br, button, div } from '@cycle/dom';
+import { ID_NEW_NOTECARD_BTN, ID_RANDOM_NOTECARD_BTN } from './set-page';
 
 export function viewRight(state$: any) {
 

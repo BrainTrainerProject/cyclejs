@@ -1,6 +1,6 @@
 import {Sources} from '../interfaces';
 import xs, {Stream} from 'xstream';
-import {defaultResponseHelper, RootRepositorySinks, ResponseSinks} from './Repository';
+import { defaultResponseHelper, RootRepositorySinks, RootResponseSinks } from './Repository';
 import {createGetRequest, createPutRequest} from '../api/ApiHelper';
 
 const API_URL = '/profile';
@@ -60,7 +60,7 @@ function requests(request$: Stream<Request>): Stream<any> {
     return xs.merge(getOwnProfile$, getProfileById$, updateProfile$);
 }
 
-function responses(sources: Sources): ResponseSinks {
+function responses(sources: Sources): RootResponseSinks {
 
     const defaultResponse = (id: string) => {
         return defaultResponseHelper(sources, id);

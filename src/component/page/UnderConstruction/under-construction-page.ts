@@ -1,19 +1,18 @@
 import { br, div, img, span } from "@cycle/dom";
-import { AppSinks, AppSources } from "../../../app";
+import { AppSources } from "../../../app";
 import xs from "xstream";
+
 const jwt = require("jwt-decode");
 
-export default function UnderConstructionPage(sources: AppSources): AppSinks {
+export default function UnderConstructionPage(sources: AppSources): any {
 
     const leftView$ = xs.of(cunstructionView());
     const rightView$ = xs.of(div());
 
-    const sinks = {
+    return {
         DOM_LEFT: leftView$,
         DOM_RIGHT: rightView$
     };
-
-    return sinks;
 }
 
 function cunstructionView() {

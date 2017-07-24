@@ -89,6 +89,8 @@ export interface SetRepositoryResponse extends RootResponseSinks {
     getSetById$: Stream<any>;
     getOwnSets$: Stream<any>;
     search$: Stream<any>;
+    updateSet$: Stream<any>;
+    deleteSet$: Stream<any>;
 }
 
 const API_URL = '/set';
@@ -162,14 +164,18 @@ function responses(sources: Sources): SetRepositoryResponse {
         return defaultResponseHelper(sources, id);
     };
 
-    const getSetById$ = defaultResponse(ActionType.BY_ID).debug('REPO SETFORM');
+    const getSetById$ = defaultResponse(ActionType.BY_ID);
     const getOwnSets$ = defaultResponse(ActionType.OWN_SETS);
     const search$ = defaultResponse(ActionType.SEARCH);
+    const updateSet$ = defaultResponse(ActionType.UPDATE);
+    const deleteSet$ = defaultResponse(ActionType.DELETE);
 
     return {
         getSetById$,
         getOwnSets$,
-        search$
+        search$,
+        deleteSet$,
+        updateSet$,
     };
 
 }

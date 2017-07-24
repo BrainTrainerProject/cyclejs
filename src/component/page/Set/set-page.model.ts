@@ -1,5 +1,5 @@
 import xs from "xstream";
-import { SetPageState } from "./SetPage";
+import { SetPageState } from "./set-page";
 import { Utils } from "../../../common/Utils";
 import { ModalAction } from "cyclejs-modal";
 import { GetPracticeApi, GetPracticeProps } from "../../../common/api/GetPractice";

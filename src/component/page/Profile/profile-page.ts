@@ -1,6 +1,6 @@
 import xs from 'xstream';
 import {div} from '@cycle/dom';
-import {view} from './view';
+import {view} from './profile-page.view';
 
 export default function ProfilePage(sources) {
 

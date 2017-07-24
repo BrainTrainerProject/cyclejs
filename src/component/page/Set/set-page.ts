@@ -2,8 +2,8 @@ import xs, { Stream } from 'xstream';
 import { Sinks, Sources, State } from '../../../common/interfaces';
 import { AppState } from '../../../app';
 import { StateSource } from 'cycle-onionify';
-import { viewRight } from './viewRight';
-import { viewLeft } from './viewLeft';
+import { viewRight } from './set-page.view.right';
+import { viewLeft } from './set-page.view.left';
 import Comments, { CommentsState } from '../../comments/Comments';
 import { State as ListState } from '../../lists/cards/CardList';
 import isolate from '@cycle/isolate';
@@ -11,17 +11,19 @@ import { div } from '@cycle/dom';
 import { VNode } from 'snabbdom/vnode';
 import { SetRepository, SetRepositoryActions } from '../../../common/repository/SetRepository';
 import {
-    ActionType as NotecardsActionType,
+    ActionType as NotecardsActionType, NotecardListActions,
     NotecardListComponent,
     State as NotecardListState
 } from '../../lists/notecard/NotecardList';
 import { NotecardFormModal, SetFormModal } from "../../../common/Modals";
 import sampleCombine from "xstream/extra/sampleCombine";
+import { NotecardRepository, NotecardRepositorySinks } from "../../../common/repository/NotecardRepository";
 
 const Route = require('route-parser');
 
 export const ID_NEW_NOTECARD_BTN = '.new-set-btn';
 export const ID_RANDOM_NOTECARD_BTN = '.random-notecard-btn';
+export const ID_NUMBER_NOTECARD_BTN = '.number-notecard-btn';
 export const ID_EDIT_SET_BTN = '.edit-set-btn';
 export const ID_RATING_BTN = '.new-set-btn';
 export const ID_RATING_FORM = '.rating-form';
@@ -83,7 +85,8 @@ function intent(sources, state$): any {
         getSetId$,
         createNotecardClicked$,
         showRandomNotecardClicked$,
-        editSetClicked$
+        editSetClicked$,
+
     };
 
 }
@@ -135,58 +138,25 @@ function httpResponseModel(actions: any): Stream<Reducer> {
             };
         });*/
 
-    /*const changeReducer$ = actions.httpChangesResponse$
+    /*const changeReducer$ = actions.updateNo
         .map(change => (state) => {
             return {
                 ...state,
                 list: updateListState(state, change)
             };
-        });
-
-    const addReducer$ = actions.httpResponseNotecards$
-        .map(notecard => (state) => {
-            return {
-                ...state,
-                list: addListState(state, notecard)
-            };
         });*/
+    /*
+        const addReducer$ = actions.httpResponseNotecards$
+            .map(notecard => (state) => {
+                return {
+                    ...state,
+                    list: addListState(state, notecard)
+                };
+            });*/
 
     return xs.merge(setReducer$);
 }
 
-function addListState(state, notecard): ListState {
-    // AddToSet
-    return state.list.concat({
-        key: String(Date.now()),
-        id: notecard._id,
-        title: notecard.title,
-        owner: notecard.owner,
-        showImport: false,
-        showRating: false
-    });
-}
-
-function updateListState(state, notecard): ListState {
-
-    // Update
-    for (let i in state.list) {
-        if (state.list[i]._id === notecard._id) {
-            state.list[i] = notecard;
-            return state;
-        }
-    }
-
-    return addListState(state, notecard);
-
-}
-
-function view(listVNode$: Stream<VNode>): Stream<VNode> {
-    return listVNode$.map(ulVNode =>
-        div([
-            ulVNode
-        ])
-    );
-}
 
 function setRepositoryIntents(action: any): Stream<any> {
 
@@ -210,8 +180,6 @@ function notecardRepositoryIntents(action: any): Stream<any> {
 export default function SetPage(sources: any): any {
 
     console.log('Set page');
-
-    const {router} = sources;
 
     const state$ = sources.onion.state$.debug('SETPAGE STATE');
     const action = intent(sources, state$);

@@ -7,6 +7,8 @@ import isolate from "@cycle/isolate";
 import SetListComponent, { SetListAction } from "../../lists/sets/SetList";
 
 export const ID_NEW_SET_BTN = '.new-set-btn';
+export const ID_RANDOM_PRACTISE = '.random-practice';
+export const ID_SET_PRACTISE = '.practise-practise';
 
 export default function StartPage(sources: AppSources): any {
 
@@ -17,6 +19,10 @@ export default function StartPage(sources: AppSources): any {
     const reducer = model(actions);
     const leftDOM$ = setsComponentSinks.DOM;
     const rightDOM$ = viewRight(state$);
+
+    // TEMP
+
+    // TEMP
 
     return {
         DOM_LEFT: leftDOM$,

@@ -9,7 +9,7 @@ import { HttpRequest } from '../../../common/api/HttpRequest';
 import concat from 'xstream/extra/concat';
 import { Utils } from '../../../common/Utils';
 import {
-    NotecardRepository,
+    NotecardRepository, NotecardRepositorySinks,
     RequestMethod as NotecardRequestMethod,
     ResponseSinks
 } from '../../../common/repository/NotecardRepository';
@@ -19,6 +19,13 @@ import { RootRepositorySinks } from '../../../common/repository/Repository';
 export enum ActionType {
     GET_BY_SET_ID = 'load-by-set'
 }
+
+export const NotecardListActions = {
+    GetBySetId: (setId) => ({
+        type: ActionType.GET_BY_SET_ID,
+        setId: setId
+    })
+};
 
 export type LoadNotecardsBySetIdAction = {
     type: ActionType.GET_BY_SET_ID;
@@ -46,6 +53,70 @@ export type Sinks = {
     itemClick$: Stream<object>;
 };
 
+// !!! ka
+
+
+function addListState(state, notecard): ListState {
+    // AddToSet
+    return state.list.concat({
+        key: String(Date.now()),
+        id: notecard._id,
+        title: notecard.title,
+        owner: notecard.owner,
+        showImport: false,
+        showRating: false
+    });
+}
+
+function httpNotecardResponseModel(repo: NotecardRepositorySinks) {
+
+    const {response} = repo;
+
+    const update$ = response.updateNotecard$
+        .map(notecard => (state) => ({
+            ...state,
+            notecardsComponent: {
+                ...state.notecardsComponent,
+                list: updateList(state.notecardsComponent.list, notecard)
+            }
+        }));
+
+    return xs.merge(update$);
+
+}
+
+function updateList(list, notecard) {
+    list.forEach(function(value, index, theArray) {
+        if(value.item._id === notecard._id) {
+            theArray[index].item = notecard;
+        }
+    });
+    return list;
+}
+
+function updateListState(state, notecard): ListState {
+
+    // Update
+    for (let i in state.list) {
+        if (state.list[i]._id === notecard._id) {
+            state.list[i] = notecard;
+            return state;
+        }
+    }
+
+    return addListState(state, notecard);
+
+}
+function view(listVNode$: Stream<VNode>): Stream<VNode> {
+    return listVNode$.map(ulVNode =>
+        div([
+            ulVNode
+        ])
+    );
+}
+
+// !!! ka
+
 function listView(items$): Stream<VNode> {
 
     const loading$ = xs.of(div('.ui.column', p(['Loading...'])));
@@ -57,7 +128,7 @@ function listView(items$): Stream<VNode> {
     const list$ = items$
         .filter(items => (items && items.length > 0))
         .map(items => div('.ui.three.column.doubling.stackable.grid',
-                items
+            items
             )
         );
 

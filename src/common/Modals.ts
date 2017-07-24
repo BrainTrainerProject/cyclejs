@@ -2,6 +2,8 @@ import { NotecardFormActions } from "../component/form/Notecard/notecard-form.ac
 import { NotecardForm } from "../component/form/Notecard/notecard-form";
 import { SetFormActions } from "../component/form/Set/set-form.actions";
 import { SetForm } from "../component/form/Set/set-form";
+import { PracticeFormActions } from "../component/form/Practise/practise-form.actions";
+import { PracticeForm } from "../component/form/Practise/practise-form";
 
 export const ModalActions = {
 
@@ -43,5 +45,15 @@ export const SetFormModal = {
         {action: SetFormActions.Edit(setId)},
         SetForm
     )
+
+};
+
+export const PractiseModal = {
+
+    Show: (notecardId: string) => ModalActions.Open(
+        'Notecard anzeigen',
+        {action: PracticeFormActions.Show(notecardId)},
+        PracticeForm
+    ),
 
 };

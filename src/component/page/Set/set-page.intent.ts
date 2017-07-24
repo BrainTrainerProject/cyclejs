@@ -1,6 +1,6 @@
 import {AppSources} from '../../../app';
 import xs from 'xstream';
-import { ID_EDIT_SET_BTN, ID_NEW_NOTECARD_BTN, ID_RANDOM_NOTECARD_BTN, ID_RATING_FORM } from './SetPage';
+import { ID_EDIT_SET_BTN, ID_NEW_NOTECARD_BTN, ID_RANDOM_NOTECARD_BTN, ID_RATING_FORM } from './set-page';
 import {GetSetApi} from '../../../common/api/set/GetSet';
 
 const Route = require('route-parser');

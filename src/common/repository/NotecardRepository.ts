@@ -4,7 +4,6 @@ import { createDeleteRequest, createGetRequest, createPostRequest, createPutRequ
 import { defaultResponseHelper, RootRepositorySinks, RootResponseSinks as RootResponseSinks } from './Repository';
 import flattenConcurrently from 'xstream/extra/flattenConcurrently';
 import debounce from 'xstream/extra/debounce';
-import { isNullOrUndefined } from "util";
 import dropRepeats from "xstream/extra/dropRepeats";
 
 export enum RequestMethod {
@@ -78,9 +77,11 @@ export type Delete = {
 export interface ResponseSinks extends RootResponseSinks {
     getNotecardsFromSet$: Stream<any>;
     getNotecardByIdResponse$: Stream<any>;
+    updateNotecard$: Stream<any>;
+    deleteNotecard$: Stream<any>;
 }
 
-export interface NotecardRepositorySinks extends RootRepositorySinks{
+export interface NotecardRepositorySinks extends RootRepositorySinks {
     response: ResponseSinks
 }
 
@@ -153,6 +154,10 @@ function responses(sources: Sources): ResponseSinks {
 
     const {HTTP} = sources;
 
+    const defaultResponse = (id: string) => {
+        return defaultResponseHelper(sources, id);
+    };
+
     // Response notecards from set
     const getNotecardsFromSet$ = HTTP.select()
         .compose(flattenConcurrently)
@@ -173,9 +178,15 @@ function responses(sources: Sources): ResponseSinks {
         .filter(({text}) => !!text)
         .map(({text}) => JSON.parse(text));
 
+    const updateNotecard$ = defaultResponse(RequestMethod.EDIT);
+    const deleteNotecard$ = defaultResponse(RequestMethod.DELETE);
+
     return {
         getNotecardsFromSet$,
-        getNotecardByIdResponse$
+        getNotecardByIdResponse$,
+
+        updateNotecard$,
+        deleteNotecard$
     };
 
 }
