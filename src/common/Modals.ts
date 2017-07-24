@@ -2,8 +2,8 @@ import { NotecardFormActions } from "../component/form/Notecard/notecard-form.ac
 import { NotecardForm } from "../component/form/Notecard/notecard-form";
 import { SetFormActions } from "../component/form/Set/set-form.actions";
 import { SetForm } from "../component/form/Set/set-form";
-import { PracticeFormActions } from "../component/form/Practise/practise-form.actions";
-import { PracticeForm } from "../component/form/Practise/practise-form";
+import { PractiseFormActions } from "../component/form/Practise/practise-form.actions";
+import { PractiseForm } from "../component/form/Practise/practise-form";
 
 export const ModalActions = {
 
@@ -50,10 +50,35 @@ export const SetFormModal = {
 
 export const PractiseModal = {
 
-    Show: (notecardId: string) => ModalActions.Open(
-        'Notecard anzeigen',
-        {action: PracticeFormActions.Show(notecardId)},
-        PracticeForm
-    ),
+        ShowNotecard: (notecardId: string) => ModalActions.Open(
+            'Notecard anzeigen',
+            {action: PractiseFormActions.ShowNotecard(notecardId)},
+            PractiseForm
+        ),
 
-};
+        Practise: () => ModalActions.Open(
+            'Übung',
+            {action: PractiseFormActions.Practise()},
+            PractiseForm
+        ),
+
+        PractiseAmount: (amount: number) => ModalActions.Open(
+            'Übung',
+            {action: PractiseFormActions.PractiseAmount(amount)},
+            PractiseForm
+        ),
+
+        PractiseBySet: (setId: string) => ModalActions.Open(
+            'Übung',
+            {action: PractiseFormActions.PractiseBySet(setId)},
+            PractiseForm
+        ),
+    
+        PractiseBySetAmount: (setId: string, amount: number) => ModalActions.Open(
+            'Übung',
+            {action: PractiseFormActions.PractiseBySetAmount(setId, amount)},
+            PractiseForm
+        )
+
+    }
+;

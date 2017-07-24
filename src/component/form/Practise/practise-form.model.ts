@@ -1,150 +1,162 @@
 import xs, { Stream } from "xstream";
 import { Reducer } from "../../../common/interfaces";
 import { inputErrorState, inputStream } from "../../../common/GuiUtils";
-import { Utils } from "../../../common/Utils";
 import { ModalAction } from "cyclejs-modal";
-import { Mode, NotecardFormState } from "./notecard-form";
-import { ID_ANSWER, ID_TASK, ID_TITLE } from "./notecard-form.view";
+import { NotecardFormState } from "../Notecard//notecard-form";
+import { ID_ANSWER, ID_TASK, ID_TITLE } from "../Notecard//notecard-form.view";
 import sampleCombine from "xstream/extra/sampleCombine";
+import { ActionType } from "../Notecard//notecard-form.actions";
+import { IntentSinks } from "./practise-form.intent";
 import {
-    NotecardRepository,
-    NotecardRepositoryAction,
-    NotecardRepositoryActions,
-    NotecardRepositorySinks
-} from "../../../common/repository/NotecardRepository";
-import { IntentSinks } from "./notecard-form.intent";
-import { ActionType } from "./notecard-form.actions";
+    PractiseRepository,
+    PractiseRepositoryActions,
+    PractiseRepositorySinks
+} from "../../../common/repository/PractiseRepository";
+import { Mode, PractiseFormState } from "./practise-form";
 
 
-function notecardRepositoryActions$(notecardRepositoryProxy$, actions, state$): Stream<any> {
+function practiseRepositoryActions$(submitProxy$, actions: IntentSinks, state$): Stream<any> {
 
-    const loadEditNotecard$ = actions.editNotecardAction$
-        .map(action => {
-            console.log('Action', action);
-            return NotecardRepositoryActions.GetById(action.notecardId)
-        });
 
-    const deleteNotecard$ = actions.delete$
-        .compose(sampleCombine(state$))
-        .map(([event, state]) => NotecardRepositoryActions.Delete(state.notecardId))
-
-    return xs.merge(notecardRepositoryProxy$, loadEditNotecard$, deleteNotecard$) as Stream<any>
+    return xs.merge(
+        actions.practiseAction$.map(action => PractiseRepositoryActions.Practise()).debug('practiseAction$'),
+        actions.practiseAmountAction$.map(({amount}) => PractiseRepositoryActions.PractiseByAmount(amount)).debug('practiseAmountAction$'),
+        actions.practiseBySetAction$.map(({setId}) => PractiseRepositoryActions.PractiseBySet(setId)).debug('practiseBySetAction$'),
+        actions.practiseBySetAmountAction$.map(({setId, amount}) => PractiseRepositoryActions.PractiseBySetAmount(setId, amount)).debug('practiseBySetAmountAction$'),
+        submitProxy$
+            .filter(state => state.mode === Mode.RESULT || state.mode === Mode.SKIP)
+            .map(state => {
+                const notecard = state.practices[state.practiceIndex];
+                const success = state.answer === notecard.answer;
+                return PractiseRepositoryActions.Evaluate([{notecard: notecard._id, success: success}]);
+            }))
 
 }
 
 export function model(sources, actions: IntentSinks, state$: any): any {
 
-    const notecardRepositoryProxy$: Stream<NotecardRepositoryAction> = xs.create();
-    const notecardRepository: NotecardRepositorySinks = NotecardRepository(sources,
-        notecardRepositoryActions$(notecardRepositoryProxy$, actions, state$)
+    const submitProxy$ = xs.create();
+    const practiseRepository: PractiseRepositorySinks = PractiseRepository(sources,
+        practiseRepositoryActions$(submitProxy$, actions, state$)
     );
 
-    // Reducer
-    const init$: Stream<Reducer> = xs.of(function initReducer(): NotecardFormState {
-        return {
-            mode: Mode.CREATE,
-            setId: '',
-            notecardId: '',
-            title: '',
-            task: '',
-            answer: '',
-            errors: [] as any
-        };
-    });
+    const init$ = xs.of((): PractiseFormState => ({
+        mode: Mode.PRACTICE,
+        practiceIndex: 0,
+        practices: [],
+        result: [],
+        showResult: false,
+        answer: '',
+        finish: false,
+        isLast: false
+    }));
 
-    const initActions$: Stream<Reducer> = xs.merge(actions.createNotecardAction$, actions.editNotecardAction$)
-        .map(action => action as any)
-        .map(action => (state) => {
-            console.log("InitAction$", action);
-            return {
-                ...state,
-                mode: (action.type === ActionType.EDIT) ? Mode.EDIT : Mode.CREATE,
-                setId: (!!action.setId) ? action.setId : '',
-                notecardId: (!!action.notecardId) ? action.notecardId : ''
-            };
-        });
-
-
-    const notecardReponseReducer$: Stream<Reducer> = notecardRepository.response.getNotecardByIdResponse$
+    const notecardReponseReducer$: Stream<Reducer> = practiseRepository.response.getGlobalReponse$
         .map(notecard => (state) => {
             console.log("notecardReponseReducer$", notecard);
             return {
                 ...state,
-                title: notecard.title,
-                task: notecard.task,
-                answer: notecard.answer
+                practiceIndex: 0,
+                practices: notecard,
+                result: [],
+                showResult: false,
+                answer: '',
+                finish: false,
+                isLast: false
             }
         });
 
-    const titleReducer$: Stream<Reducer> = inputStream(ID_TITLE, 'title', actions.inputTitle$);
-    const taskReducer$: Stream<Reducer> = inputStream(ID_TASK, 'task', actions.inputTask$);
+    const submitReducer$: Stream<Reducer> = actions.submit$
+        .map(s => (state) => manageSubmit(state));
+
+    const cancelReducer$: Stream<Reducer> = actions.submitCancel$
+        .map(s => (state) => ({
+            ...state,
+            mode: Mode.SKIP,
+            showResult: true,
+            answer: '',
+            errors: [],
+            isLast: state.practiceIndex + 1 === state.practices.length
+        }));
+
     const answerReducer$: Stream<Reducer> = inputStream(ID_ANSWER, 'answer', actions.inputAnswer$);
-
-    const submitValid$: Stream<Reducer> = actions.submit$
-        .map(submit => (state) => {
-            if (!state.title) {
-                state = inputErrorState(ID_TITLE, 'Titel eingeben!', state);
-            }
-
-            if (!state.task) {
-                state = inputErrorState(ID_TASK, 'Task eingeben!', state);
-            }
-
-            if (!state.answer) {
-                state = inputErrorState(ID_ANSWER, 'Antwort eingeben!', state);
-            }
-            return state;
-        });
 
     const reducer$ = xs.merge(
         init$,
-        initActions$,
-        titleReducer$,
-        taskReducer$,
+        submitReducer$,
+        cancelReducer$,
         answerReducer$,
-        submitValid$,
         notecardReponseReducer$
     );
 
-    // HTTP
-    const submitRequest$ = submitValid$
+    const submitRequest$ = xs.merge(actions.submit$, actions.submitCancel$)
         .compose(sampleCombine(state$))
-        .map(([submitEvent, state]) => state as NotecardFormState)
-        .filter(state => !Utils.jsonHasChilds(state.errors))
-        .map(state => buildRepositoryAction(state));
+        .map(([submitEvent, state]) => state as PractiseFormState);
 
-    notecardRepositoryProxy$.imitate(submitRequest$);
+    submitProxy$.imitate(submitRequest$);
+
+    const finishSubmit$ = submitRequest$
+        .filter(state => state.finish);
 
     // Modal
-    const closeModal$ = xs.merge(submitRequest$, actions.delete$)
+    const closeModal$ = xs.merge(finishSubmit$)
         .mapTo({type: 'close'} as ModalAction);
 
     return {
         onion: reducer$,
-        HTTP: notecardRepository.HTTP,
+        HTTP: practiseRepository.HTTP,
         modal: closeModal$
     };
 }
 
-function buildRepositoryAction(state: NotecardFormState) {
+function manageSubmit(state): PractiseFormState {
 
-    const currNotecardEntity = {
-        title: state.title,
-        task: state.task,
-        answer: state.answer
-    };
-    console.log('PASSED MODE CREATE', state);
-    switch (state.mode) {
+    const isResultShowing = state.showResult;
+    const sumPractises = state.practices.length;
+    const isLast = sumPractises === state.practiceIndex + 1;
 
-        case Mode.CREATE:
-            if (!state.setId) return 'Noteform Model: create error!';
-            console.log('PASSED MODE CREATE', state);
-            return NotecardRepositoryActions.AddToSet(state.setId, currNotecardEntity);
+    if (state.isLast) {
+        return {...state, finish: true}
+    }
 
-        case Mode.EDIT:
-            if (!state.notecardId) return 'Noteform Model: edit error!';
-            console.log('PASSED MODE EDIT', state);
-            return NotecardRepositoryActions.Edit(state.notecardId, currNotecardEntity);
+    if (isResultShowing) {
+        return showPractise()
+    } else {
+        return showResult()
+    }
+
+
+    function incIndex() {
+        if (state.practiceIndex + 1 >= sumPractises) {
+            return state.practiceIndex
+        } else {
+            return state.practiceIndex + 1;
+        }
+    }
+
+    function showPractise() {
+        return {
+            ...state,
+            mode: Mode.PRACTICE,
+            answer: '',
+            practiceIndex: incIndex(),
+            errors: [],
+            showResult: false
+        }
+    }
+
+    function showResult() {
+
+        if (!state.showResult && !state.answer) {
+            return inputErrorState(ID_ANSWER, 'Antwort eingeben!', state);
+        } else {
+            return {
+                ...state,
+                mode: Mode.RESULT,
+                showResult: true,
+                isLast: isLast
+            }
+        }
     }
 
 }

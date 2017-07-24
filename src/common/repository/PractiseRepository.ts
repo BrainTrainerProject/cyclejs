@@ -3,13 +3,16 @@ import xs, { Stream } from 'xstream';
 import { createGetRequest, createPostRequest } from '../api/ApiHelper';
 import { defaultResponseHelper, filterActionFromRequest$, RootRepositorySinks, RootResponseSinks } from './Repository';
 import dropRepeats from "xstream/extra/dropRepeats";
+import debounce from "xstream/extra/debounce";
+import flattenConcurrently from "xstream/extra/flattenConcurrently";
 
 enum ActionType {
     PRACTISE = 'practise',
     PRACTISE_BY_AMOUNT = 'random-practise',
     PRACTISE_BY_SET = 'practise-by-set',
     PRACTISE_BY_SET_AMOUNT = 'asdasd',
-    EVALUATE = 'evaluate-practise'
+    EVALUATE = 'evaluate-practise',
+    SUM_NOTECARDS = 'practise-sum-notecards'
 }
 
 type Action = {
@@ -69,12 +72,14 @@ export interface PractiseRepositoryResponse extends RootResponseSinks {
     getPractiseByAmount$: Stream<any>
     getPractiseBySet$: Stream<any>
     getPractiseBySetAmount$: Stream<any>
-    getEvaluate$: Stream<any>
+    getMergesResponses$: Stream<any>
+    getEvaluate$: Stream<any>,
+    getGlobalReponse$
 }
 
-const API_URL = '/practise';
+const API_URL = '/practice';
 
-function requests(action$: Stream<Action>): Stream<any> {
+function requests(action$: Stream<Action>, requestProxy$): Stream<any> {
 
     // GET /practice
     const practise$ = filterActionFromRequest$(action$, ActionType.PRACTISE)
@@ -82,7 +87,7 @@ function requests(action$: Stream<Action>): Stream<any> {
 
     // GET /practice/:cardsPerSession
     const practiseByAmount$ = filterActionFromRequest$(action$, ActionType.PRACTISE_BY_AMOUNT)
-        .map(request => createGetRequest(API_URL + '/' + request.total, ActionType.PRACTISE_BY_AMOUNT));
+        .map(({amount}) => createGetRequest(API_URL + '/' + amount, ActionType.PRACTISE_BY_AMOUNT));
 
     // GET /practice/set/:id
     const practiseBySet$ = filterActionFromRequest$(action$, ActionType.PRACTISE_BY_SET)
@@ -96,17 +101,22 @@ function requests(action$: Stream<Action>): Stream<any> {
     const evaluate$ = filterActionFromRequest$(action$, ActionType.EVALUATE)
         .map(({evaluate}) => createPostRequest(API_URL + '/evaluate', evaluate, ActionType.EVALUATE));
 
+    const requestNotecards$ = requestProxy$
+        .filter(array => array.length > 0)
+        .map(value => xs.fromArray(value).map(id => createGetRequest('/notecard/' + id, ActionType.SUM_NOTECARDS))).flatten();
+
     return xs.merge(
         practise$,
         practiseByAmount$,
         practiseBySet$,
         practiseBySetAmount$,
-        evaluate$.compose(dropRepeats())
+        evaluate$.compose(dropRepeats()),
+        requestNotecards$.debug('request notecards')
     );
 
 }
 
-function responses(sources: Sources): PractiseRepositoryResponse {
+function responses(sources: Sources, requestProxy$): PractiseRepositoryResponse {
 
     const defaultResponse = (id: string) => {
         return defaultResponseHelper(sources, id);
@@ -117,20 +127,34 @@ function responses(sources: Sources): PractiseRepositoryResponse {
     const getPractiseBySet$ = defaultResponse(ActionType.PRACTISE_BY_SET);
     const getPractiseBySetAmount$ = defaultResponse(ActionType.PRACTISE_BY_SET_AMOUNT);
     const getEvaluate$ = defaultResponse(ActionType.EVALUATE);
+    const getMergesResponses$ = xs.merge(getPractise$, getPractiseByAmount$, getPractiseBySet$, getPractiseBySetAmount$);
+    requestProxy$.imitate(getMergesResponses$);
+
+    const getGlobalReponse$ = sources.HTTP.select(ActionType.SUM_NOTECARDS)
+        .compose(flattenConcurrently)
+        .filter(({text}) => !!text)
+        .map(({text}) => JSON.parse(text))
+        .fold((list, x) => list.concat(x), [])
+        .compose(debounce(100))
 
     return {
         getPractise$,
         getPractiseByAmount$,
         getPractiseBySet$,
         getPractiseBySetAmount$,
-        getEvaluate$
+        getEvaluate$,
+        getMergesResponses$,
+        getGlobalReponse$
     };
 
 }
 
 export function PractiseRepository(sources: Sources, action$: Stream<Action>): PractiseRepositorySinks {
+
+    const requestProxy$ = xs.create();
+
     return {
-        HTTP: requests(action$.remember()),
-        response: responses(sources)
+        HTTP: requests(action$.remember(), requestProxy$),
+        response: responses(sources, requestProxy$)
     };
 }

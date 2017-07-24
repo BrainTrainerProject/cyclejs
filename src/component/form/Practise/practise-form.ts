@@ -2,26 +2,34 @@ import xs, { Stream } from "xstream";
 import { StateSource } from "cycle-onionify";
 import { Reducer, Sinks, Sources, State } from "../../../common/interfaces";
 import { isNullOrUndefined } from "util";
-import { PracticeFormAction } from "./practise-form.actions";
-import { div } from "@cycle/dom";
+import { PractiseFormAction } from "./practise-form.actions";
+import { view } from "./practise-form.view";
+import { intent } from "./practise-form.intent";
+import { model } from "./practise-form.model";
+import dropRepeats from "xstream/extra/dropRepeats";
+import debounce from "xstream/extra/debounce";
 
-export type PracticeFormSources = Sources & { onion: StateSource<PracticeFormState> };
-export type PracticeFromSinks = Sinks & { onion: Stream<Reducer> };
+export type PractiseFormSources = Sources & { onion: StateSource<PractiseFormState> };
+export type PractiseFromSinks = Sinks & { onion: Stream<Reducer> };
 
 export enum Mode {
-    PRACTISE, PRAC
-    PRACTICE_MULTI, PRACTICE, SHOW
+    PRACTICE, SKIP, RESULT
 }
 
-export interface PracticeFormState extends State {
+export interface PractiseFormState extends State {
     mode: Mode,
-    notecardId: string,
-    practices: string[],
+    practiceIndex: number,
+    practices: NotecardEntity[],
+    result: { notecard: string, success: boolean }[],
+    showResult: boolean,
+    answer: string,
+    finish: boolean,
+    isLast: boolean
 }
 
-export function PracticeForm(sources: PracticeFormSources, action$?: Stream<PracticeFormAction>): PracticeFromSinks {
+export function PractiseForm(sources: PractiseFormSources, action$?: Stream<PractiseFormAction>): PractiseFromSinks {
 
-    /*const state$ = sources.onion.state$;
+    const state$ = sources.onion.state$.debug('Practise Form State');
     const actions = intent(sources, combineActions(sources, action$));
     const reducer = model(sources, actions, state$);
 
@@ -30,26 +38,18 @@ export function PracticeForm(sources: PracticeFormSources, action$?: Stream<Prac
         onion: reducer.onion,
         HTTP: reducer.HTTP,
         modal: reducer.modal
-    };*/
-
-    return {
-        DOM: xs.of(div(['practise'])),
-        onion: xs.never(),
-        HTTP: xs.never(),
-        modal: xs.never()
-    }
+    };
 
 }
 
-function combineActions(sources: PracticeFormSources, action$?: Stream<PracticeFormAction>): Stream<PracticeFormAction> {
+function combineActions(sources: PractiseFormSources, action$?: Stream<PractiseFormAction>): Stream<PractiseFormAction> {
 
-    const propsAction$ = xs.of(sources)
-        .filter(src => !!(src as any).props.action)
-        .map(src => (src as any).props.action);
+    const propsAction$ = xs.of(sources.props.action)
+        .filter(action => !!action);
 
     const directAction$ = xs.of(action$)
         .filter(action => !isNullOrUndefined(action))
         .flatten();
 
-    return xs.merge(propsAction$, directAction$).debug('PracticeFormModalAction') as Stream<PracticeFormAction>;
+    return xs.merge(propsAction$).debug('PracticeFormModalAction') as Stream<PractiseFormAction>;
 }

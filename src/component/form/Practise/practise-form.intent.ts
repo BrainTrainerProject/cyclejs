@@ -1,49 +1,49 @@
 import { Stream } from "xstream";
-import { ActionType, NotecardFormAction } from "./notecard-form.actions";
-import { ID_ANSWER, ID_DELETE_BTN, ID_SUBMIT, ID_TASK, ID_TITLE } from "./notecard-form.view";
-import { NotecardFormSources } from "./notecard-form";
+import { ActionType, PractiseFormAction } from "./practise-form.actions";
+import { PractiseFormSources } from "./practise-form";
+import { ID_ANSWER, ID_DONT_KNOW, ID_SUBMIT } from "./practise-form.view";
 
 export interface IntentSinks {
-    inputTitle$: Stream<any>
-    inputTask$: Stream<any>
-    inputAnswer$: Stream<any>
-    submit$: Stream<any>
-    delete$: Stream<any>
+    submit$,
+    inputAnswer$,
+    submitCancel$,
 
-    createNotecardAction$: Stream<NotecardFormAction>
-    editNotecardAction$: Stream<NotecardFormAction>
+    practiseAction$,
+    practiseBySetAction$,
+    practiseAmountAction$,
+    practiseBySetAmountAction$,
 }
 
-export function intent(sources: NotecardFormSources, action$: Stream<NotecardFormAction>): IntentSinks {
+export function intent(sources: PractiseFormSources, action$: Stream<PractiseFormAction>): IntentSinks {
 
     const {DOM} = sources;
 
     // UI intents
-    const delete$ = DOM.select(ID_DELETE_BTN).events('click');
-    const inputTitle$ = DOM.select(ID_TITLE).events('input').map(e => (e.target as any).value);
-    const inputTask$ = DOM.select(ID_TASK).events('input').map(e => (e.target as any).value);
     const inputAnswer$ = DOM.select(ID_ANSWER).events('input').map(e => (e.target as any).value);
     const submit$ = DOM.select(ID_SUBMIT).events('click');
+    const submitCancel$ = DOM.select(ID_DONT_KNOW).events('click');
 
     // Actions
-    function actionFilter(type: ActionType): Stream<NotecardFormAction> {
+    function actionFilter(type: ActionType): Stream<PractiseFormAction> {
         return action$
             .filter(action => !!action.type)
             .filter(action => action.type === type);
     }
 
-    const createNotecardAction$ = actionFilter(ActionType.CREATE);
-    const editNotecardAction$ = actionFilter(ActionType.EDIT);
+    const practiseAction$ = actionFilter(ActionType.PRACTISE);
+    const practiseBySetAction$ = actionFilter(ActionType.PRACTISE_BY_SET);
+    const practiseAmountAction$ = actionFilter(ActionType.PRACTISE_AMOUNT);
+    const practiseBySetAmountAction$ = actionFilter(ActionType.PRACTISE_BY_SET_AMOUNT);
 
     return {
-        inputTitle$,
-        inputTask$,
-        inputAnswer$,
         submit$,
-        delete$,
+        inputAnswer$,
+        submitCancel$,
 
-        createNotecardAction$,
-        editNotecardAction$
+        practiseAction$,
+        practiseBySetAction$,
+        practiseAmountAction$,
+        practiseBySetAmountAction$,
     };
 
 }

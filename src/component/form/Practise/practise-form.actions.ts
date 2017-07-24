@@ -22,30 +22,30 @@ type SetIdAction = Action & {
     setId: string
 }
 
-export type PracticeFormAction = Action | ShowAction | AmountAction | SetIdAction;
+export type PractiseFormAction = Action | ShowAction | AmountAction | SetIdAction;
 
-export const PracticeFormActions = {
+export const PractiseFormActions = {
 
-    Show: (notecardId: string): ShowAction => ({
+    ShowNotecard: (notecardId: string): ShowAction => ({
         type: ActionType.SHOW,
         notecardId: notecardId
     }),
 
-    Practice: () => ({
+    Practise: () => ({
         type: ActionType.PRACTISE
     }),
 
-    PracticeAmount: (amount: number): Action & AmountAction => ({
+    PractiseAmount: (amount: number): Action & AmountAction => ({
         type: ActionType.PRACTISE_AMOUNT,
         amount: amount
     }),
 
-    PracticeBySet: (setId: string): Action & SetIdAction => ({
+    PractiseBySet: (setId: string): Action & SetIdAction => ({
         type: ActionType.PRACTISE_BY_SET,
         setId: setId
     }),
 
-    PracticeBySetAmount: (setId: string, amount: number): Action & SetIdAction & AmountAction => ({
+    PractiseBySetAmount: (setId: string, amount: number): Action & SetIdAction & AmountAction => ({
         type: ActionType.PRACTISE_BY_SET_AMOUNT,
         setId: setId,
         amount: amount
