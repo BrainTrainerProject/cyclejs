@@ -1,8 +1,10 @@
-import {div, i} from '@cycle/dom';
-import xs from 'xstream';
-import {VNode} from 'snabbdom/vnode';
-import {Sources} from '../../common/interfaces';
-import {OrderAction, OrderTypes, SortTypes} from '../../driver/FilterDriver/index';
+import { div, i } from '@cycle/dom';
+import xs, { Stream } from 'xstream';
+import { VNode } from 'snabbdom/vnode';
+import { Sources } from '../../common/interfaces';
+import { OrderAction, OrderTypes, SortTypes } from '../../driver/FilterDriver/index';
+
+const Route = require('route-parser');
 
 const ID_TITLE = '.order-title';
 const ID_DATE_DESC = '.date-order-desc';
@@ -67,8 +69,17 @@ export default function MastheadFilter(sources: Sources): any {
 
     const route$ = xs.merge(profileClick$, settingClick$, logoutClick$);
 
+    const path$ = sources.router.history$;
+    const naviReducer$ = path$
+        .startWith('/start')
+        .map(v => v.pathname)
+        .map(path => {
+            const route = new Route('/:root');
+            return route.match(path);
+        });
+
     return {
-        DOM: xs.of(view()),
+        DOM: view(naviReducer$),
         router: route$
     };
 
@@ -92,11 +103,12 @@ function filterItemUp(id: string, orderBy: string, label: string): VNode {
     return filterItem(id, orderBy, ID_SORT_ASC, '.angle.up.icon', label);
 }
 
-function view(): VNode {
-    return div('.ui.secondary.menu', [
+function view(naviReducer$): Stream<VNode> {
+
+    return naviReducer$.map(path => div('.ui.secondary.menu', [
         div('.right.menu', [
             div('.item', [
-                div('.ui.dropdown.simple', [
+                (path.root === 'store') ? div('.ui.dropdown.simple', [
                     div('.text' + ID_TITLE, [`Datum aufsteigend`]),
                     i('.dropdown.icon'),
                     div('.menu', [
@@ -107,8 +119,9 @@ function view(): VNode {
                         filterItemDown(ID_RATING_DESC, ID_ORDER_RATING, 'Rating aufsteigend')
 
                     ])
-                ])
+                ]) : null
             ])
         ])
-    ]);
+    ]))
+
 }
