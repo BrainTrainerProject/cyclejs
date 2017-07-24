@@ -5,7 +5,7 @@ import {Lens, mix, pick, StateSource} from 'cycle-onionify';
 import Item, {State as ItemState} from './Item';
 import {Utils} from '../../../common/Utils';
 import {HTTPSource} from '@cycle/http';
-import {CreateSetFormAction, SetForm} from '../../form/Set/SetForm';
+import {CreateSetFormAction, SetForm} from '../../form/Set/set-form';
 
 export type State = Array<ItemState>;
 

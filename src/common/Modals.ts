@@ -1,6 +1,7 @@
 import { NotecardFormActions } from "../component/form/Notecard/notecard-form.actions";
 import { NotecardForm } from "../component/form/Notecard/notecard-form";
-import { SetForm, SetFormActions } from "../component/form/Set/SetForm";
+import { SetFormActions } from "../component/form/Set/set-form.actions";
+import { SetForm } from "../component/form/Set/set-form";
 
 export const ModalActions = {
 

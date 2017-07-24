@@ -5,6 +5,7 @@ import { SortType } from '../SortType';
 import { createDeleteRequest, createGetRequest, createPostRequest, createPutRequest } from '../api/ApiHelper';
 import { defaultResponseHelper, filterActionFromRequest$, RootRepositorySinks, RootResponseSinks } from './Repository';
 import debounce from 'xstream/extra/debounce';
+import dropRepeats from "xstream/extra/dropRepeats";
 
 enum ActionType {
     OWN_SETS = 'get-own-set',
@@ -33,9 +34,11 @@ type SetIdAction = Action & {
     setId: string
 }
 
-export const SetRepositoryAction = {
+type SetEditAction = SetAction & SetIdAction
 
-    GetSet: (setId: string): SetIdAction => ({
+export const SetRepositoryActions = {
+
+    GetById: (setId: string): SetIdAction => ({
         type: ActionType.BY_ID,
         setId: setId
     }),
@@ -54,8 +57,9 @@ export const SetRepositoryAction = {
         set: set
     }),
 
-    Edit: (set: object): SetAction => ({
+    Edit: (setId: string, set: object): SetEditAction => ({
         type: ActionType.EDIT,
+        setId: setId,
         set: set
     }),
 
@@ -129,8 +133,7 @@ function requests(action$: Stream<Action>): Stream<any> {
 
     // Edit set
     const edit$ = filterActionFromRequest$(action$, ActionType.EDIT)
-        .map(action => action.set)
-        .map(set => createPutRequest(API_URL, set, ActionType.EDIT));
+        .map(reqeust => createPutRequest(API_URL + '/' + reqeust.setId, reqeust.set, ActionType.EDIT));
 
     // Delete set
     const delete$ = filterActionFromRequest$(action$, ActionType.DELETE)
@@ -145,7 +148,9 @@ function requests(action$: Stream<Action>): Stream<any> {
         ownSetRequest$,
         specificSetRequest$,
         searchSetRequest$,
-        add$, edit$, delete$,
+        add$.compose(dropRepeats()),
+        edit$,
+        delete$.compose(dropRepeats()),
         import$
     );
 
@@ -157,7 +162,7 @@ function responses(sources: Sources): SetRepositoryResponse {
         return defaultResponseHelper(sources, id);
     };
 
-    const getSetById$ = defaultResponse(ActionType.BY_ID);
+    const getSetById$ = defaultResponse(ActionType.BY_ID).debug('REPO SETFORM');
     const getOwnSets$ = defaultResponse(ActionType.OWN_SETS);
     const search$ = defaultResponse(ActionType.SEARCH);
 

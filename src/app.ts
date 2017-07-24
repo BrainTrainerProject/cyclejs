@@ -47,7 +47,7 @@ function App(sources: AppSources): AppSinks {
 
     return {
         ...routerSinks,
-        HTTP: routerSinks.HTTP.compose(dropRepeats()).debug('HTTP REQUEST'),
+        HTTP: routerSinks.HTTP.debug('HTTP REQUEST'),
         DOM: view(routerSinks.DOM),
         auth0: routerSinks.auth0.debug('AUTH APP'),
         filter: xs.merge(routerSinks.filter.debug('Filter'), filterListener$)

@@ -1,11 +1,11 @@
-import {Stream} from 'xstream';
+import xs, {Stream} from 'xstream';
 import { button, div, form, i, img, input, label, option, select, textarea } from '@cycle/dom';
 import {VNode} from 'snabbdom/vnode';
 import {Visibility} from '../../../common/Visibility';
 import {isNullOrUndefined, isUndefined} from 'util';
 import {Utils} from '../../../common/Utils';
 import {errorMessage} from '../../../common/GuiUtils';
-import { SetFormState } from "./SetForm";
+import { Mode, SetFormState } from "./set-form";
 const R = require('ramda');
 
 export const ID_DELETE_BTN = '.btn_delete';
@@ -17,17 +17,16 @@ export const INP_VISBILITY = '.inp_visibility';
 
 export const ERR_TITLE = 'err_title';
 
-export function view(state$: Stream<SetFormState>): Stream<VNode> {
+export function view(imageProxy$, state$: Stream<SetFormState>): Stream<VNode> {
     return state$
         .map(state => {
             console.log('VIEW STATE', state);
-            return getCreateForm(state);
+            return getCreateForm(imageProxy$, state);
         });
 }
 
-function imageUpload(event, state: SetFormState) {
+function imageUpload(event, imageProxy$) {
     let file = event.target.files[0];
-
     if (!file.type.match('image.*')) {
         // error
     } else {
@@ -37,7 +36,8 @@ function imageUpload(event, state: SetFormState) {
             return function(e) {
                 const imgSrc = e.target.result;
                 const preview = document.getElementById('set-image');
-                preview.src = state.imageUrl = imgSrc;
+                preview.src = imgSrc;
+                imageProxy$.shamefullySendNext(imgSrc);
             };
 
         })(file);
@@ -45,7 +45,7 @@ function imageUpload(event, state: SetFormState) {
     }
 }
 
-function getCreateForm(state: SetFormState): VNode {
+function getCreateForm(imageProxy$, state: SetFormState): VNode {
 
     const errJson = (!isNullOrUndefined(state.errors)) ? state.errors : isUndefined;
     const hasTitleError: boolean = (!isNullOrUndefined(errJson) && errJson.hasOwnProperty(INP_TITLE));
@@ -64,7 +64,7 @@ function getCreateForm(state: SetFormState): VNode {
                                 hook: {
                                     insert: (vnode) => {
                                         $('#file').change(function(e) {
-                                            imageUpload(e, state);
+                                            imageUpload(e, imageProxy$);
                                             $(vnode.elm).parent().parent().parent().dimmer('hide');
                                         });
 
@@ -80,7 +80,7 @@ function getCreateForm(state: SetFormState): VNode {
 
                 img('#set-image.ui.medium.image', {
                     attrs: {
-                        'src': Utils.imageUrl('/card-placeholder.png'),
+                        'src': Utils.imageOrPlaceHolder(state.imageUrl),
                         'className': 'ui medium image'
                     },
                     hook: {
@@ -130,7 +130,7 @@ function getCreateForm(state: SetFormState): VNode {
                 ]),
                 div('.fields', [
                     div('.eight.wide.field',[
-                        (state.action.type !== 'edit') ? null : button(ID_DELETE_BTN + '.ui.icon.red.basic.button.', {
+                        (state.mode !== Mode.EDIT) ? null : button(ID_DELETE_BTN + '.ui.icon.red.basic.button.', {
                             'attrs': {
                                 'type': 'submit'
                             }
@@ -161,7 +161,7 @@ function getCreateForm(state: SetFormState): VNode {
                             'attrs': {
                                 'type': 'submit',
                             }
-                        }, [ (state.action.type === 'edit') ? 'bearbeiten' : 'erstellen'])
+                        }, [ (state.mode === Mode.EDIT) ? 'bearbeiten' : 'erstellen'])
                     ])
                 ])
             ]),

@@ -9,7 +9,7 @@ import { HttpRequest } from '../../../common/api/HttpRequest';
 import {
     SearchParams,
     SetRepository,
-    SetRepositoryAction,
+    SetRepositoryActions,
     SetRepositorySinks
 } from '../../../common/repository/SetRepository';
 import concat from 'xstream/extra/concat';
@@ -102,7 +102,7 @@ export default function SetListComponent(sources: Sources, action$: Stream<Actio
         .map(callback => callback.item);
 
     const importAction$ = importClick$
-        .map(item => SetRepositoryAction.Import(item._id));
+        .map(item => SetRepositoryActions.Import(item._id));
     importProxy$.imitate(importAction$);
 
     return {
@@ -133,13 +133,13 @@ function listIntent(action$: Stream<Action>): Stream<any> {
     }
 
     const ownSetsAction$ = filterType(ActionType.OWN)
-        .map(action => SetRepositoryAction.GetOwnSets());
+        .map(action => SetRepositoryActions.GetOwnSets());
 
     const getSetAction$ = filterType(ActionType.BY_ID)
-        .map(action => SetRepositoryAction.GetSet(action.setId));
+        .map(action => SetRepositoryActions.GetById(action.setId));
 
     const searchAction$ = filterType(ActionType.SEARCH)
-        .map(action => SetRepositoryAction.Search(action.search));
+        .map(action => SetRepositoryActions.Search(action.search));
 
     return xs.merge(ownSetsAction$, getSetAction$, searchAction$);
 

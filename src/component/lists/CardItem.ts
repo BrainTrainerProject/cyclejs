@@ -102,7 +102,7 @@ function cardView(state$: Stream<any>): any {
                     attrs: {href: item.url}
                 }, [
                     img({
-                        attrs: {src: Utils.imageOrPlaceHolder(item.image)}
+                        attrs: {src: Utils.imageOrPlaceHolder(item.photourl)}
                     })
                 ]),
                 div('.card-title.content', [

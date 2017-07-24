@@ -4,7 +4,7 @@ import { Utils } from "../../../common/Utils";
 import { ModalAction } from "cyclejs-modal";
 import NotecardForm, { CreateNotecardFormAction } from "../../form/Notecard/Notecard";
 import { GetPracticeApi, GetPracticeProps } from "../../../common/api/GetPractice";
-import { EditSetFormAction, SetForm } from "../../form/Set/SetForm";
+import { EditSetFormAction, SetForm } from "../../form/Set/set-form";
 
 export function model(action: any, state$) {
 

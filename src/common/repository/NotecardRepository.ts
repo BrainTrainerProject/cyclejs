@@ -139,7 +139,13 @@ function requests(sources: Sources, action$: Stream<NotecardRepositoryAction>): 
     const delete$ = filterActionFromState$(RequestMethod.DELETE)
         .map(request => createDeleteRequest(API_URL + '/' + request.notecardId, RequestMethod.DELETE));
 
-    return xs.merge(getById$, getNotecardsFromSet$, getNotecardsFromSetArray$, addToSet$, edit$, delete$);
+    return xs.merge(
+        getById$,
+        getNotecardsFromSet$,
+        getNotecardsFromSetArray$,
+        addToSet$.compose(dropRepeats()),
+        edit$,
+        delete$.compose(dropRepeats()));
 
 }
 

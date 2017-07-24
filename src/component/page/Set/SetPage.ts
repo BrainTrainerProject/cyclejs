@@ -9,7 +9,7 @@ import { State as ListState } from '../../lists/cards/CardList';
 import isolate from '@cycle/isolate';
 import { div } from '@cycle/dom';
 import { VNode } from 'snabbdom/vnode';
-import { SetRepository, SetRepositoryAction } from '../../../common/repository/SetRepository';
+import { SetRepository, SetRepositoryActions } from '../../../common/repository/SetRepository';
 import {
     ActionType as NotecardsActionType,
     NotecardListComponent,
@@ -191,7 +191,7 @@ function view(listVNode$: Stream<VNode>): Stream<VNode> {
 function setRepositoryIntents(action: any): Stream<any> {
 
     const loadSet$ = action.getSetId$
-        .map(id => SetRepositoryAction.GetSet(id));
+        .map(id => SetRepositoryActions.GetById(id));
 
     return xs.merge(loadSet$);
 }
@@ -265,6 +265,10 @@ function openEditSetModal(action, state$) {
 
     return action.editSetClicked$
         .compose(sampleCombine(state$))
-        .map(([event, state]) => SetFormModal.Edit(state.setId))
+        .map(([event, state]) => {
+            console.log(state);
+            return SetFormModal.Edit(state.set._id)
+        })
+        .debug('SetModal§§')
 
 }
