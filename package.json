@@ -70,6 +70,7 @@
     "route-parser": "0.0.5",
     "run-sequence": "^1.2.2",
     "shx": "^0.2.2",
+    "simple-web-notification": "^1.0.20",
     "snabbdom": "^0.6.9",
     "socket.io-client": "^2.0.3",
     "string-to-dom": "^0.1.5",

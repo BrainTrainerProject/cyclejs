@@ -11,10 +11,11 @@ import UnderConstructionPage from "./page/UnderConstruction/under-construction-p
 import dropRepeats from "xstream/extra/dropRepeats";
 import SetPage from "./page/Set/set-page";
 import FeedPage from "./page/Feed/feed-page";
-import isolate from "@cycle/isolate";
 import StorePage from "./page/Store/store-page";
 import ProfilePage from './page/Profile/profile-page';
 import { PractiseModal } from "../common/Modals";
+import { Notifications } from "../common/Notification";
+import sampleCombine from "xstream/extra/sampleCombine";
 
 const routedComponent = (sources) => ({path, value}) => value({...sources, router: sources.router.path(path)});
 const protectedPage = (page) => ProtectedPage(page);
@@ -43,6 +44,12 @@ export function Router(sources: AppSources): AppSinks {
         .mapTo('/start');
 
     const showPractise$ = sources.socket.get('practice_begin')
+        .compose(sampleCombine(sources.router.history$))
+        .map(([ev, path]) => {
+            console.log(path);
+            Notifications.Practise('http://localhost:8000' + path);
+            return ev;
+        })
         .mapTo(PractiseModal.Practise());
 
     return {

@@ -1,5 +1,6 @@
 import { adapt } from "@cycle/run/lib/adapt";
 import xs from 'xstream';
+import { Notifications } from "../../common/Notification";
 
 const io = require('socket.io-client');
 
@@ -13,12 +14,19 @@ export function makeSocketIODriver() {
     function getIdToken() {
         const auth0Storage = localStorage.getItem(storageKey);
         idToken = (auth0Storage) ? JSON.parse(auth0Storage).idToken : null;
-        console.log('ID TOKEN');
-        console.log(idToken);
         socket = io('http://localhost:8080', {
-            extraHeaders: {
-                Authorization: "Bearer " + idToken
+            transportOptions: {
+                polling: {
+                    'Authorization': "Bearer " + idToken,
+                }
             }
+        });
+        socket.on('connected', function (data) {
+            console.log("connected but not authorized");
+            socket.emit('authorize', {token: idToken});
+        });
+        socket.on('authorized', function (data) {
+            console.log("authorized");
         });
     }
 
@@ -34,6 +42,8 @@ export function makeSocketIODriver() {
             return;
         }
     }
+
+
 
     function get(eventName, {multiArgs = false} = {}) {
         validToken();
