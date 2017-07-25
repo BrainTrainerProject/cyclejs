@@ -8,7 +8,7 @@ export function viewRight(state$: any) {
 
     return state$.map(state => div('.ui', [
         button(ID_NEW_SET_BTN + '.ui.primary.button', ['Set erstellen']),
-        br(),
+        /*br(),
         button(ID_PRACTISE + '.ui.primary.button', ['Practise']),
         br(),
         button(ID_SET_PRACTISE + '.ui.primary.button', ['Set Practise']),
@@ -17,7 +17,7 @@ export function viewRight(state$: any) {
         br(),
         button(ID_SET_PRACTISE_AMOUNT + '.ui.primary.button', ['Set Practise Amount']),
         br(),
-        button(ID_SHOW + '.ui.primary.button', ['Show']),
+        button(ID_SHOW + '.ui.primary.button', ['Show']),*/
     ]))
 
 }

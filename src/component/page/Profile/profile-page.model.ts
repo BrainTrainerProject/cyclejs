@@ -23,7 +23,10 @@ export function model(sources, intent: IntentSinks) {
             .compose(sampleCombine(sources.onion.state$))
             .map(([event, state]) => state)
             .filter(state => !state.isOwner)
-            .map(state => FollowerRepositoryAction.FollowProfile(state.profile._id))
+            .map(state => FollowerRepositoryAction.FollowProfile(state.profile._id)),
+
+        intent.followerListAboClick$
+            .map(item => FollowerRepositoryAction.FollowProfile(item._id))
     ));
 
     const init$ = xs.of((): ProfilePageState => ({

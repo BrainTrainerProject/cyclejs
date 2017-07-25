@@ -28,7 +28,13 @@ export const NotecardFormModal = {
     Edit: (notecardId: string) => ModalActions.Open(
         'Notecard bearbeiten',
         {action: NotecardFormActions.Edit(notecardId)},
-        NotecardForm)
+        NotecardForm),
+
+    Show: (notecardId: string) => ModalActions.Open(
+        'Notecard anzeigen',
+        {action: NotecardFormActions.Show(notecardId)},
+        NotecardForm
+    )
 
 };
 

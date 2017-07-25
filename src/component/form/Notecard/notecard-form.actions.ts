@@ -1,6 +1,7 @@
 export enum ActionType {
     CREATE = 'create',
-    EDIT = 'edit'
+    EDIT = 'edit',
+    SHOW = 'show'
 }
 
 type Action = {
@@ -28,5 +29,10 @@ export const NotecardFormActions = {
         type: ActionType.EDIT,
         notecardId: notecardId
     }),
+
+    Show: (notecardId: string) => ({
+        type: ActionType.SHOW,
+        notecardId: notecardId
+    })
 
 };

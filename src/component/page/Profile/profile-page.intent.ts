@@ -4,10 +4,11 @@ const Route = require('route-parser');
 
 export interface IntentSinks {
     loadProfile$,
-    aboClick$
+    aboClick$,
+    followerListAboClick$
 }
 
-export function intent(sources) {
+export function intent(sources, aboPoxy$) {
 
     const {router, DOM} = sources;
 
@@ -22,10 +23,12 @@ export function intent(sources) {
     const loadProfile$ = path$.filter(path => path);
 
     const aboClick$ = DOM.select(ID_FOLLOWER_BTN).events('click').map(e => e.preventDefault()).debug('ABO CLICK');
+    const followerListAboClick$ = aboPoxy$;
 
     return {
         loadProfile$,
-        aboClick$
+        aboClick$,
+        followerListAboClick$
     }
 
 }

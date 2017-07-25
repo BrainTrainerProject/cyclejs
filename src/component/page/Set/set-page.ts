@@ -5,19 +5,15 @@ import { StateSource } from 'cycle-onionify';
 import { viewRight } from './set-page.view.right';
 import { viewLeft } from './set-page.view.left';
 import Comments, { CommentsState } from '../../comments/Comments';
-import { State as ListState } from '../../lists/cards/CardList';
 import isolate from '@cycle/isolate';
-import { div } from '@cycle/dom';
-import { VNode } from 'snabbdom/vnode';
 import { SetRepository, SetRepositoryActions } from '../../../common/repository/SetRepository';
 import {
-    ActionType as NotecardsActionType, NotecardListActions,
+    ActionType as NotecardsActionType,
     NotecardListComponent,
     State as NotecardListState
 } from '../../lists/notecard/NotecardList';
-import { NotecardFormModal, SetFormModal } from "../../../common/Modals";
+import { NotecardFormModal, PractiseModal, SetFormModal } from "../../../common/Modals";
 import sampleCombine from "xstream/extra/sampleCombine";
-import { NotecardRepository, NotecardRepositorySinks } from "../../../common/repository/NotecardRepository";
 
 const Route = require('route-parser');
 
@@ -198,17 +194,26 @@ export default function SetPage(sources: any): any {
 
     const editSet$ = openEditSetModal(action, state$);
     const editNotecard$ = openEditNotecardModal(notecardsComponent.itemClick$, state$);
-//    const showNotecard$ = showNotecardModal(show, state$)
+    const showNotecard$ = openShowNotecardModal(notecardsComponent.itemClick$, state$);
     const openCreateNotecardModal$ = openCreateNoteCardModal(action, state$);
+    const randomPractise$ = openPractiseModal(action, state$)
 
     return {
         DOM_LEFT: leftDOM$,
         DOM_RIGHT: rightDOM$,
         HTTP: xs.merge(notecardsComponent.HTTP, setRepository.HTTP, commentSinks.HTTP),
         onion: xs.merge(reducer$, notecardsComponent.onion, commentSinks.onion),
-        modal: xs.merge(openCreateNotecardModal$, editSet$, editNotecard$),
+        modal: xs.merge(openCreateNotecardModal$, editSet$, editNotecard$, showNotecard$, randomPractise$),
         router: commentSinks.router
     };
+}
+
+function openPractiseModal(action, state$) {
+
+    return action.showRandomNotecardClicked$
+        .compose(sampleCombine(state$))
+        .map(([event, state]) => PractiseModal.PractiseBySetAmount(state.set._id, 1))
+
 }
 
 function openCreateNoteCardModal(action, state$) {
@@ -216,6 +221,18 @@ function openCreateNoteCardModal(action, state$) {
     return action.createNotecardClicked$
         .compose(sampleCombine(state$))
         .map(([event, state]) => NotecardFormModal.Create(state.set._id));
+
+}
+
+function openEditSetModal(action, state$) {
+
+    return action.editSetClicked$
+        .compose(sampleCombine(state$))
+        .map(([event, state]) => {
+            console.log(state);
+            return SetFormModal.Edit(state.set._id)
+        })
+        .debug('SetModal§§')
 
 }
 
@@ -230,14 +247,14 @@ function openEditNotecardModal(click$, state$) {
 
 }
 
-function openEditSetModal(action, state$) {
 
-    return action.editSetClicked$
+function openShowNotecardModal(click$, state$) {
+
+    return click$
         .compose(sampleCombine(state$))
-        .map(([event, state]) => {
-            console.log(state);
-            return SetFormModal.Edit(state.set._id)
-        })
-        .debug('SetModal§§')
+        .filter(([item, state]) => item.owner !== state.user._id)
+        .map(([item, state]) => item._id)
+        .map(notecardId => NotecardFormModal.Show(notecardId))
+        .debug('SetsModal§§');
 
 }

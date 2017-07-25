@@ -8,11 +8,11 @@ import { model } from "./notecard-form.model";
 import { view } from "./notecard-form.view";
 import { isNullOrUndefined } from "util";
 
-export type NotecardFormSources = Sources & { onion: StateSource<NotecardFormState> };
+export type NotecardFormSources = Sources & { onion: StateSource<NotecardFormState>, taskProxy$: Stream<string> };
 export type NotecardFromSinks = Sinks & { onion: Stream<Reducer> };
 
 export enum Mode {
-    CREATE, EDIT
+    CREATE, EDIT, SHOW
 }
 
 export interface NotecardFormState extends State {

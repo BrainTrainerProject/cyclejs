@@ -50,7 +50,7 @@ function requests(sources: Sources, action$: Stream<any>): Stream<any> {
         .map(({text}) => JSON.parse(text))
         .map(res => res.follower)
         .filter(array => array.length > 0)
-        .map(array => xs.of(array).map(id => createGetRequest('/profile/' + id, RequestMethod.CONCAT_FOLLOWER)))
+        .map(array => xs.fromArray(array).map(id => createGetRequest('/profile/' + id, RequestMethod.CONCAT_FOLLOWER)))
         .flatten();
 
     const follow$ = filterActionFromRequest$(action$, RequestMethod.FOLLOW_PROFILE)

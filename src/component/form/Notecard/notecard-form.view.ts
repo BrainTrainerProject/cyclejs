@@ -1,5 +1,5 @@
 import { errorMessage } from "../../../common/GuiUtils";
-import { button, div, form, i, input, label, textarea } from "@cycle/dom";
+import { button, div, form, i, input, label, span, textarea } from "@cycle/dom";
 import { Stream } from "xstream";
 import { VNode } from "snabbdom/vnode";
 import { Mode, NotecardFormState } from "./notecard-form";
@@ -14,43 +14,48 @@ export function view(state$: Stream<NotecardFormState>): Stream<VNode> {
     return state$
         .map(state => {
             console.log("Viewssss", state)
+
             return div('.ui.grid', [
                 div('.sixteen.wide.column', [
                     form('.ui.form', [
                         div('.field', [
                             label([`Titel`]),
                             div('.field', [
-                                input(ID_TITLE, {
-                                    'attrs': {
-                                        'type': 'text',
-                                        'placeholder': 'Titel',
-                                        'value': state.title
-                                    }
-                                })
+                                (state.mode === Mode.SHOW) ?
+                                    span([state.title])
+                                    : input(ID_TITLE, {
+                                        'attrs': {
+                                            'type': 'text',
+                                            'placeholder': 'Titel',
+                                            'value': state.title
+                                        }
+                                    })
                             ])
                         ]),
                         div('.field', [
                             label([`Aufgabe`]),
                             div('.field', [
-                                textarea(ID_TASK, {
-                                    hook: {
-                                        insert: ({elm}) => {
-                                            //$(elm).froalaEditor();
+                                (state.mode === Mode.SHOW) ?
+                                    span([state.task]) : textarea(ID_TASK, {
+                                        hook: {
+                                            insert: ({elm}) => {
+                                                //$(elm).froalaEditor();
+                                            }
                                         }
-                                    }
-                                }, [state.task])
+                                    }, [state.task])
                             ])
                         ]),
                         div('.field', [
                             label([`Antwort`]),
                             div('.field', [
-                                input(ID_ANSWER, {
-                                    'attrs': {
-                                        'type': 'text',
-                                        'placeholder': 'Antwort',
-                                        'value': state.answer
-                                    }
-                                })
+                                (state.mode === Mode.SHOW) ?
+                                    span([state.answer]) : input(ID_ANSWER, {
+                                        'attrs': {
+                                            'type': 'text',
+                                            'placeholder': 'Antwort',
+                                            'value': state.answer
+                                        }
+                                    })
                             ])
                         ]),
                         div('.fields', [
@@ -69,7 +74,7 @@ export function view(state$: Stream<NotecardFormState>): Stream<VNode> {
                                     'attrs': {
                                         'type': 'submit'
                                     }
-                                }, [(state.mode === Mode.EDIT) ? 'bearbeiten' : 'erstellen'])
+                                }, [(state.mode === Mode.EDIT) ? 'bearbeiten' : (state.mode === Mode.CREATE) ? 'erstellen' : 'schließen'])
                             ])
                         ])
                     ]),

@@ -22,7 +22,8 @@ export default function ProfilePage(sources) {
 
     const state$ = sources.onion.state$.debug('ProfilePage State$');
 
-    const action = intent(sources);
+    const aboProxy$ = xs.create();
+    const action = intent(sources, aboProxy$);
     const reducer = model(sources, action);
 
     // Filter Profile id
@@ -48,12 +49,16 @@ export default function ProfilePage(sources) {
     const follower$ = isolate(FollowerList, 'follower')(sources,
         profileId$.map(id => FollowerListAction.GetByUserId(id)));
 
+    aboProxy$.imitate(follower$.aboClick$);
+    const followerRoute$ = follower$.profileClick$
+        .map(item => '/profile/' + item._id);
+
     const sinks = {
         DOM_LEFT: view(state$, feed$.DOM, sets$.DOM, follower$.DOM),
         DOM_RIGHT: xs.of([]),
         onion: xs.merge(reducer.onion, feed$.onion, sets$.onion, follower$.onion),
         HTTP: xs.merge(reducer.HTTP, feed$.HTTP, sets$.HTTP, follower$.HTTP),
-        router: setRoute$
+        router: xs.merge(setRoute$, followerRoute$)
     };
 
     return sinks;

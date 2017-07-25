@@ -2,6 +2,7 @@ import { Stream } from "xstream";
 import { ActionType, NotecardFormAction } from "./notecard-form.actions";
 import { ID_ANSWER, ID_DELETE_BTN, ID_SUBMIT, ID_TASK, ID_TITLE } from "./notecard-form.view";
 import { NotecardFormSources } from "./notecard-form";
+import dropRepeats from "xstream/extra/dropRepeats";
 
 export interface IntentSinks {
     inputTitle$: Stream<any>
@@ -12,6 +13,7 @@ export interface IntentSinks {
 
     createNotecardAction$: Stream<NotecardFormAction>
     editNotecardAction$: Stream<NotecardFormAction>
+    showNotecardAction$: Stream<NotecardFormAction>
 }
 
 export function intent(sources: NotecardFormSources, action$: Stream<NotecardFormAction>): IntentSinks {
@@ -34,6 +36,7 @@ export function intent(sources: NotecardFormSources, action$: Stream<NotecardFor
 
     const createNotecardAction$ = actionFilter(ActionType.CREATE);
     const editNotecardAction$ = actionFilter(ActionType.EDIT);
+    const showNotecardAction$ = actionFilter(ActionType.SHOW);
 
     return {
         inputTitle$,
@@ -43,7 +46,8 @@ export function intent(sources: NotecardFormSources, action$: Stream<NotecardFor
         delete$,
 
         createNotecardAction$,
-        editNotecardAction$
+        editNotecardAction$,
+        showNotecardAction$
     };
 
 }

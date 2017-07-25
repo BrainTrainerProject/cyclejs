@@ -1,11 +1,13 @@
 import xs, { Stream } from 'xstream';
-import { div, DOMSource, i, img } from '@cycle/dom';
+import { a, div, DOMSource, img } from '@cycle/dom';
 import { StateSource } from 'cycle-onionify';
 import { ProfileEntity } from "../../common/model/Profile";
 import { StateListItemSinks, StateListItemSources } from "../lists/StateListItem";
 import { Utils } from "../../common/Utils";
+import sampleCombine  from "xstream/extra/sampleCombine";
 
-const ID_PROFILE = '.profile-clicked';
+const ID_PROFILE = '.follower-item-profile-clicked';
+const ID_ABO = '.follower-item-abo-clicked';
 
 export interface State {
     id: string;
@@ -45,25 +47,30 @@ function intent(sources: any): any {
     const profileClick$ = sources.DOM.select(ID_PROFILE).events('click')
         .map(e => e.preventDefault());
 
-    return {profileClick$};
+    const aboClick$ = sources.DOM.select(ID_ABO).events('click')
+        .map(e => e.preventDefault());
+
+    return {profileClick$, aboClick$};
 }
 
 function model(actions: any, state$: Stream<any>): any {
 
     const profileClick$ = actions.profileClick$
-        .mapTo(state$)
-        .flatten()
-        .map(state => {
-                return ({
-                    type: 'click-profile',
-                    item: state.item
-                });
-            }
-        );
+        .compose(sampleCombine(state$))
+        .map(([evnt, state]) => ({
+            type: 'click-profile',
+            item: state.item
+        }));
 
+    const aboClick$ = actions.aboClick$
+        .compose(sampleCombine(state$))
+        .map(([evnt, state]) => ({
+            type: 'click-abo',
+            item: state.item
+        }));
 
     return {
-        callback$: xs.merge(profileClick$)
+        callback$: xs.merge(profileClick$, aboClick$)
     };
 
 }
@@ -80,14 +87,14 @@ function cardView(state$: Stream<any>): any {
             }
         }, [
             div('.right.floated.content', [
-                div('.ui.tiny.button', [`abonnieren`])
+                div(ID_ABO + '.ui.tiny.button', [`abonnieren`])
             ]),
             img('.ui.avatar.image', {
                 attrs: {
                     src: Utils.imageOrPlaceHolder(item.photourl),
                 }
             }),
-            div('.content', [(item.name) ? item.name : item.email])
+            div('.content', a(ID_PROFILE, [(item.name) ? item.name : item.email]))
         ])
 
     });
