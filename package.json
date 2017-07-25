@@ -51,7 +51,7 @@
     "cyclejs-utils": "^1.0.4",
     "cyclic-router": "^4.0.5",
     "es6-map": "^0.1.5",
-    "froala-editor": "^2.6.2",
+    "froala-editor": "^2.6.4",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
     "gulp-clean": "^0.3.2",

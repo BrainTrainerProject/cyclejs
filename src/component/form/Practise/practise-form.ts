@@ -1,13 +1,11 @@
-import xs, { Stream } from "xstream";
-import { StateSource } from "cycle-onionify";
-import { Reducer, Sinks, Sources, State } from "../../../common/interfaces";
-import { isNullOrUndefined } from "util";
-import { PractiseFormAction } from "./practise-form.actions";
-import { view } from "./practise-form.view";
-import { intent } from "./practise-form.intent";
-import { model } from "./practise-form.model";
-import dropRepeats from "xstream/extra/dropRepeats";
-import debounce from "xstream/extra/debounce";
+import xs, {Stream} from 'xstream';
+import {StateSource} from 'cycle-onionify';
+import {Reducer, Sinks, Sources, State} from '../../../common/interfaces';
+import {isNullOrUndefined} from 'util';
+import {PractiseFormAction} from './practise-form.actions';
+import {view} from './practise-form.view';
+import {intent} from './practise-form.intent';
+import {model} from './practise-form.model';
 
 export type PractiseFormSources = Sources & { onion: StateSource<PractiseFormState> };
 export type PractiseFromSinks = Sinks & { onion: Stream<Reducer> };
@@ -51,5 +49,5 @@ function combineActions(sources: PractiseFormSources, action$?: Stream<PractiseF
         .filter(action => !isNullOrUndefined(action))
         .flatten();
 
-    return xs.merge(propsAction$).debug('PracticeFormModalAction') as Stream<PractiseFormAction>;
+    return xs.merge(propsAction$, directAction$).debug('PracticeFormModalAction') as Stream<PractiseFormAction>;
 }

@@ -12,6 +12,9 @@ import {
     Request as ProfileRequest,
     RequestMethod as ProfileRequestMethod
 } from '../../common/repository/ProfileRepository';
+import {sampleCombine} from 'xstream/extra/sampleCombine';
+import {PractiseModal} from '../../common/Modals';
+import {Notifications} from '../../common/Notification';
 
 const R = require('ramda');
 
@@ -35,6 +38,14 @@ export function MainLayoutWrapper(component: MainLayoutComponent): any {
 
         const reducer$ = reducer(sources);
 
+        const showPractise$ = sources.socket.get('practice_begin')
+            .compose(sampleCombine(sources.router.history$))
+            .map(([ev, path]) => {
+                Notifications.Practise('http://localhost:8000' + path);
+                return ev;
+            })
+            .mapTo(PractiseModal.Practise());
+
         const sinks = {
             ...mergedSinks,
             DOM: xs.combine(
@@ -43,7 +54,8 @@ export function MainLayoutWrapper(component: MainLayoutComponent): any {
                 componentSinks.DOM_RIGHT || xs.never()
             ).map(view),
             HTTP: xs.merge(mergedSinks.HTTP || xs.never(), reducer$.HTTP),
-            onion: xs.merge(mergedSinks.onion || xs.never(), reducer$.onion)
+            onion: xs.merge(mergedSinks.onion || xs.never(), reducer$.onion),
+            modal: xs.merge(mergedSinks, showPractise$)
         };
 
         return sinks;

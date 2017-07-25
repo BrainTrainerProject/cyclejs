@@ -1,4 +1,4 @@
-import { img } from "@cycle/dom";
+import {img} from '@cycle/dom';
 import xs from 'xstream';
 
 export default function NotFoundPage(sources) {
