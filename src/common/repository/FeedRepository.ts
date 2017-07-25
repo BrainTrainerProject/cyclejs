@@ -36,10 +36,10 @@ const API_URL = '/activity';
 function requests(sources: Sources, action$: Stream<any>): Stream<any> {
 
     const getOwnFeed$ = filterActionFromRequest$(action$, RequestMethod.GET_OWN)
-        .map(request => createGetRequest(API_URL+ '/1', RequestMethod.GET_OWN));
+        .map(request => createGetRequest(API_URL + '/1', RequestMethod.GET_OWN));
 
     const getById$ = filterActionFromRequest$(action$, RequestMethod.GET_BY_ID)
-        .map(request => createGetRequest(API_URL, RequestMethod.GET_OWN));
+        .map(({id}) => createGetRequest(API_URL + '/' + id + '/1', RequestMethod.GET_BY_ID));
 
     return xs.merge(getOwnFeed$, getById$);
 
@@ -54,7 +54,8 @@ function responses(sources: Sources): ResponseSinks {
         .map(({text}) => JSON.parse(text));
 
     const getByIdFeedResponse$ = HTTP.select(RequestMethod.GET_BY_ID)
-        .flatten();
+        .flatten()
+        .map(({text}) => JSON.parse(text));
 
     return {
         getOwnFeedResponse$: getOwnFeedResponse$,

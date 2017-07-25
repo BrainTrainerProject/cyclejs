@@ -60,7 +60,7 @@ function intent(commentRepository: FeedRepositorySinks): IntentSinks {
     const response = commentRepository.response;
 
     return {
-        ownFeedLoaded$: response.getOwnFeedResponse$.debug('FEED RESPONSE'),
+        ownFeedLoaded$: response.getOwnFeedResponse$,
         byIdFeedLoaded$: response.getByIdFeedResponse$
     };
 
@@ -89,16 +89,10 @@ function reducer(intent: IntentSinks): Stream<any> {
 
     function fillListByResponse$(stream$: Stream<any>): Stream<any> {
         return stream$
-            .map(array => {
-                console.log("FILL ARRAYY")
-                console.log(array);
-                return array;
-            })
             .map(array => xs.fromArray(array))
             .compose(flattenSequentially)
             .map(item => (state) => {
-                console.log('ITEM');
-                console.log(item);
+
                 // Verzögerung notwendig, sonst kommt es zu 'race condition' mit dem vdom$
                 Utils.syncDelay(1);
 
@@ -154,6 +148,7 @@ function listActions(action$: Stream<any>) {
 
 export function FeedList(sources: Sources, action$: Stream<any>): Sinks {
 
+    const state$ = sources.onion.state$;
     const feedRepository = FeedRepository(sources as any, listActions(action$));
 
     const listSinks = isolate(StateList, 'list')(sources, FeedItem);

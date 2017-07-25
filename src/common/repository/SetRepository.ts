@@ -15,7 +15,8 @@ enum ActionType {
     EDIT = 'edit-set',
     UPDATE = 'update-set',
     IMPORT = 'import-set',
-    DELETE = 'delete-set'
+    DELETE = 'delete-set',
+    GET_BY_PROFILE_ID = 'get-set-by-profile-id'
 }
 
 type Action = {
@@ -45,6 +46,11 @@ export const SetRepositoryActions = {
 
     GetOwnSets: (): Action => ({
         type: ActionType.OWN_SETS
+    }),
+
+    GetByProfileId: (profileId: string) => ({
+        type: ActionType.GET_BY_PROFILE_ID,
+        profileId: profileId
     }),
 
     Search: (params: SearchParams): Search => ({
@@ -91,6 +97,7 @@ export interface SetRepositoryResponse extends RootResponseSinks {
     search$: Stream<any>;
     updateSet$: Stream<any>;
     deleteSet$: Stream<any>;
+    getByProfileId$: Stream<any>;
 }
 
 const API_URL = '/set';
@@ -128,6 +135,10 @@ function requests(action$: Stream<Action>): Stream<any> {
     const specificSetRequest$ = filterActionFromRequest$(action$, ActionType.BY_ID)
         .map(action => createGetRequest(API_URL + '/' + action.setId, ActionType.BY_ID));
 
+    // Get set by profile id
+    const getByProfileId$ = filterActionFromRequest$(action$, ActionType.GET_BY_PROFILE_ID)
+        .map(({profileId}) => createGetRequest(API_URL + '/profile/' + profileId, ActionType.GET_BY_PROFILE_ID));
+
     // Add set
     const add$ = filterActionFromRequest$(action$, ActionType.ADD)
         .map(action => action.set)
@@ -150,6 +161,7 @@ function requests(action$: Stream<Action>): Stream<any> {
         ownSetRequest$,
         specificSetRequest$,
         searchSetRequest$,
+        getByProfileId$,
         add$.compose(dropRepeats()),
         edit$,
         delete$.compose(dropRepeats()),
@@ -169,6 +181,7 @@ function responses(sources: Sources): SetRepositoryResponse {
     const search$ = defaultResponse(ActionType.SEARCH);
     const updateSet$ = defaultResponse(ActionType.UPDATE);
     const deleteSet$ = defaultResponse(ActionType.DELETE);
+    const getByProfileId$ = defaultResponse(ActionType.GET_BY_PROFILE_ID);
 
     return {
         getSetById$,
@@ -176,6 +189,7 @@ function responses(sources: Sources): SetRepositoryResponse {
         search$,
         deleteSet$,
         updateSet$,
+        getByProfileId$
     };
 
 }

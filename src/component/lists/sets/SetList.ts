@@ -19,7 +19,8 @@ import { CardItem } from '../CardItem';
 export enum ActionType {
     OWN = 'own',
     BY_ID = 'byId',
-    SEARCH = 'search'
+    SEARCH = 'search',
+    BY_PROFILE_ID = 'profile-id'
 }
 
 interface Action {
@@ -35,6 +36,11 @@ export const SetListAction = {
     GetSetsById: (setId: string): Action & { setId: string } => ({
         type: ActionType.BY_ID,
         setId: setId
+    }),
+
+    GetSetsByProfileId: (profileId: string) => ({
+        type: ActionType.BY_PROFILE_ID,
+        profileId: profileId
     }),
 
     Search: (search: SearchParams): Action & { search: SearchParams } => ({
@@ -119,7 +125,8 @@ function intent(setRepository: SetRepositorySinks): any {
     return {
         showOwnSets$: response.getOwnSets$,
         showSetById$: response.getSetById$,
-        showSearchSets$: response.search$
+        showSearchSets$: response.search$,
+        showSetByProfileId$: response.getByProfileId$
     };
 }
 
@@ -141,7 +148,10 @@ function listIntent(action$: Stream<Action>): Stream<any> {
     const searchAction$ = filterType(ActionType.SEARCH)
         .map(action => SetRepositoryActions.Search(action.search));
 
-    return xs.merge(ownSetsAction$, getSetAction$, searchAction$);
+    const getByProfileId$ = filterType(ActionType.BY_PROFILE_ID)
+        .map(({profileId}) => SetRepositoryActions.GetByProfileId(profileId));
+
+    return xs.merge(ownSetsAction$, getSetAction$, searchAction$, getByProfileId$);
 
 }
 
@@ -165,6 +175,7 @@ function reducer(intent: any): Stream<any> {
 
     const responseGetSetsApi$ = intent.showOwnSets$;
     const responseSearchSetsApi$ = intent.showSearchSets$;
+    const responseByProfile$ = intent.showSetByProfileId$;
 
     const clearSets$ = xs.of((state) => ({
         ...state,
@@ -191,7 +202,7 @@ function reducer(intent: any): Stream<any> {
             });
     }
 
-    const fillListReducer$ = xs.merge(responseGetSetsApi$, responseSearchSetsApi$)
+    const fillListReducer$ = xs.merge(responseGetSetsApi$, responseSearchSetsApi$, responseByProfile$)
         .map(s => concat(clearSets$, fillListByResponse$(xs.of(s)))).flatten();
 
     return xs.merge(initReducer$, fillListReducer$);

@@ -1,7 +1,7 @@
-import {Sources} from '../interfaces';
-import xs, {Stream} from 'xstream';
+import { Sources } from '../interfaces';
+import xs, { Stream } from 'xstream';
 import { defaultResponseHelper, RootRepositorySinks, RootResponseSinks } from './Repository';
-import {createGetRequest, createPutRequest} from '../api/ApiHelper';
+import { createGetRequest, createPutRequest } from '../api/ApiHelper';
 
 const API_URL = '/profile';
 
@@ -24,11 +24,31 @@ export type GetByIdRequest = {
 
 export type UpdateRequest = {
     type: RequestMethod.UPDATE,
-    payload: {
-        visibility: boolean,
-        cardsPerSession: number,
-        interval: number
-    }
+    payload: UpdateProfileModel
+};
+
+interface UpdateProfileModel {
+    visibility: boolean,
+    cardsPerSession: number,
+    interval: number
+}
+
+export const ProfileRepositoryActions = {
+
+    GetOwn: () => ({
+        type: RequestMethod.GET_OWN
+    }),
+
+    GetById: (userId: string) => ({
+        type: RequestMethod.GET_BY_ID,
+        userId: userId
+    }),
+
+    Edit: (profile: UpdateProfileModel) => ({
+        type: RequestMethod.UPDATE,
+        payload: profile
+    })
+
 };
 
 export function ProfileRepository(sources: Sources, request$: Stream<Request>): RootRepositorySinks {
@@ -41,8 +61,7 @@ export function ProfileRepository(sources: Sources, request$: Stream<Request>): 
 function requests(request$: Stream<Request>): Stream<any> {
 
     function filterActionFromRequest$(type: string): Stream<any> {
-        return request$
-            .filter(action => action.type === type);
+        return request$.filter(action => action.type === type);
     }
 
     // Own profile
@@ -68,7 +87,13 @@ function responses(sources: Sources): RootResponseSinks {
 
     return {
         getOwnProfile$: defaultResponse(RequestMethod.GET_OWN),
-        getProfileById$: defaultResponse(RequestMethod.GET_BY_ID),
+        getProfileById$: sources.HTTP.select(RequestMethod.GET_BY_ID).flatten().map(({text}) => {
+            if (text === 'Profile is private') {
+                return {private: true}
+            } else {
+                return JSON.parse(text)
+            }
+        }),
         updateProfile$: defaultResponse(RequestMethod.UPDATE)
     };
 

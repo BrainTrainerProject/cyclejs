@@ -1,37 +1,46 @@
-import {a, div, h2, i, img, span, strong} from '@cycle/dom';
+import { a, div, h2, i, img } from '@cycle/dom';
+import { VNode } from "snabbdom/vnode";
+import xs, { Stream } from "xstream";
+import { Utils } from "../../../common/Utils";
 
-export function view() {
-    return div('.ui.container', [
-        div('.ui.grid', [
-            profileImage(),
-            profile(),
-            tabs()
-        ])
-    ]);
+export function view(state$, feed$, sets$): Stream<VNode> {
+
+    return xs.combine(state$, feed$, sets$)
+        .map(([state, feedList, setList]) => div('.ui.container', [
+
+            (!state.profile) ? div(['Loading...']) :
+                (state.isPrivate) ? div(['Private']) :
+                    div('.ui.grid', [
+                        (!!state.profile.photourl) ? profileImage(Utils.imageOrPlaceHolder(state.profile.photourl)) : null,
+                        profile(state.profile),
+                        tabs(feedList, setList)
+                    ])
+        ]));
+
 }
 
-function profileImage() {
+function profileImage(image) {
     return div('.four.wide.column', [
         img('.ui.circular.middle.image', {
             'attrs': {
-                'src': 'https://semantic-ui.com/images/avatar2/small/molly.png'
+                'src': image
             }
         })
     ]);
 }
 
-function profile() {
+function profile(profile) {
     return div('.eight.wide.column', {
         'style': {
             'name': 'style',
             'value': 'padding-top: 1.75em'
         }
     }, [
-        h2('.ui.header', [`Molly`]),
+        h2('.ui.header', [(profile.name) ? profile.name : profile.email]),
         div('.ui.list.horizontal.bulleted.', [
-            div('.item', [`50 Sets`]),
-            div('.item', [`1000 Notecards`]),
-            div('.item', [`30 Follower`])
+            div('.item', [profile.setsCount + ` Sets`]),
+            div('.item', [profile.notecardCount + ` Notecards`]),
+            div('.item', [profile.followerCount + ` Follower`])
         ]),
         div('.ui.divider.hidden'),
         div('.ui.left.labeled.button', {
@@ -39,9 +48,9 @@ function profile() {
                 'tabindex': '0'
             }
         }, [
-            a('.ui.basic.right.pointing.red.label', ['2,048']),
+            a('.ui.basic.right.pointing.red.label', [profile.followerCount]),
             div('.ui.red.button', [
-                i('.heart.icon'), 'abbonieren'
+                i('.heart.icon'), 'abonnieren'
             ])
         ])
     ]);
@@ -60,7 +69,7 @@ function tabItem(clazz, tabid, tablabel) {
     }, [tablabel]);
 }
 
-function tabs() {
+function tabs(feedList, setList) {
     return div('.sixteen.wide.column', [
         div('.ui.pointing.secondary.menu', [
 
@@ -69,143 +78,27 @@ function tabs() {
             tabItem('.item', 'tab-follower', 'Follower'),
 
         ]),
-        feed(),
-        sets(),
+        feed(feedList),
+        sets(setList),
         follower()
     ]);
 }
 
-function feed() {
+function feed(feedList) {
     return div('.ui.active.tab', {
         'attrs': {
             'data-tab': 'tab-feed',
             'className': 'ui active tab'
         }
     }, [
-        div('.ui.middle.aligned.divided.list', [
-            div('.item', [
-                div('.ui.hidden.divider'),
-                div('.right.floated.content', [
-                    div('.ui', {
-                        'attrs': {
-                            'className': 'ui'
-                        },
-                        'style': {
-                            'name': 'style',
-                            'value': 'padding: .75em 0 .25em .5em;'
-                        }
-                    }, [`49min`])
-                ]),
-                div('.ui.horizontal.list', [
-                    div('.item', [
-                        strong([`Neue Karteikarten`])
-                    ])
-                ]),
-                div('.ui.container', {
-                    'attrs': {
-                        'className': 'ui container'
-                    },
-                    'style': {
-                        'name': 'style',
-                        'value': 'font-size: 14px !important; padding-top: 15px;'
-                    }
-                }, [
-                    div('..ui.three.column.doubling.stackable.grid', [
-                        div('.column', [
-                            div('.ui.fluid.card', [
-                                a('.card-cover.image', {
-                                    'attrs': {
-                                        'href': '',
-                                        'className': 'card-cover image'
-                                    }
-                                }, [
-                                    img({
-                                        'attrs': {
-                                            'src': 'https://pbs.twimg.com/profile_images/1418282604/EnglishTwitterAvatar.jpg'
-                                        }
-                                    })
-                                ]),
-                                div('.card-title.content', [
-                                    a('.header', {
-                                        'attrs': {
-                                            'href': '',
-                                            'className': 'header'
-                                        }
-                                    }, [`Title`])
-                                ]),
-                                div('.extra.content', [
-                                    span('.right.floated', [
-                                        a({
-                                            'attrs': {
-                                                'href': ''
-                                            }
-                                        }, [
-                                            i('.download.icon')
-                                        ])
-                                    ]),
-                                    div('.ui.rating', {
-                                        'attrs': {
-                                            'data-rating': '3',
-                                            'data-max-rating': '5',
-                                            'className': 'ui rating'
-                                        }
-                                    }),
-                                    `(42)`
-                                ])
-                            ])
-                        ]),
-                        div('.column', [
-                            div('.ui.fluid.card', [
-                                a('.card-cover.image', {
-                                    'attrs': {
-                                        'href': '',
-                                        'className': 'card-cover image'
-                                    }
-                                }, [
-                                    img({
-                                        'attrs': {
-                                            'src': 'https://pbs.twimg.com/profile_images/1418282604/EnglishTwitterAvatar.jpg'
-                                        }
-                                    })
-                                ]),
-                                div('.card-title.content', [
-                                    a('.header', {
-                                        'attrs': {
-                                            'href': '',
-                                            'className': 'header'
-                                        }
-                                    }, [`Title`])
-                                ]),
-                                div('.extra.content', [
-                                    span('.right.floated', [
-                                        a({
-                                            'attrs': {
-                                                'href': ''
-                                            }
-                                        }, [
-                                            i('.download.icon')
-                                        ])
-                                    ]),
-                                    div('.ui.rating', {
-                                        'attrs': {
-                                            'data-rating': '3',
-                                            'data-max-rating': '5',
-                                            'className': 'ui rating'
-                                        }
-                                    }),
-                                    `(42)`
-                                ])
-                            ])
-                        ])
-                    ])
-                ])
-            ])
+        div('.ui.middle.aligned.divided.list', {attrs: {style: 'padding:10px !important;'}}, [
+            feedList,
         ])
     ]);
 
 }
 
-function sets() {
+function sets(setList) {
     return div('.ui.tab', {
         'attrs': {
             'data-tab': 'tab-sets',
@@ -214,101 +107,13 @@ function sets() {
     }, [
         div('.ui.container', {
             'attrs': {
-                'className': 'ui container'
-            },
-            'style': {
-                'name': 'style',
-                'value': 'font-size: 14px !important; padding-top: 15px;'
+                'className': 'ui container',
+                style: 'font-size: 14px !important; padding-top: 15px !important;'
             }
         }, [
-            div('..ui.three.column.doubling.stackable.grid', [
-                div('.column', [
-                    div('.ui.fluid.card', [
-                        a('.card-cover.image', {
-                            'attrs': {
-                                'href': '',
-                                'className': 'card-cover image'
-                            }
-                        }, [
-                            img({
-                                'attrs': {
-                                    'src': 'https://pbs.twimg.com/profile_images/1418282604/EnglishTwitterAvatar.jpg'
-                                }
-                            })
-                        ]),
-                        div('.card-title.content', [
-                            a('.header', {
-                                'attrs': {
-                                    'href': '',
-                                    'className': 'header'
-                                }
-                            }, [`Title`])
-                        ]),
-                        div('.extra.content', [
-                            span('.right.floated', [
-                                a({
-                                    'attrs': {
-                                        'href': ''
-                                    }
-                                }, [
-                                    i('.download.icon')
-                                ])
-                            ]),
-                            div('.ui.rating', {
-                                'attrs': {
-                                    'data-rating': '3',
-                                    'data-max-rating': '5',
-                                    'className': 'ui rating'
-                                }
-                            }),
-                            `(42)`
-                        ])
-                    ])
-                ]),
-                div('.column', [
-                    div('.ui.fluid.card', [
-                        a('.card-cover.image', {
-                            'attrs': {
-                                'href': '',
-                                'className': 'card-cover image'
-                            }
-                        }, [
-                            img({
-                                'attrs': {
-                                    'src': 'https://pbs.twimg.com/profile_images/1418282604/EnglishTwitterAvatar.jpg'
-                                }
-                            })
-                        ]),
-                        div('.card-title.content', [
-                            a('.header', {
-                                'attrs': {
-                                    'href': '',
-                                    'className': 'header'
-                                }
-                            }, [`Title`])
-                        ]),
-                        div('.extra.content', [
-                            span('.right.floated', [
-                                a({
-                                    'attrs': {
-                                        'href': ''
-                                    }
-                                }, [
-                                    i('.download.icon')
-                                ])
-                            ]),
-                            div('.ui.rating', {
-                                'attrs': {
-                                    'data-rating': '3',
-                                    'data-max-rating': '5',
-                                    'className': 'ui rating'
-                                }
-                            }),
-                            `(42)`
-                        ])
-                    ])
-                ])
-            ])
+
+            setList,
+
         ])
     ]);
 
