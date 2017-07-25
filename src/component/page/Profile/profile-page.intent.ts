@@ -1,12 +1,15 @@
+import { ID_FOLLOWER_BTN } from "./profile-page";
+
 const Route = require('route-parser');
 
 export interface IntentSinks {
-    loadProfile$
+    loadProfile$,
+    aboClick$
 }
 
 export function intent(sources) {
 
-    const {router} = sources;
+    const {router, DOM} = sources;
 
     const path$ = router.history$
         .map(h => h.pathname)
@@ -18,8 +21,11 @@ export function intent(sources) {
 
     const loadProfile$ = path$.filter(path => path);
 
+    const aboClick$ = DOM.select(ID_FOLLOWER_BTN).events('click').map(e => e.preventDefault()).debug('ABO CLICK');
+
     return {
-        loadProfile$
+        loadProfile$,
+        aboClick$
     }
 
 }

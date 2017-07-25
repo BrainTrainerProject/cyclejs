@@ -2,18 +2,19 @@ import { a, div, h2, i, img } from '@cycle/dom';
 import { VNode } from "snabbdom/vnode";
 import xs, { Stream } from "xstream";
 import { Utils } from "../../../common/Utils";
+import { ID_FOLLOWER_BTN } from "./profile-page";
 
-export function view(state$, feed$, sets$): Stream<VNode> {
+export function view(state$, feed$, sets$, follower$): Stream<VNode> {
 
-    return xs.combine(state$, feed$, sets$)
-        .map(([state, feedList, setList]) => div('.ui.container', [
+    return xs.combine(state$, feed$, sets$, follower$)
+        .map(([state, feedList, setList, followerList]) => div('.ui.container', [
 
             (!state.profile) ? div(['Loading...']) :
                 (state.isPrivate) ? div(['Private']) :
                     div('.ui.grid', [
                         (!!state.profile.photourl) ? profileImage(Utils.imageOrPlaceHolder(state.profile.photourl)) : null,
-                        profile(state.profile),
-                        tabs(feedList, setList)
+                        profile(state),
+                        tabs(feedList, setList, followerList)
                     ])
         ]));
 
@@ -29,7 +30,7 @@ function profileImage(image) {
     ]);
 }
 
-function profile(profile) {
+function profile({isOwner, profile}) {
     return div('.eight.wide.column', {
         'style': {
             'name': 'style',
@@ -43,16 +44,18 @@ function profile(profile) {
             div('.item', [profile.followerCount + ` Follower`])
         ]),
         div('.ui.divider.hidden'),
-        div('.ui.left.labeled.button', {
+
+        (!isOwner) ? div('.ui.left.labeled.button', {
             'attrs': {
                 'tabindex': '0'
             }
         }, [
             a('.ui.basic.right.pointing.red.label', [profile.followerCount]),
-            div('.ui.red.button', [
+            div(ID_FOLLOWER_BTN + '.ui.red.button', [
                 i('.heart.icon'), 'abonnieren'
             ])
-        ])
+        ]) : null
+
     ]);
 }
 
@@ -69,7 +72,7 @@ function tabItem(clazz, tabid, tablabel) {
     }, [tablabel]);
 }
 
-function tabs(feedList, setList) {
+function tabs(feedList, setList, followerList) {
     return div('.sixteen.wide.column', [
         div('.ui.pointing.secondary.menu', [
 
@@ -80,7 +83,7 @@ function tabs(feedList, setList) {
         ]),
         feed(feedList),
         sets(setList),
-        follower()
+        follower(followerList)
     ]);
 }
 
@@ -119,56 +122,14 @@ function sets(setList) {
 
 }
 
-function follower() {
+function follower(followerList) {
     return div('.ui.tab', {
         'attrs': {
             'data-tab': 'tab-follower',
-            'className': 'ui  tab'
         }
     }, [
         div('.ui.divider.hidden'),
-        div('.ui.middle.aligned.divided.list', [
-            div('.item', {
-                'attrs': {
-                    'className': 'item'
-                },
-                'style': {
-                    'name': 'style',
-                    'value': 'border:none !important; padding-bottom: 1em;'
-                }
-            }, [
-                div('.right.floated.content', [
-                    div('.ui.tiny.button', [`abbonieren`])
-                ]),
-                img('.ui.avatar.image', {
-                    'attrs': {
-                        'src': 'https://semantic-ui.com/images/avatar2/small/lindsay.png',
-                        'className': 'ui avatar image'
-                    }
-                }),
-                div('.content', [`Lena`])
-            ]),
-            div('.item', {
-                'attrs': {
-                    'className': 'item'
-                },
-                'style': {
-                    'name': 'style',
-                    'value': 'border:none !important;'
-                }
-            }, [
-                div('.right.floated.content', [
-                    div('.ui.tiny.button', [`abbonieren`])
-                ]),
-                img('.ui.avatar.image', {
-                    'attrs': {
-                        'src': 'https://semantic-ui.com/images/avatar2/small/lena.png',
-                        'className': 'ui avatar image'
-                    }
-                }),
-                div('.content', [`Lindsay`])
-            ])
-        ])
+        div({attrs: {style: 'padding:0px 10px !important;'}}, [followerList])
     ]);
 
 }
