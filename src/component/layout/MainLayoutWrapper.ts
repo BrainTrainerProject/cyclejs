@@ -55,7 +55,7 @@ export function MainLayoutWrapper(component: MainLayoutComponent): any {
             ).map(view),
             HTTP: xs.merge(mergedSinks.HTTP || xs.never(), reducer$.HTTP),
             onion: xs.merge(mergedSinks.onion || xs.never(), reducer$.onion),
-            modal: xs.merge(mergedSinks, showPractise$)
+            modal: xs.merge(mergedSinks.modal, showPractise$)
         };
 
         return sinks;

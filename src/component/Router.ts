@@ -44,6 +44,7 @@ export function Router(sources: AppSources): AppSinks {
         .filter(loc => loc.pathname === '/')
         .mapTo('/start');
 
+
     return {
         DOM: page$.map(c => c.DOM || xs.never()).flatten(),
         HTTP: page$.map(c => c.HTTP || xs.never()).flatten(),
