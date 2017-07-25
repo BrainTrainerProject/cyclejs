@@ -20,9 +20,9 @@ export function intent(sources, aboPoxy$) {
             return route.match(path);
         }).debug('URI: ');
 
-    const loadProfile$ = path$.filter(path => path);
+    const loadProfile$ = path$.filter(path => (path));
 
-    const aboClick$ = DOM.select(ID_FOLLOWER_BTN).events('click').map(e => e.preventDefault()).debug('ABO CLICK');
+    const aboClick$ = DOM.select(ID_FOLLOWER_BTN).events('click').map(e => e.preventDefault());
     const followerListAboClick$ = aboPoxy$;
 
     return {

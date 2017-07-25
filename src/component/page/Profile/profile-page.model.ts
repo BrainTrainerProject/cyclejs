@@ -4,19 +4,17 @@ import { IntentSinks } from "./profile-page.intent";
 import { ProfileRepository, ProfileRepositoryActions } from "../../../common/repository/ProfileRepository";
 import sampleCombine from "xstream/extra/sampleCombine";
 import { FollowerRepository, FollowerRepositoryAction } from "../../../common/repository/FollowerRepository";
+import dropRepeats from "xstream/extra/dropRepeats";
 
 export function model(sources, intent: IntentSinks) {
 
-    const profileRepository = ProfileRepository(sources, intent.loadProfile$
-        .map(path => {
-            if (path.id) {
-                console.log('Profile: ByID');
-                return ProfileRepositoryActions.GetOwn()
-            } else {
-                console.log('Profile: Own');
-                return ProfileRepositoryActions.GetOwn()
-            }
-        }).remember());
+    const getProfile$ = sources.onion.state$
+        .filter(path => path.user  || path.profile)
+        .compose(dropRepeats((oldV, newV) => oldV.ownerId === newV.ownerId))
+        .map(path => ProfileRepositoryActions.GetById((path.ownerId) ? path.ownerId : path.user._id))
+        .debug('loadProfile');
+
+    const profileRepository = ProfileRepository(sources, getProfile$.remember());
 
     const followerRepository = FollowerRepository(sources, xs.merge(
         intent.aboClick$
@@ -44,23 +42,23 @@ export function model(sources, intent: IntentSinks) {
             }
         });
 
-    const profileResponses$ = xs.merge(profileRepository.response.getOwnProfile$, profileRepository.response.getProfileById$);
+    const profileResponses$ = xs.merge(profileRepository.response.getProfileById$);
     const initProfile$ = xs.merge(profileResponses$)
-        .map(profile => (state) => {
+        .map(profile => (state) => ({
+            ...state,
+            isPrivate: !profile.visibility,
+            profile: profile
+        }));
 
-            console.log("STATE: ", state);
-            console.log("Profile: ", profile);
+    const isOwner$ = sources.onion.state$
+        .filter(state => state.user && state.profile)
+        .compose(dropRepeats((oldV, newV) => oldV.user._id === newV.user._id))
+        .map(s => (state) => ({
+            ...state,
+            isOwner: state.user._id === state.profile._id,
+        }));
 
-            return {
-                ...state,
-                isPrivate: !profile.visibility,
-                isOwner: (!state.ownerId) || (profile._id === state.ownerId),
-                profile: profile
-            }
-
-        });
-
-    const reducer$ = xs.merge(init$, load$, initProfile$);
+    const reducer$ = xs.merge(init$, load$, initProfile$, isOwner$);
 
     return {
         HTTP: xs.merge(profileRepository.HTTP, followerRepository.HTTP).debug("Profile Request Repo"),

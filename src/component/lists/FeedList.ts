@@ -119,7 +119,7 @@ function commentsListView(items$): Stream<VNode> {
 
     const emptyList$ = items$
         .filter(items => !items || (items && items.length === 0))
-        .mapTo(div('.ui.column', p([''])));
+        .mapTo(div('.ui.column', p(['Keine Einträge vorhanden'])));
 
     const list$ = items$
         .filter(items => (items && items.length > 0))

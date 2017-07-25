@@ -70,6 +70,7 @@ function responses(sources: Sources): ResponseSinks {
     const followerResponse$ = HTTP.select(RequestMethod.CONCAT_FOLLOWER)
         .compose(flattenConcurrently)
         .filter(({text}) => !!text)
+        .filter(({text}) => text !== 'Profile is private')
         .map(({text}) => JSON.parse(text))
         .fold((list, x) => list.concat(x), [])
         .compose(debounce(100));

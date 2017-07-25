@@ -94,7 +94,6 @@ function cardView(state$: Stream<any>): any {
     return state$.map(state => {
 
         const item = state.item;
-        console.log("CardItem CC", state)
 
         return div('.column', [
             div('.ui.card.fluid', [

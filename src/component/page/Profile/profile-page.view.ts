@@ -94,7 +94,7 @@ function feed(feedList) {
             'className': 'ui active tab'
         }
     }, [
-        div('.ui.middle.aligned.divided.list', {attrs: {style: 'padding:10px !important;'}}, [
+        div('.ui.middle.aligned.divided.list', {attrs: {style: 'padding:10px 15px !important;'}}, [
             feedList,
         ])
     ]);

@@ -11,9 +11,10 @@ import UnderConstructionPage from "./page/UnderConstruction/under-construction-p
 import dropRepeats from "xstream/extra/dropRepeats";
 import SetPage from "./page/Set/set-page";
 import FeedPage from "./page/Feed/feed-page";
-import isolate  from "@cycle/isolate";
+import isolate from "@cycle/isolate";
 import StorePage from "./page/Store/store-page";
 import ProfilePage from './page/Profile/profile-page';
+import { PractiseModal } from "../common/Modals";
 
 const routedComponent = (sources) => ({path, value}) => value({...sources, router: sources.router.path(path)});
 const protectedPage = (page) => ProtectedPage(page);
@@ -41,12 +42,15 @@ export function Router(sources: AppSources): AppSinks {
         .filter(loc => loc.pathname === '/')
         .mapTo('/start');
 
+    const showPractise$ = sources.socket.get('practice_begin')
+        .mapTo(PractiseModal.Practise());
+
     return {
         DOM: page$.map(c => c.DOM || xs.never()).flatten(),
         HTTP: page$.map(c => c.HTTP || xs.never()).flatten(),
         router: xs.merge(page$.map(c => c.router || xs.never()).flatten(), redirectStartpage$),
         onion: page$.map(c => c.onion || xs.never()).flatten(),
-        modal: page$.map(c => c.modal || xs.never()).flatten(),
+        modal: xs.merge(page$.map(c => c.modal || xs.never()).flatten(), showPractise$),
         auth0: page$.map(c => c.auth0 || xs.never()).flatten(),
         filter: page$.map(c => c.filter || xs.never()).flatten()
     };

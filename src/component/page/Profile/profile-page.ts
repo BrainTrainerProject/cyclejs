@@ -8,6 +8,7 @@ import isolate from "@cycle/isolate";
 import dropRepeats from "xstream/extra/dropRepeats";
 import SetListComponent, { SetListAction } from "../../lists/sets/SetList";
 import { FollowerList, FollowerListAction } from "../../lists/FollowerList";
+import { div } from "@cycle/dom";
 
 export const ID_FOLLOWER_BTN = '.profile-follower';
 

@@ -71,6 +71,7 @@
     "run-sequence": "^1.2.2",
     "shx": "^0.2.2",
     "snabbdom": "^0.6.9",
+    "socket.io-client": "^2.0.3",
     "string-to-dom": "^0.1.5",
     "switch-path": "^1.2.0",
     "symbol-observable": "^1.0.4",

@@ -10,6 +10,7 @@ export type Sources = {
     modal: any;
     router: any;
     auth0: any;
+    socket: any;
 };
 
 export type RootSinks = {
@@ -22,6 +23,7 @@ export type RootSinks = {
 
 export interface State {
 }
+
 export type Reducer = (prev?: State) => State | undefined;
 export type Sinks = Partial<RootSinks>;
 export type Component = (s: Sources) => Sinks;

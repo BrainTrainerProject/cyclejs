@@ -1,7 +1,7 @@
 import 'babel-polyfill';
 import { div, makeDOMDriver } from '@cycle/dom';
 import { makeHTTPDriver } from '@cycle/http';
-import { Stream } from 'xstream';
+import xs, { Stream } from 'xstream';
 import { run } from '@cycle/run';
 import onionify, { StateSource } from 'cycle-onionify';
 import { Reducer, Sinks, Sources, State } from './common/interfaces';
@@ -10,18 +10,18 @@ import { wrappedModalify } from 'cyclejs-modal';
 import { ModalWrapper } from './component/layout/ModalWrapper';
 import { makeAuth0Driver, protect } from 'cyclejs-auth0';
 import { createBrowserHistory } from 'history';
-import { captureClicks, makeHistoryDriver } from '@cycle/history';
 import switchPath from 'switch-path';
-import { makeRouterDriver, RouterSource } from 'cyclic-router';
+import { makeRouterDriver } from 'cyclic-router';
 import { Router } from './component/Router';
-import  xs from 'xstream';
 import { makeFilterDriver } from './driver/FilterDriver/index';
-import dropRepeats from "xstream/extra/dropRepeats";
+import { makeSocketIODriver } from "./driver/SocketDriver/index";
+import { PractiseModal } from "./common/Modals";
 
 const config = require('./config.json');
 
 export type AppSources = Sources & { onion: StateSource<AppState>, filter: any };
 export type AppSinks = Sinks & { onion: Stream<Reducer>, modal: Stream<any>, filter: Stream<any> };
+
 export interface AppState extends State {
 }
 
@@ -37,13 +37,16 @@ run(onionify(wrappedModalify(App, ModalWrapper)), {
             redirectUrl: config.auth0.callbackUrl
         }
     }),
-    filter: makeFilterDriver()
+    filter: makeFilterDriver(),
+    socket: makeSocketIODriver()
 });
 
 function App(sources: AppSources): AppSinks {
     const routerSinks = Router(sources);
 
     const filterListener$ = sources.filter.select('search').map(search => console.log('Suche: ' + search));
+
+
 
     return {
         ...routerSinks,
