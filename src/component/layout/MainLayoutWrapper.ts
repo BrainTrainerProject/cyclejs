@@ -12,7 +12,7 @@ import {
     Request as ProfileRequest,
     RequestMethod as ProfileRequestMethod
 } from '../../common/repository/ProfileRepository';
-import {sampleCombine} from 'xstream/extra/sampleCombine';
+import sampleCombine from 'xstream/extra/sampleCombine';
 import {PractiseModal} from '../../common/Modals';
 import {Notifications} from '../../common/Notification';
 
